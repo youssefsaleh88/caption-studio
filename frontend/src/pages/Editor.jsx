@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate } from "react-router-dom"
 import { v4 as uuidv4 } from "uuid"
@@ -9,6 +16,22 @@ import StylePanel from "../components/StylePanel"
 import ExportBar from "../components/ExportBar"
 import BrandHeader from "../components/BrandHeader"
 import BrandFooter from "../components/BrandFooter"
+
+const LG_MQ = "(min-width: 1024px)"
+
+function subscribeLg(cb) {
+  const mq = window.matchMedia(LG_MQ)
+  mq.addEventListener("change", cb)
+  return () => mq.removeEventListener("change", cb)
+}
+
+function snapshotLg() {
+  return window.matchMedia(LG_MQ).matches
+}
+
+function useLgLayout() {
+  return useSyncExternalStore(subscribeLg, snapshotLg, () => false)
+}
 
 const DEFAULT_STYLE = {
   fontFamily: "Noto Sans Arabic",
@@ -34,6 +57,7 @@ export default function Editor() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const previewRef = useRef(null)
+  const isLg = useLgLayout()
 
   useEffect(() => {
     if (!state?.videoUrl || !Array.isArray(state?.words)) {
@@ -125,23 +149,35 @@ export default function Editor() {
 
   if (!state?.videoUrl || !Array.isArray(state?.words)) return null
 
-  const previewBlock = (
+  const videoPreviewInner = (
+    <VideoPreview
+      ref={previewRef}
+      videoUrl={state.videoUrl}
+      words={words}
+      style={{ ...style, timing_offset: 0 }}
+      onTimeUpdate={setCurrentTime}
+      onVideoDimensions={handleVideoDimensions}
+    />
+  )
+
+  /* موبايل: ارتفاع محدد + قصّ صريح حتى ما يطلع الفيديو فوق التابات */
+  const previewBlockMobile = (
+    <div className="h-full w-full min-h-0 min-w-0 rounded-2xl overflow-hidden border border-white/8 bg-black shadow-lg flex items-center justify-center">
+      {videoPreviewInner}
+    </div>
+  )
+
+  /* ديسكتوب: الفيديو يملأ أوسع عمود؛ طولي يكبر مع العمود بدون سقف 360px */
+  const previewBlockDesktop = (
     <div
       className={[
-        "min-h-0 rounded-2xl overflow-hidden border border-white/8 bg-black shadow-xl",
+        "min-h-0 min-w-0 rounded-2xl overflow-hidden border border-white/8 bg-black shadow-xl flex items-center justify-center",
         videoLayout.isVertical
-          ? "max-w-[360px] mx-auto lg:mx-0 w-full"
-          : "w-full h-full",
+          ? "h-full w-full max-w-[min(520px,100%)]"
+          : "h-full w-full",
       ].join(" ")}
     >
-      <VideoPreview
-        ref={previewRef}
-        videoUrl={state.videoUrl}
-        words={words}
-        style={{ ...style, timing_offset: 0 }}
-        onTimeUpdate={setCurrentTime}
-        onVideoDimensions={handleVideoDimensions}
-      />
+      {videoPreviewInner}
     </div>
   )
 
@@ -182,89 +218,76 @@ export default function Editor() {
         }
       />
 
-      {/* Desktop: ثابت مسارًا بصريًا — معاينة | محرّر | نمط (لا عكس RTL) */}
-      <div
-        dir="ltr"
-        className="hidden lg:flex flex-1 min-h-0 min-w-0"
-      >
-        <section
-          className={[
-            "shrink-0 flex flex-col p-4 gap-3 border-e border-white/8 bg-dark-elevated/30",
-            videoLayout.isVertical ? "w-[min(380px,32vw)]" : "flex-[1.05] min-w-0 max-w-[min(520px,40vw)]",
-          ].join(" ")}
-        >
-          <div
-            className={[
-              "flex-1 min-h-[240px] flex items-center justify-center",
-              videoLayout.isVertical ? "" : "max-h-[min(72vh,720px)]",
-            ].join(" ")}
-          >
-            {previewBlock}
-          </div>
-        </section>
+      {isLg ? (
+        <div dir="ltr" className="flex flex-1 min-h-0 min-w-0">
+          <section className="flex-[3] min-w-0 flex flex-col p-3 sm:p-4 gap-2 border-e border-white/8 bg-dark-elevated/30 min-h-0">
+            <div className="flex-1 min-h-0 min-w-0 flex items-center justify-center py-1">
+              {previewBlockDesktop}
+            </div>
+          </section>
 
-        <section className="flex-[1.65] min-w-0 flex flex-col p-4 min-h-0">
-          <div className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-dark-surface/60 p-5 shadow-xl shadow-black/20">
-            {editorBlock}
-          </div>
-        </section>
+          <aside className="flex-[1.05] min-w-[260px] max-w-[min(380px,28vw)] shrink-0 border-e border-white/8 bg-dark-elevated/25 p-3 sm:p-4 flex flex-col min-h-0">
+            {styleExportBlock}
+          </aside>
 
-        <aside className="w-[min(340px,26vw)] shrink-0 border-s border-white/8 bg-dark-elevated/25 p-4 flex flex-col min-h-0">
-          {styleExportBlock}
-        </aside>
-      </div>
-
-      {/* Tablet / mobile */}
-      <div className="lg:hidden flex flex-col flex-1 min-h-0 min-w-0">
-        <div className="shrink-0 z-10 bg-gradient-to-b from-dark to-dark/95 border-b border-white/10 px-3 pt-2 pb-2">
-          <div className="max-h-[min(34vh,280px)] min-h-[160px] mx-auto">
-            {previewBlock}
-          </div>
-        </div>
-
-        <div
-          dir="ltr"
-          className="grid grid-cols-3 gap-2 px-3 py-2 shrink-0 border-b border-white/10 bg-dark/98 backdrop-blur-md sticky top-0 z-20"
-        >
-          {[
-            { id: "edit", label: t("editor.tabEdit") },
-            { id: "style", label: t("editor.tabStyle") },
-            { id: "export", label: t("editor.tabExport") },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setMobileTab(tab.id)}
-              className={[
-                "w-full px-2 py-3 rounded-xl text-sm font-semibold min-h-[48px] transition-all duration-200 flex items-center justify-center text-center leading-tight",
-                mobileTab === tab.id
-                  ? "bg-accent text-white shadow-lg shadow-accent/30 scale-[1.02]"
-                  : "bg-dark-surface text-white/75 border border-white/10 hover:border-white/25",
-              ].join(" ")}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex-1 min-h-0 overflow-hidden p-3 bg-dark">
-          {mobileTab === "edit" && (
-            <div className="h-full min-h-0 rounded-2xl border border-white/8 bg-dark-surface/50 p-3 overflow-hidden">
+          <section className="flex-[0.72] min-w-[220px] max-w-[min(400px,26vw)] shrink-0 flex flex-col p-3 sm:p-4 min-h-0">
+            <div className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-dark-surface/60 p-4 shadow-lg shadow-black/15 overflow-hidden">
               {editorBlock}
             </div>
-          )}
-          {mobileTab === "style" && (
-            <div className="h-full min-h-0 overflow-y-auto">
-              <StylePanel style={style} onChange={setStyle} />
-            </div>
-          )}
-          {mobileTab === "export" && (
-            <div className="h-full min-h-0 flex flex-col gap-4">
-              <ExportBar words={words} videoUrl={state.videoUrl} style={style} />
-            </div>
-          )}
+          </section>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
+          <div className="shrink-0 bg-dark border-b border-white/10 px-3 pt-2 pb-3 overflow-hidden">
+            <div className="mx-auto w-full max-w-md min-h-[200px] max-h-[min(42vh,380px)] h-[min(42vh,380px)] overflow-hidden rounded-2xl bg-black flex flex-col min-w-0">
+              {previewBlockMobile}
+            </div>
+          </div>
+
+          <div
+            dir="ltr"
+            className="grid grid-cols-3 gap-2 px-3 py-2.5 shrink-0 border-b border-white/10 bg-dark"
+          >
+            {[
+              { id: "edit", label: t("editor.tabEdit") },
+              { id: "style", label: t("editor.tabStyle") },
+              { id: "export", label: t("editor.tabExport") },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setMobileTab(tab.id)}
+                className={[
+                  "w-full px-2 py-3 rounded-xl text-sm font-semibold min-h-[48px] transition-all duration-200 flex items-center justify-center text-center leading-tight",
+                  mobileTab === tab.id
+                    ? "bg-accent text-white shadow-lg shadow-accent/30 scale-[1.02]"
+                    : "bg-dark-surface text-white/75 border border-white/10 hover:border-white/25",
+                ].join(" ")}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden p-3 bg-dark">
+            {mobileTab === "edit" && (
+              <div className="flex-1 min-h-0 rounded-2xl border border-white/8 bg-dark-surface/50 p-3 flex flex-col overflow-hidden">
+                {editorBlock}
+              </div>
+            )}
+            {mobileTab === "style" && (
+              <div className="flex-1 min-h-0 overflow-y-auto pb-4">
+                <StylePanel style={style} onChange={setStyle} />
+              </div>
+            )}
+            {mobileTab === "export" && (
+              <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-y-auto pb-4">
+                <ExportBar words={words} videoUrl={state.videoUrl} style={style} />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <BrandFooter className="shrink-0 py-2.5 text-[11px]" />
     </div>

@@ -199,7 +199,7 @@ const VideoPreview = forwardRef(function VideoPreview(
     <div
       ref={containerRef}
       className={[
-        "relative w-full h-full bg-black rounded-xl overflow-hidden flex items-center justify-center",
+        "relative w-full h-full min-h-0 min-w-0 bg-black rounded-xl overflow-hidden flex items-center justify-center",
         fsActive ? "rounded-none" : "",
       ].join(" ")}
     >
