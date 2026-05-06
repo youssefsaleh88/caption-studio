@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import httpx
 import tempfile
 import os
+import ffmpeg
 
 from services.gemini_service import transcribe_audio
 from services.ffmpeg_service import extract_audio
@@ -13,6 +14,60 @@ router = APIRouter()
 class TranscribeRequest(BaseModel):
     video_url: str
     language_hint: str = "auto"
+
+
+def _probe_media_duration(video_path: str) -> float:
+    """Return media duration in seconds, or 0 if unavailable."""
+    try:
+        probe = ffmpeg.probe(video_path)
+        duration = float((probe.get("format") or {}).get("duration") or 0.0)
+        return max(0.0, duration)
+    except Exception:
+        return 0.0
+
+
+def _normalize_word_timeline_to_media(
+    words: list[dict],
+    media_duration: float,
+    *,
+    keep_tail_silence: float = 1.2,
+) -> list[dict]:
+    """
+    Stretch/compress timeline if ASR timings are clearly off vs media duration.
+    This fixes cases where captions finish too early or too late.
+    """
+    if not words or media_duration <= 0:
+        return words
+
+    sorted_words = sorted(words, key=lambda w: float(w["start"]))
+    last_end = max(float(w["end"]) for w in sorted_words)
+    if last_end <= 0:
+        return words
+
+    target_end = max(0.1, media_duration - keep_tail_silence)
+    scale = target_end / last_end
+
+    # Only rescale when mismatch is significant.
+    if 0.92 <= scale <= 1.08:
+        return words
+
+    normalized: list[dict] = []
+    for w in sorted_words:
+        row = dict(w)
+        s = max(0.0, float(row["start"]) * scale)
+        e = max(s + 0.02, float(row["end"]) * scale)
+        row["start"] = s
+        row["end"] = min(e, media_duration)
+        normalized.append(row)
+
+    # Keep strict ordering and avoid overlap.
+    for i in range(len(normalized) - 1):
+        cur = normalized[i]
+        nxt = normalized[i + 1]
+        if cur["end"] >= nxt["start"]:
+            cur["end"] = max(cur["start"] + 0.02, nxt["start"] - 0.01)
+
+    return normalized
 
 
 @router.post("/transcribe")
@@ -42,6 +97,8 @@ async def transcribe(req: TranscribeRequest):
                 audio_path,
                 language_hint=req.language_hint or "auto",
             )
+            duration = _probe_media_duration(video_path)
+            words = _normalize_word_timeline_to_media(words, duration)
 
         return {"words": words}
     except HTTPException:
