@@ -29,7 +29,10 @@
     "timeSuffix": "s",
     "tabEdit": "Edit",
     "tabStyle": "Style",
-    "tabExport": "Export"
+    "tabExport": "Export",
+    "styleSheetButton": "Look, fonts & colors",
+    "styleSheetTitle": "Style settings",
+    "styleSheetClose": "Close"
   },
   "caption": {
     "title": "Captions",

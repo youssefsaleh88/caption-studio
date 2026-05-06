@@ -29,7 +29,10 @@
     "timeSuffix": "ث",
     "tabEdit": "تحرير",
     "tabStyle": "النمط",
-    "tabExport": "تصدير"
+    "tabExport": "تصدير",
+    "styleSheetButton": "المظهر والخطوط والألوان",
+    "styleSheetTitle": "إعدادات المظهر",
+    "styleSheetClose": "إغلاق"
   },
   "caption": {
     "title": "الترجمات",

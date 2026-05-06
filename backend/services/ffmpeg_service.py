@@ -7,6 +7,28 @@ from services.caption_grouping import expand_captions_for_style
 from services.ass_subtitles import write_ass_for_burn_in
 
 
+def _escape_ffmpeg_filter_path(path: str) -> str:
+    return path.replace("\\", "/").replace(":", r"\:").replace("'", r"\'")
+
+
+def resolve_burn_in_font_file(style: dict) -> str | None:
+    """
+    Prefer bundled/env font path so libass can load Arabic glyphs in Docker/Linux.
+    """
+    env_font = os.environ.get("CAPTION_FONT_FILE")
+    candidates = [
+        env_font,
+        "/usr/share/fonts/NotoSansArabic.ttf",
+        "/usr/share/fonts/opentype/noto/NotoSansArabic-Regular.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansArabic[wdth,wght].ttf",
+    ]
+    for p in candidates:
+        if p and os.path.isfile(p):
+            return p
+    return None
+
+
 def extract_audio(video_path: str, output_dir: str) -> str:
     """Extract cleaned mono WAV (24kHz) for ASR."""
     audio_path = os.path.join(output_dir, f"{uuid.uuid4()}.wav")
@@ -77,20 +99,23 @@ def burn_captions(
     width, height = _probe_video_size(video_path)
 
     ass_path = os.path.join(output_dir, f"captions_{uuid.uuid4()}.ass")
+    font_path = resolve_burn_in_font_file(style)
     write_ass_for_burn_in(
         ass_path,
         draw_caps,
         style,
         play_res_x=width,
         play_res_y=height,
+        font_file=font_path,
     )
 
-    ass_esc = (
-        ass_path.replace("\\", "/")
-        .replace(":", r"\:")
-        .replace("'", r"\'")
-    )
-    vf = f"subtitles='{ass_esc}'"
+    ass_esc = _escape_ffmpeg_filter_path(ass_path)
+    if font_path:
+        font_dir = os.path.dirname(os.path.abspath(font_path))
+        dir_esc = _escape_ffmpeg_filter_path(font_dir)
+        vf = f"subtitles='{ass_esc}':fontsdir='{dir_esc}'"
+    else:
+        vf = f"subtitles='{ass_esc}'"
 
     try:
         (

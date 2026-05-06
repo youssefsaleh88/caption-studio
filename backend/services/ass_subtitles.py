@@ -82,11 +82,12 @@ def write_ass_for_burn_in(
     *,
     play_res_x: int,
     play_res_y: int,
-    font_file: str,
+    font_file: str | None = None,
 ) -> None:
     """
     lines: [{"word": text, "start": float, "end": float}, ...]
     style: font_size_pct, fontsize (fallback), fontFamily, color, bg_*, position, shadow
+    font_file: optional path (burn-in uses fontsdir in FFmpeg; reserved for future).
     """
     prx = max(1, int(play_res_x))
     pry = max(1, int(play_res_y))
