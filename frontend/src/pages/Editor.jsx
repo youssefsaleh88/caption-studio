@@ -59,6 +59,7 @@ export default function Editor() {
   const { state } = useLocation()
   const previewRef = useRef(null)
   const isLg = useLgLayout()
+  const [styleSheetOpen, setStyleSheetOpen] = useState(false)
 
   useEffect(() => {
     if (!state?.videoUrl || !Array.isArray(state?.words)) {
@@ -94,7 +95,6 @@ export default function Editor() {
   const [style, setStyle] = useState(DEFAULT_STYLE)
   const [currentTime, setCurrentTime] = useState(0)
   const [mobileTab, setMobileTab] = useState("edit")
-  const [styleSheetOpen, setStyleSheetOpen] = useState(false)
   const [videoLayout, setVideoLayout] = useState({
     isVertical: false,
     aspect: 16 / 9,
