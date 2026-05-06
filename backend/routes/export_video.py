@@ -26,6 +26,11 @@ class StyleOptions(BaseModel):
     shadow: int = 2
     position: str = "bottom-center"
     font: str | None = None
+    caption_mode: str = "sentences"
+    timing_offset: float = 0.0
+    max_words_per_line: int = 6
+    max_segment_duration: float = 3.0
+    sliding_window: int = 3
 
 
 class ExportRequest(BaseModel):

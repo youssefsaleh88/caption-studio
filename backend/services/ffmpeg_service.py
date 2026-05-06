@@ -3,6 +3,8 @@ import os
 import uuid
 from fastapi import HTTPException
 
+from services.caption_grouping import expand_captions_for_style
+
 FONT_PATH = "/usr/share/fonts/NotoSansArabic.ttf"
 FALLBACK_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
@@ -67,14 +69,19 @@ def burn_captions(
     if not captions:
         raise HTTPException(status_code=400, detail="No captions provided")
 
+    draw_caps = expand_captions_for_style(captions, style)
+    if not draw_caps:
+        raise HTTPException(status_code=400, detail="No captions provided")
+
     filters = []
-    for cap in captions:
+    for cap in draw_caps:
         word = (
             str(cap["word"])
             .replace("\\", "\\\\")
             .replace("'", "\\'")
             .replace(":", "\\:")
             .replace(",", "\\,")
+            .replace("%", "\\%")
         )
         start = float(cap["start"])
         end = float(cap["end"])

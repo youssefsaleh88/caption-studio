@@ -37,6 +37,7 @@ const TABS = [
   { id: "background", label: "Background" },
   { id: "effects",    label: "Effects" },
   { id: "position",   label: "Position" },
+  { id: "captions",   label: "Captions" },
 ]
 
 function Section({ label, children }) {
@@ -262,6 +263,111 @@ export default function StylePanel({ style, onChange }) {
               })}
             </div>
           </Section>
+        )}
+
+        {tab === "captions" && (
+          <>
+            <Section label="Display mode">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => set({ caption_mode: "sentences" })}
+                  className={[
+                    "flex-1 px-3 py-2 rounded-lg text-xs font-medium border transition-all",
+                    style.caption_mode !== "sliding"
+                      ? "bg-accent text-white border-accent"
+                      : "bg-dark text-white/70 border-white/10 hover:border-white/25",
+                  ].join(" ")}
+                >
+                  Sentences
+                </button>
+                <button
+                  type="button"
+                  onClick={() => set({ caption_mode: "sliding" })}
+                  className={[
+                    "flex-1 px-3 py-2 rounded-lg text-xs font-medium border transition-all",
+                    style.caption_mode === "sliding"
+                      ? "bg-accent text-white border-accent"
+                      : "bg-dark text-white/70 border-white/10 hover:border-white/25",
+                  ].join(" ")}
+                >
+                  Sliding words
+                </button>
+              </div>
+            </Section>
+
+            <Section
+              label={`Timing offset — ${(style.timing_offset ?? 0) >= 0 ? "+" : ""}${Number(style.timing_offset ?? 0).toFixed(1)}s`}
+            >
+              <input
+                type="range"
+                min={-2}
+                max={2}
+                step={0.1}
+                value={Number(style.timing_offset ?? 0)}
+                onChange={(e) =>
+                  set({ timing_offset: Number(e.target.value) })
+                }
+                className="w-full accent-accent"
+              />
+              <p className="text-[11px] text-white/45 mt-2">
+                Positive delays captions; negative moves them earlier.
+              </p>
+            </Section>
+
+            {style.caption_mode !== "sliding" && (
+              <>
+                <Section
+                  label={`Max words per line — ${style.max_words_per_line ?? 6}`}
+                >
+                  <input
+                    type="range"
+                    min={3}
+                    max={10}
+                    step={1}
+                    value={style.max_words_per_line ?? 6}
+                    onChange={(e) =>
+                      set({ max_words_per_line: Number(e.target.value) })
+                    }
+                    className="w-full accent-accent"
+                  />
+                </Section>
+                <Section
+                  label={`Max segment duration — ${Number(style.max_segment_duration ?? 3).toFixed(1)}s`}
+                >
+                  <input
+                    type="range"
+                    min={1.5}
+                    max={5}
+                    step={0.5}
+                    value={style.max_segment_duration ?? 3}
+                    onChange={(e) =>
+                      set({ max_segment_duration: Number(e.target.value) })
+                    }
+                    className="w-full accent-accent"
+                  />
+                </Section>
+              </>
+            )}
+
+            {style.caption_mode === "sliding" && (
+              <Section
+                label={`Window size — ${style.sliding_window ?? 3} words`}
+              >
+                <input
+                  type="range"
+                  min={1}
+                  max={7}
+                  step={1}
+                  value={style.sliding_window ?? 3}
+                  onChange={(e) =>
+                    set({ sliding_window: Number(e.target.value) })
+                  }
+                  className="w-full accent-accent"
+                />
+              </Section>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -57,6 +57,11 @@ export default function ExportBar({ words, videoUrl, style }) {
             shadow: Number(style.shadow) || 2,
             position: style.position || "bottom-center",
             font: style.fontFamily || null,
+            caption_mode: style.caption_mode || "sentences",
+            timing_offset: Number(style.timing_offset ?? 0),
+            max_words_per_line: Number(style.max_words_per_line ?? 6),
+            max_segment_duration: Number(style.max_segment_duration ?? 3),
+            sliding_window: Number(style.sliding_window ?? 3),
           },
         }),
       })

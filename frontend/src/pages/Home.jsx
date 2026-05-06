@@ -1,8 +1,10 @@
 import UploadZone from "../components/UploadZone"
+import BrandHeader from "../components/BrandHeader"
+import BrandFooter from "../components/BrandFooter"
 
 export default function Home() {
   return (
-    <div className="min-h-screen w-full bg-dark text-white relative overflow-hidden">
+    <div className="min-h-screen w-full bg-dark text-white relative overflow-hidden flex flex-col">
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
@@ -12,28 +14,9 @@ export default function Home() {
         }}
       />
 
-      <header className="relative z-10 px-8 py-6 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m22 8-6 4 6 4V8Z" />
-            <rect x="2" y="6" width="14" height="12" rx="2" ry="2" />
-          </svg>
-        </div>
-        <span className="text-sm font-semibold tracking-tight">
-          AI Caption Studio
-        </span>
-      </header>
+      <BrandHeader />
 
-      <main className="relative z-10 flex flex-col items-center justify-center px-6 pt-10 pb-24 min-h-[calc(100vh-80px)]">
+      <main className="relative z-10 flex flex-col items-center justify-center px-6 pt-10 pb-12 flex-1 w-full">
         <h1 className="text-4xl md:text-5xl font-semibold text-center tracking-tight max-w-3xl">
           Add captions to any video in seconds
         </h1>
@@ -45,6 +28,8 @@ export default function Home() {
           <UploadZone />
         </div>
       </main>
+
+      <BrandFooter className="relative z-10 mt-auto" />
     </div>
   )
 }

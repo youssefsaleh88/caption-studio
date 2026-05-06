@@ -1,4 +1,17 @@
-import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from "react"
+import {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
+import {
+  applyTimingOffsetToWords,
+  groupIntoSegments,
+  applyTimingOffsetToSegments,
+  findActiveWordIndex,
+  slidingWindowText,
+} from "../utils/captions"
 
 const POSITION_STYLES = {
   "top-left":      { top: 24, left: 24, transform: "none" },
@@ -49,12 +62,39 @@ const VideoPreview = forwardRef(function VideoPreview(
     },
   }))
 
-  const activeWords = useMemo(() => {
-    if (!Array.isArray(words)) return []
-    return words.filter(
-      (w) => currentTime >= w.start && currentTime <= w.end,
+  const offsetWords = useMemo(
+    () => applyTimingOffsetToWords(words || [], style?.timing_offset ?? 0),
+    [words, style?.timing_offset],
+  )
+
+  const segments = useMemo(() => {
+    return groupIntoSegments(offsetWords, {
+      maxWords: style?.max_words_per_line ?? 6,
+      maxDuration: style?.max_segment_duration ?? 3,
+    })
+  }, [offsetWords, style?.max_words_per_line, style?.max_segment_duration])
+
+  const activeSegmentText = useMemo(() => {
+    if (!segments.length) return ""
+    const t = currentTime
+    const seg = segments.find((s) => t >= s.start && t <= s.end)
+    return seg?.text ?? ""
+  }, [segments, currentTime])
+
+  const slidingText = useMemo(() => {
+    const ws = offsetWords
+    if (!ws.length) return ""
+    const idx = findActiveWordIndex(ws, currentTime)
+    if (idx < 0) return ""
+    return slidingWindowText(
+      ws,
+      idx,
+      style?.sliding_window ?? 3,
     )
-  }, [words, currentTime])
+  }, [offsetWords, currentTime, style?.sliding_window])
+
+  const overlayLabel =
+    style?.caption_mode === "sliding" ? slidingText : activeSegmentText
 
   const positionStyle =
     POSITION_STYLES[style?.position] || POSITION_STYLES["bottom-center"]
@@ -100,11 +140,9 @@ const VideoPreview = forwardRef(function VideoPreview(
         className="w-full h-full max-h-full object-contain bg-black"
         onTimeUpdate={handleTimeUpdate}
       />
-      {activeWords.length > 0 && (
-        <div style={overlayStyle}>
-          {activeWords.map((w) => w.word).join(" ")}
-        </div>
-      )}
+      {overlayLabel ? (
+        <div style={overlayStyle}>{overlayLabel}</div>
+      ) : null}
     </div>
   )
 })

@@ -4,6 +4,7 @@ export default function CaptionEditor({
   words,
   currentTime,
   selectedWordId,
+  timingOffset = 0,
   onWordClick,
   onEdit,
   onDelete,
@@ -26,7 +27,20 @@ export default function CaptionEditor({
   }, [selectedWordId])
 
   function isActive(w) {
-    return currentTime >= w.start && currentTime <= w.end
+    const o = Number(timingOffset) || 0
+    return (
+      currentTime >= w.start + o && currentTime <= w.end + o
+    )
+  }
+
+  function displayStart(w) {
+    const o = Number(timingOffset) || 0
+    return w.start + o
+  }
+
+  function displayEnd(w) {
+    const o = Number(timingOffset) || 0
+    return w.end + o
   }
 
   function commitEdit() {
@@ -88,7 +102,7 @@ export default function CaptionEditor({
                     active ? "text-white/85" : "text-white/40",
                   ].join(" ")}
                 >
-                  {w.start.toFixed(1)}s
+                  {displayStart(w).toFixed(1)}s
                 </span>
               </button>
             )
@@ -104,7 +118,8 @@ export default function CaptionEditor({
       {selectedWord && (
         <div className="mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-dark-surface px-3 py-2">
           <span className="text-[11px] font-mono text-white/40 px-1">
-            {selectedWord.start.toFixed(2)}s → {selectedWord.end.toFixed(2)}s
+            {displayStart(selectedWord).toFixed(2)}s →{" "}
+            {displayEnd(selectedWord).toFixed(2)}s
           </span>
           <input
             ref={inputRef}

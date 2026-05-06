@@ -6,6 +6,8 @@ import VideoPreview from "../components/VideoPreview"
 import CaptionEditor from "../components/CaptionEditor"
 import StylePanel from "../components/StylePanel"
 import ExportBar from "../components/ExportBar"
+import BrandHeader from "../components/BrandHeader"
+import BrandFooter from "../components/BrandFooter"
 
 const DEFAULT_STYLE = {
   fontFamily: "DM Sans",
@@ -18,6 +20,11 @@ const DEFAULT_STYLE = {
   outline_enabled: false,
   outline_color: "#000000",
   position: "bottom-center",
+  caption_mode: "sentences",
+  timing_offset: 0,
+  max_words_per_line: 6,
+  max_segment_duration: 3,
+  sliding_window: 3,
 }
 
 export default function Editor() {
@@ -87,53 +94,16 @@ export default function Editor() {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-dark text-white">
-      <header className="flex items-center justify-between px-6 h-14 border-b border-white/5 bg-dark-surface/40">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/")}
-            className="text-white/60 hover:text-white text-sm flex items-center gap-2"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-            Back
-          </button>
-          <span className="w-px h-5 bg-white/10" />
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m22 8-6 4 6 4V8Z" />
-                <rect x="2" y="6" width="14" height="12" rx="2" ry="2" />
-              </svg>
-            </div>
-            <span className="text-sm font-semibold tracking-tight">
-              Caption Studio
-            </span>
-          </div>
-        </div>
-        <span className="text-xs text-white/40 font-mono">
-          {currentTime.toFixed(2)}s
-        </span>
-      </header>
+      <BrandHeader
+        compact
+        showBack
+        onBack={() => navigate("/")}
+        rightSlot={
+          <span className="text-xs text-white/40 font-mono">
+            {currentTime.toFixed(2)}s
+          </span>
+        }
+      />
 
       <div className="flex-1 flex min-h-0">
         <section className="flex-[2] min-w-0 flex flex-col p-4 gap-4">
@@ -150,6 +120,7 @@ export default function Editor() {
             <CaptionEditor
               words={words}
               currentTime={currentTime}
+              timingOffset={style.timing_offset ?? 0}
               selectedWordId={selectedWordId}
               onWordClick={onWordClick}
               onEdit={onEdit}
@@ -170,6 +141,8 @@ export default function Editor() {
           />
         </aside>
       </div>
+
+      <BrandFooter className="shrink-0 py-2.5 text-[11px]" />
     </div>
   )
 }
