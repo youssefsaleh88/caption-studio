@@ -26,13 +26,23 @@
     "langEn": "English"
   },
   "editor": {
-    "timeSuffix": "s"
+    "timeSuffix": "s",
+    "tabEdit": "Edit",
+    "tabStyle": "Style",
+    "tabExport": "Export"
   },
   "caption": {
     "title": "Captions",
     "wordsCount": "words",
     "noCaptions": "No captions yet.",
     "editPlaceholder": "Edit word…",
+    "editText": "Word text",
+    "editTime": "Time",
+    "wordStart": "Start",
+    "wordEnd": "End",
+    "sentenceStart": "Sentence start",
+    "sentenceEnd": "Sentence end",
+    "playFromHere": "Play from here",
     "confirmTitle": "Confirm (Enter)",
     "addAfterTitle": "Add word after",
     "deleteTitle": "Delete"
@@ -71,8 +81,6 @@
       "displayMode": "Display mode",
       "sentences": "Sentences",
       "chunks": "Word chunks",
-      "timingOffset": "Timing offset — {{v}}s",
-      "timingHint": "Positive delays captions; negative moves them earlier.",
       "minDisplay": "Min display time — {{v}}s",
       "minDisplayHint": "Keeps each caption on screen long enough (no flashing).",
       "maxWords": "Max words per line — {{n}}",

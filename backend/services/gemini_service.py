@@ -281,7 +281,7 @@ Return ONLY the JSON array."""
             len(words),
         )
 
-    result = _rebalance_word_timings(result)
+    # Keep raw Gemini timings (no automatic rebalance).
     for i, w in enumerate(result):
         w["id"] = str(i)
 

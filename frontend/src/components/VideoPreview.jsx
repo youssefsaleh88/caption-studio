@@ -57,7 +57,7 @@ function resolveFontSizePct(style) {
 }
 
 const VideoPreview = forwardRef(function VideoPreview(
-  { videoUrl, words, style, onTimeUpdate },
+  { videoUrl, words, style, onTimeUpdate, onVideoDimensions },
   ref,
 ) {
   const { t } = useTranslation()
@@ -210,7 +210,19 @@ const VideoPreview = forwardRef(function VideoPreview(
         controlsList="nofullscreen"
         disablePictureInPicture
         className="w-full h-full max-h-full object-contain bg-black"
-        onLoadedMetadata={measure}
+        onLoadedMetadata={(e) => {
+          measure()
+          const v = e.target
+          const vw = v.videoWidth
+          const vh = v.videoHeight
+          if (vw > 0 && vh > 0 && onVideoDimensions) {
+            onVideoDimensions({
+              width: vw,
+              height: vh,
+              isVertical: vw / vh < 1,
+            })
+          }
+        }}
         onTimeUpdate={handleTimeUpdate}
       />
       {overlayLabel ? (

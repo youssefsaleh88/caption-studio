@@ -26,13 +26,23 @@
     "langEn": "الإنجليزية"
   },
   "editor": {
-    "timeSuffix": "ث"
+    "timeSuffix": "ث",
+    "tabEdit": "تحرير",
+    "tabStyle": "النمط",
+    "tabExport": "تصدير"
   },
   "caption": {
     "title": "الترجمات",
     "wordsCount": "كلمة",
     "noCaptions": "لا توجد ترجمات بعد.",
     "editPlaceholder": "تعديل الكلمة…",
+    "editText": "نص الكلمة",
+    "editTime": "التوقيت",
+    "wordStart": "بداية",
+    "wordEnd": "نهاية",
+    "sentenceStart": "بداية الجملة",
+    "sentenceEnd": "نهاية الجملة",
+    "playFromHere": "تشغيل من هنا",
     "confirmTitle": "تأكيد (Enter)",
     "addAfterTitle": "إضافة كلمة بعد",
     "deleteTitle": "حذف"
@@ -71,8 +81,6 @@
       "displayMode": "وضع العرض",
       "sentences": "جمل",
       "chunks": "مجموعات كلمات",
-      "timingOffset": "إزاحة التوقيت — {{v}}ث",
-      "timingHint": "القيم الموجبة تؤخر الترجمة؛ السالبة تقدمها.",
       "minDisplay": "أقل مدة عرض — {{v}}ث",
       "minDisplayHint": "تبقي كل مقطع ظاهرًا مدة كافية (بدون وميض).",
       "maxWords": "أقصى كلمات في السطر — {{n}}",

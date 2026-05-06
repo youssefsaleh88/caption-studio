@@ -34,7 +34,7 @@ def _normalize_word_timeline_to_media(
 ) -> list[dict]:
     """
     Stretch/compress timeline if ASR timings are clearly off vs media duration.
-    This fixes cases where captions finish too early or too late.
+    Currently unused: raw Gemini timings are returned as-is.
     """
     if not words or media_duration <= 0:
         return words
@@ -47,7 +47,6 @@ def _normalize_word_timeline_to_media(
     target_end = max(0.1, media_duration - keep_tail_silence)
     scale = target_end / last_end
 
-    # Only rescale when mismatch is significant.
     if 0.92 <= scale <= 1.08:
         return words
 
@@ -60,7 +59,6 @@ def _normalize_word_timeline_to_media(
         row["end"] = min(e, media_duration)
         normalized.append(row)
 
-    # Keep strict ordering and avoid overlap.
     for i in range(len(normalized) - 1):
         cur = normalized[i]
         nxt = normalized[i + 1]
@@ -97,8 +95,6 @@ async def transcribe(req: TranscribeRequest):
                 audio_path,
                 language_hint=req.language_hint or "auto",
             )
-            duration = _probe_media_duration(video_path)
-            words = _normalize_word_timeline_to_media(words, duration)
 
         return {"words": words}
     except HTTPException:

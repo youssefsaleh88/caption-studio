@@ -16,10 +16,10 @@ const TEXT_COLORS = [
   "#00FFFF",
   "#FF4444",
   "#000000",
-  "#7C6EFA",
+  "#8B7CFF",
 ]
 
-const BG_COLORS = ["#000000", "#1A1A24", "#7C6EFA", "#FF4444", "#FFFFFF"]
+const BG_COLORS = ["#000000", "#16161E", "#8B7CFF", "#FF4444", "#FFFFFF"]
 
 const POSITIONS = [
   { id: "top-left",      label: "↖" },
@@ -79,14 +79,14 @@ export default function StylePanel({ style, onChange }) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center gap-1 p-1 rounded-xl bg-dark border border-white/5 mb-4">
+      <div className="flex gap-1 p-1 rounded-xl bg-dark border border-white/5 mb-4 overflow-x-auto overscroll-x-contain flex-nowrap scrollbar-thin pb-1 [-webkit-overflow-scrolling:touch]">
         {TABS.map((tabItem) => (
           <button
             key={tabItem.id}
             type="button"
             onClick={() => setTab(tabItem.id)}
             className={[
-              "flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all",
+              "shrink-0 px-4 py-3 min-h-[44px] text-xs font-medium rounded-lg transition-all whitespace-nowrap",
               tab === tabItem.id
                 ? "bg-accent text-white shadow-lg shadow-accent/25"
                 : "text-white/60 hover:text-white",
@@ -128,7 +128,7 @@ export default function StylePanel({ style, onChange }) {
                 onChange={(e) =>
                   set({ font_size_pct: Number(e.target.value) })
                 }
-                className="w-full accent-accent"
+                className="w-full accent-accent touch-range"
               />
             </Section>
 
@@ -200,7 +200,7 @@ export default function StylePanel({ style, onChange }) {
                 step={0.05}
                 value={style.bg_opacity}
                 onChange={(e) => set({ bg_opacity: Number(e.target.value) })}
-                className="w-full accent-accent"
+                className="w-full accent-accent touch-range"
               />
             </Section>
           </>
@@ -215,7 +215,7 @@ export default function StylePanel({ style, onChange }) {
                 max={10}
                 value={style.shadow}
                 onChange={(e) => set({ shadow: Number(e.target.value) })}
-                className="w-full accent-accent"
+                className="w-full accent-accent touch-range"
               />
             </Section>
 
@@ -309,27 +309,6 @@ export default function StylePanel({ style, onChange }) {
             </Section>
 
             <Section
-              label={t("style.captions.timingOffset", {
-                v: `${(style.timing_offset ?? 0) >= 0 ? "+" : ""}${Number(style.timing_offset ?? 0).toFixed(1)}`,
-              })}
-            >
-              <input
-                type="range"
-                min={-2}
-                max={2}
-                step={0.1}
-                value={Number(style.timing_offset ?? 0)}
-                onChange={(e) =>
-                  set({ timing_offset: Number(e.target.value) })
-                }
-                className="w-full accent-accent"
-              />
-              <p className="text-[11px] text-white/45 mt-2">
-                {t("style.captions.timingHint")}
-              </p>
-            </Section>
-
-            <Section
               label={t("style.captions.minDisplay", {
                 v: Number(style.min_display_time ?? 0.7).toFixed(1),
               })}
@@ -343,7 +322,7 @@ export default function StylePanel({ style, onChange }) {
                 onChange={(e) =>
                   set({ min_display_time: Number(e.target.value) })
                 }
-                className="w-full accent-accent"
+                className="w-full accent-accent touch-range"
               />
               <p className="text-[11px] text-white/45 mt-2">
                 {t("style.captions.minDisplayHint")}
@@ -366,7 +345,7 @@ export default function StylePanel({ style, onChange }) {
                     onChange={(e) =>
                       set({ max_words_per_line: Number(e.target.value) })
                     }
-                    className="w-full accent-accent"
+                    className="w-full accent-accent touch-range"
                   />
                 </Section>
                 <Section
@@ -383,7 +362,7 @@ export default function StylePanel({ style, onChange }) {
                     onChange={(e) =>
                       set({ max_segment_duration: Number(e.target.value) })
                     }
-                    className="w-full accent-accent"
+                    className="w-full accent-accent touch-range"
                   />
                 </Section>
               </>
@@ -404,7 +383,7 @@ export default function StylePanel({ style, onChange }) {
                   onChange={(e) =>
                     set({ sliding_window: Number(e.target.value) })
                   }
-                  className="w-full accent-accent"
+                  className="w-full accent-accent touch-range"
                 />
               </Section>
             )}

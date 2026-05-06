@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate } from "react-router-dom"
 import { v4 as uuidv4 } from "uuid"
@@ -54,26 +54,44 @@ export default function Editor() {
   const [words, setWords] = useState(initialWords)
   const [style, setStyle] = useState(DEFAULT_STYLE)
   const [currentTime, setCurrentTime] = useState(0)
-  const [selectedWordId, setSelectedWordId] = useState(null)
+  const [mobileTab, setMobileTab] = useState("edit")
+  const [videoLayout, setVideoLayout] = useState({
+    isVertical: false,
+    aspect: 16 / 9,
+  })
 
-  function onWordClick(id) {
-    setSelectedWordId(id)
-    if (id !== null && previewRef.current?.pause) {
-      previewRef.current.pause()
-      const w = words.find((x) => x.id === id)
-      if (w && previewRef.current.seek) previewRef.current.seek(w.start)
-    }
-  }
-
-  function onEdit(id, newWord) {
+  const onPatchWord = useCallback((id, patch) => {
     setWords((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, word: newWord } : w)),
+      prev.map((w) => (w.id === id ? { ...w, ...patch } : w)),
     )
-  }
+  }, [])
+
+  const onPatchSegment = useCallback((wordIds, { start: segStart, end: segEnd }) => {
+    if (!wordIds?.length) return
+    setWords((prev) => {
+      const map = new Map(prev.map((w) => [String(w.id), { ...w }]))
+      const ids = wordIds.map(String)
+      const firstId = ids[0]
+      const lastId = ids[ids.length - 1]
+
+      if (segStart != null && map.has(firstId)) {
+        const w = map.get(firstId)
+        w.start = Math.max(0, Number(segStart))
+        if (firstId === lastId && segEnd != null) {
+          w.end = Math.max(w.start + 0.02, Number(segEnd))
+        }
+      }
+      if (segEnd != null && map.has(lastId)) {
+        const w = map.get(lastId)
+        const minStart = map.has(firstId) ? map.get(firstId).start : w.start
+        w.end = Math.max(minStart + 0.02, Number(segEnd))
+      }
+      return prev.map((w) => map.get(String(w.id)) ?? w)
+    })
+  }, [])
 
   function onDelete(id) {
     setWords((prev) => prev.filter((w) => w.id !== id))
-    setSelectedWordId(null)
   }
 
   function onAddAfter(id) {
@@ -93,57 +111,151 @@ export default function Editor() {
     })
   }
 
+  const seekTo = useCallback((t) => {
+    previewRef.current?.pause?.()
+    previewRef.current?.seek?.(t)
+  }, [])
+
+  const handleVideoDimensions = useCallback((meta) => {
+    const { width, height, isVertical } = meta
+    const aspect =
+      width > 0 && height > 0 ? width / height : 16 / 9
+    setVideoLayout({ isVertical: Boolean(isVertical), aspect })
+  }, [])
+
   if (!state?.videoUrl || !Array.isArray(state?.words)) return null
 
+  const previewBlock = (
+    <div
+      className={[
+        "min-h-0 rounded-2xl overflow-hidden border border-white/8 bg-black shadow-xl",
+        videoLayout.isVertical
+          ? "max-w-[360px] mx-auto lg:mx-0 w-full"
+          : "w-full h-full",
+      ].join(" ")}
+    >
+      <VideoPreview
+        ref={previewRef}
+        videoUrl={state.videoUrl}
+        words={words}
+        style={{ ...style, timing_offset: 0 }}
+        onTimeUpdate={setCurrentTime}
+        onVideoDimensions={handleVideoDimensions}
+      />
+    </div>
+  )
+
+  const editorBlock = (
+    <CaptionEditor
+      words={words}
+      style={style}
+      currentTime={currentTime}
+      timingOffset={0}
+      onSeek={seekTo}
+      onPatchWord={onPatchWord}
+      onPatchSegment={onPatchSegment}
+      onDelete={onDelete}
+      onAddAfter={onAddAfter}
+    />
+  )
+
+  const styleExportBlock = (
+    <div className="flex flex-col h-full min-h-0 gap-4">
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <StylePanel style={style} onChange={setStyle} />
+      </div>
+      <ExportBar words={words} videoUrl={state.videoUrl} style={style} />
+    </div>
+  )
+
   return (
-    <div className="h-screen w-screen flex flex-col bg-dark text-white">
+    <div className="h-screen w-screen flex flex-col bg-dark text-white overflow-hidden">
       <BrandHeader
         compact
         showBack
         onBack={() => navigate("/")}
         rightSlot={
-          <span className="text-xs text-white/40 font-mono">
+          <span className="text-xs text-white/40 font-mono tabular-nums">
             {currentTime.toFixed(2)}
             {t("editor.timeSuffix")}
           </span>
         }
       />
 
-      <div className="flex-1 flex min-h-0">
-        <section className="flex-[2] min-w-0 flex flex-col p-4 gap-4">
-          <div className="h-[55%] min-h-0 rounded-xl overflow-hidden border border-white/5 bg-black">
-            <VideoPreview
-              ref={previewRef}
-              videoUrl={state.videoUrl}
-              words={words}
-              style={style}
-              onTimeUpdate={setCurrentTime}
-            />
-          </div>
-          <div className="flex-1 min-h-0 rounded-xl border border-white/5 bg-dark-surface/60 p-4">
-            <CaptionEditor
-              words={words}
-              currentTime={currentTime}
-              timingOffset={style.timing_offset ?? 0}
-              selectedWordId={selectedWordId}
-              onWordClick={onWordClick}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onAddAfter={onAddAfter}
-            />
+      {/* Desktop: 3 columns */}
+      <div className="hidden lg:flex flex-1 min-h-0">
+        <section
+          className={[
+            "shrink-0 flex flex-col p-4 gap-3 border-r border-white/5 bg-dark/40",
+            videoLayout.isVertical ? "w-[min(380px,32vw)]" : "flex-[1.15] min-w-0",
+          ].join(" ")}
+        >
+          <div
+            className={[
+              "flex-1 min-h-[240px] flex items-center justify-center",
+              videoLayout.isVertical ? "" : "max-h-[min(72vh,720px)]",
+            ].join(" ")}
+          >
+            {previewBlock}
           </div>
         </section>
 
-        <aside className="w-[340px] shrink-0 border-l border-white/5 bg-dark-surface/40 p-4 flex flex-col min-h-0">
-          <div className="flex-1 min-h-0">
-            <StylePanel style={style} onChange={setStyle} />
+        <section className="flex-[1.4] min-w-0 flex flex-col p-4 min-h-0">
+          <div className="flex-1 min-h-0 rounded-2xl border border-white/8 bg-dark-surface/50 p-4 shadow-inner">
+            {editorBlock}
           </div>
-          <ExportBar
-            words={words}
-            videoUrl={state.videoUrl}
-            style={style}
-          />
+        </section>
+
+        <aside className="w-[min(360px,28vw)] shrink-0 border-l border-white/5 bg-dark-surface/30 p-4 flex flex-col min-h-0">
+          {styleExportBlock}
         </aside>
+      </div>
+
+      {/* Tablet / mobile */}
+      <div className="lg:hidden flex flex-col flex-1 min-h-0">
+        <div className="shrink-0 z-20 bg-dark/90 backdrop-blur-md border-b border-white/8 px-3 pt-3 pb-2">
+          <div className="max-h-[42vh] min-h-[180px]">{previewBlock}</div>
+        </div>
+
+        <div className="flex gap-2 px-3 pt-3 pb-2 border-b border-white/10 shrink-0 overflow-x-auto">
+          {[
+            { id: "edit", label: t("editor.tabEdit") },
+            { id: "style", label: t("editor.tabStyle") },
+            { id: "export", label: t("editor.tabExport") },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setMobileTab(tab.id)}
+              className={[
+                "shrink-0 px-5 py-3 rounded-xl text-sm font-semibold min-h-[48px] transition-all duration-200",
+                mobileTab === tab.id
+                  ? "bg-accent text-white shadow-lg shadow-accent/25"
+                  : "bg-white/5 text-white/70 border border-white/10",
+              ].join(" ")}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-hidden p-3">
+          {mobileTab === "edit" && (
+            <div className="h-full min-h-0 rounded-2xl border border-white/8 bg-dark-surface/50 p-3 overflow-hidden">
+              {editorBlock}
+            </div>
+          )}
+          {mobileTab === "style" && (
+            <div className="h-full min-h-0 overflow-y-auto">
+              <StylePanel style={style} onChange={setStyle} />
+            </div>
+          )}
+          {mobileTab === "export" && (
+            <div className="h-full min-h-0 flex flex-col gap-4">
+              <ExportBar words={words} videoUrl={state.videoUrl} style={style} />
+            </div>
+          )}
+        </div>
       </div>
 
       <BrandFooter className="shrink-0 py-2.5 text-[11px]" />

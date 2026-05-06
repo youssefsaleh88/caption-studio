@@ -63,7 +63,7 @@ export default function BrandHeader({
             <span className="text-sm font-semibold tracking-tight truncate">
               {t("brand.appName")}
             </span>
-            <span className="text-xs text-white/45 truncate">
+            <span className="hidden md:inline text-xs text-white/45 truncate">
               {t("brand.byOwner", { name: BRAND.ownerName })}
             </span>
           </div>
