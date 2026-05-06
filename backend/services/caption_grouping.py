@@ -1,4 +1,4 @@
-"""Group word-level captions into segments or sliding windows for FFmpeg burn-in."""
+"""Group word-level captions into segments or chunks for FFmpeg burn-in."""
 
 from __future__ import annotations
 
@@ -22,6 +22,30 @@ def apply_timing_offset(captions: list[dict], offset_sec: float) -> list[dict]:
         item["start"] = s
         item["end"] = e
         out.append(item)
+    return out
+
+
+def apply_min_display_time(items: list[dict], min_sec: float) -> list[dict]:
+    """Extend each item's end by min_sec, capped at the next segment start."""
+    min_sec = max(0.0, float(min_sec or 0))
+    if not items or min_sec <= 0:
+        return list(items)
+
+    sorted_items = sorted(items, key=lambda x: float(x["start"]))
+    out: list[dict] = []
+    for i, item in enumerate(sorted_items):
+        row = dict(item)
+        s = float(row["start"])
+        e = float(row["end"])
+        next_start = (
+            float(sorted_items[i + 1]["start"])
+            if i + 1 < len(sorted_items)
+            else float("inf")
+        )
+        desired_end = max(e, s + min_sec)
+        row["end"] = min(desired_end, next_start)
+        row["end"] = max(s, float(row["end"]))
+        out.append(row)
     return out
 
 
@@ -82,32 +106,23 @@ def group_into_segments(
     return segments
 
 
-def build_sliding_lines(
+def build_chunked_lines(
     words: list[dict],
     window_size: int = 3,
 ) -> list[dict]:
-    """One overlay per word index; text is sliding window around that word."""
+    """Non-overlapping chunks of `window_size` words each."""
     if not words:
         return []
 
-    n = len(words)
     ws = max(1, min(7, int(window_size or 3)))
     sorted_w = sorted(words, key=lambda x: float(x["start"]))
-    # Map original indices by position in sorted order - assume ids preserve order
-    # Use sorted list indices 0..n-1
     lines: list[dict] = []
-    for i in range(n):
-        left = max(0, i - (ws - 1) // 2)
-        right = min(n - 1, left + ws - 1)
-        left = max(0, right - ws + 1)
-        chunk = sorted_w[left : right + 1]
-        text = " ".join(str(w["word"]) for w in chunk).strip()
-        anchor = sorted_w[i]
-        lines.append({
-            "word": text,
-            "start": float(anchor["start"]),
-            "end": float(anchor["end"]),
-        })
+    for i in range(0, len(sorted_w), ws):
+        slice_ = sorted_w[i : i + ws]
+        text = " ".join(str(w["word"]) for w in slice_).strip()
+        start = float(slice_[0]["start"])
+        end = float(slice_[-1]["end"])
+        lines.append({"word": text, "start": start, "end": end})
     return lines
 
 
@@ -115,19 +130,23 @@ def expand_captions_for_style(
     captions: list[dict],
     style: dict,
 ) -> list[dict]:
-    """Apply offset + caption_mode to raw word list for drawtext."""
+    """Apply offset + caption_mode + min display time for drawtext."""
     offset = float(style.get("timing_offset") or 0)
     adjusted = apply_timing_offset(captions, offset)
+
+    min_hold = float(style.get("min_display_time") or 0.7)
 
     mode = str(style.get("caption_mode") or "sentences").lower()
     if mode == "sliding":
         ws = int(style.get("sliding_window") or 3)
-        return build_sliding_lines(adjusted, window_size=ws)
+        lines = build_chunked_lines(adjusted, window_size=ws)
+        return apply_min_display_time(lines, min_hold)
 
     max_words = int(style.get("max_words_per_line") or 6)
     max_dur = float(style.get("max_segment_duration") or 3)
-    return group_into_segments(
+    lines = group_into_segments(
         adjusted,
         max_words=max_words,
         max_duration=max_dur,
     )
+    return apply_min_display_time(lines, min_hold)

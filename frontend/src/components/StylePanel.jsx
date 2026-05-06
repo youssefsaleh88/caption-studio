@@ -291,7 +291,7 @@ export default function StylePanel({ style, onChange }) {
                       : "bg-dark text-white/70 border-white/10 hover:border-white/25",
                   ].join(" ")}
                 >
-                  Sliding words
+                  Word chunks
                 </button>
               </div>
             </Section>
@@ -312,6 +312,25 @@ export default function StylePanel({ style, onChange }) {
               />
               <p className="text-[11px] text-white/45 mt-2">
                 Positive delays captions; negative moves them earlier.
+              </p>
+            </Section>
+
+            <Section
+              label={`Min display time — ${Number(style.min_display_time ?? 0.7).toFixed(1)}s`}
+            >
+              <input
+                type="range"
+                min={0.3}
+                max={2}
+                step={0.1}
+                value={Number(style.min_display_time ?? 0.7)}
+                onChange={(e) =>
+                  set({ min_display_time: Number(e.target.value) })
+                }
+                className="w-full accent-accent"
+              />
+              <p className="text-[11px] text-white/45 mt-2">
+                Keeps each caption on screen at least this long (no flashing).
               </p>
             </Section>
 
@@ -352,7 +371,7 @@ export default function StylePanel({ style, onChange }) {
 
             {style.caption_mode === "sliding" && (
               <Section
-                label={`Window size — ${style.sliding_window ?? 3} words`}
+                label={`Words per chunk — ${style.sliding_window ?? 3}`}
               >
                 <input
                   type="range"

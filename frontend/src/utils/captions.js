@@ -150,3 +150,57 @@ export function slidingWindowText(words, anchorIndex, windowSize) {
   const slice = words.slice(left, right + 1)
   return slice.map((w) => w.word).join(" ").trim()
 }
+
+/**
+ * Non-overlapping word chunks of fixed size (for sliding/caption-chunk mode).
+ * @param {WordItem[]} words
+ * @param {number} windowSize
+ * @returns {Segment[]}
+ */
+export function chunkByWindow(words, windowSize) {
+  if (!Array.isArray(words) || words.length === 0) return []
+  const ws = Math.max(1, Math.min(7, Math.floor(Number(windowSize) || 3)))
+  const sorted = [...words].sort((a, b) => a.start - b.start)
+  /** @type {Segment[]} */
+  const chunks = []
+  for (let i = 0; i < sorted.length; i += ws) {
+    const slice = sorted.slice(i, i + ws)
+    const text = slice.map((w) => w.word).join(" ").trim()
+    const start = slice[0].start
+    const end = slice[slice.length - 1].end
+    const wordIds = slice.map((w) => String(w.id))
+    chunks.push({
+      id: `chunk-${chunks.length}`,
+      text,
+      start,
+      end,
+      wordIds,
+    })
+  }
+  return chunks
+}
+
+/**
+ * Extend each segment's end to at least start + minSec, capped at the next segment's start.
+ * @param {{ start: number, end: number, text?: string }[]} segments
+ * @param {number} minSec
+ */
+export function applyMinDisplayTime(segments, minSec) {
+  const min = Math.max(0, Number(minSec) || 0)
+  if (!Array.isArray(segments) || segments.length === 0 || min <= 0) {
+    return segments ? [...segments] : []
+  }
+  const sorted = [...segments].sort((a, b) => a.start - b.start)
+  return sorted.map((seg, i) => {
+    const nextStart =
+      i + 1 < sorted.length ? sorted[i + 1].start : Infinity
+    const s = seg.start
+    const rawEnd = seg.end
+    const desiredEnd = Math.max(rawEnd, s + min)
+    const end = Math.min(desiredEnd, nextStart)
+    return {
+      ...seg,
+      end: Math.max(s, end),
+    }
+  })
+}

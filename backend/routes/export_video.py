@@ -31,6 +31,7 @@ class StyleOptions(BaseModel):
     max_words_per_line: int = 6
     max_segment_duration: float = 3.0
     sliding_window: int = 3
+    min_display_time: float = 0.7
 
 
 class ExportRequest(BaseModel):

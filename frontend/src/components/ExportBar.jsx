@@ -62,6 +62,7 @@ export default function ExportBar({ words, videoUrl, style }) {
             max_words_per_line: Number(style.max_words_per_line ?? 6),
             max_segment_duration: Number(style.max_segment_duration ?? 3),
             sliding_window: Number(style.sliding_window ?? 3),
+            min_display_time: Number(style.min_display_time ?? 0.7),
           },
         }),
       })

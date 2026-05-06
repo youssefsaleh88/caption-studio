@@ -8,9 +8,8 @@ import {
 import {
   applyTimingOffsetToWords,
   groupIntoSegments,
-  applyTimingOffsetToSegments,
-  findActiveWordIndex,
-  slidingWindowText,
+  chunkByWindow,
+  applyMinDisplayTime,
 } from "../utils/captions"
 
 const POSITION_STYLES = {
@@ -67,34 +66,37 @@ const VideoPreview = forwardRef(function VideoPreview(
     [words, style?.timing_offset],
   )
 
+  const minHold = style?.min_display_time ?? 0.7
+
   const segments = useMemo(() => {
-    return groupIntoSegments(offsetWords, {
+    const raw = groupIntoSegments(offsetWords, {
       maxWords: style?.max_words_per_line ?? 6,
       maxDuration: style?.max_segment_duration ?? 3,
     })
-  }, [offsetWords, style?.max_words_per_line, style?.max_segment_duration])
+    return applyMinDisplayTime(raw, minHold)
+  }, [
+    offsetWords,
+    style?.max_words_per_line,
+    style?.max_segment_duration,
+    minHold,
+  ])
 
-  const activeSegmentText = useMemo(() => {
-    if (!segments.length) return ""
-    const t = currentTime
-    const seg = segments.find((s) => t >= s.start && t <= s.end)
-    return seg?.text ?? ""
-  }, [segments, currentTime])
-
-  const slidingText = useMemo(() => {
-    const ws = offsetWords
-    if (!ws.length) return ""
-    const idx = findActiveWordIndex(ws, currentTime)
-    if (idx < 0) return ""
-    return slidingWindowText(
-      ws,
-      idx,
+  const chunkSegments = useMemo(() => {
+    const raw = chunkByWindow(
+      offsetWords,
       style?.sliding_window ?? 3,
     )
-  }, [offsetWords, currentTime, style?.sliding_window])
+    return applyMinDisplayTime(raw, minHold)
+  }, [offsetWords, style?.sliding_window, minHold])
 
-  const overlayLabel =
-    style?.caption_mode === "sliding" ? slidingText : activeSegmentText
+  const overlayLabel = useMemo(() => {
+    const t = currentTime
+    const list =
+      style?.caption_mode === "sliding" ? chunkSegments : segments
+    if (!list.length) return ""
+    const seg = list.find((s) => t >= s.start && t <= s.end)
+    return seg?.text ?? ""
+  }, [style?.caption_mode, chunkSegments, segments, currentTime])
 
   const positionStyle =
     POSITION_STYLES[style?.position] || POSITION_STYLES["bottom-center"]

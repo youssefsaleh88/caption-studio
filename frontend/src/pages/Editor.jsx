@@ -25,6 +25,7 @@ const DEFAULT_STYLE = {
   max_words_per_line: 6,
   max_segment_duration: 3,
   sliding_window: 3,
+  min_display_time: 0.7,
 }
 
 export default function Editor() {
