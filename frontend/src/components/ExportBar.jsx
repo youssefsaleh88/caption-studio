@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { downloadSRT } from "../utils/srtExport"
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL
 
 export default function ExportBar({ words, videoUrl, style }) {
+  const { t } = useTranslation()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
@@ -17,22 +19,22 @@ export default function ExportBar({ words, videoUrl, style }) {
     try {
       downloadSRT(words)
     } catch (e) {
-      setError(e.message || "Could not generate SRT.")
+      setError(e.message || t("export.failed"))
     }
   }
 
   async function handleExport() {
     setError(null)
     if (!videoUrl) {
-      setError("No video to export.")
+      setError(t("export.noVideo"))
       return
     }
     if (!Array.isArray(words) || words.length === 0) {
-      setError("No captions to burn.")
+      setError(t("export.noCaptions"))
       return
     }
     if (!BACKEND) {
-      setError("Backend URL is not configured.")
+      setError(t("export.noBackend"))
       return
     }
 
@@ -50,13 +52,18 @@ export default function ExportBar({ words, videoUrl, style }) {
             end: Number(w.end),
           })),
           style: {
-            fontsize: Number(style.fontsize) || 28,
+            font_size_pct: Number(style.font_size_pct ?? 5.5),
+            fontsize: style.fontsize != null ? Number(style.fontsize) : null,
             color: style.color || "white",
+            bg_enabled: style.bg_enabled !== false,
             bg_color: style.bg_color || "black",
             bg_opacity: Number(style.bg_opacity ?? 0.6),
             shadow: Number(style.shadow) || 2,
             position: style.position || "bottom-center",
+            fontFamily: style.fontFamily || null,
             font: style.fontFamily || null,
+            outline_enabled: Boolean(style.outline_enabled),
+            outline_color: style.outline_color || "#000000",
             caption_mode: style.caption_mode || "sentences",
             timing_offset: Number(style.timing_offset ?? 0),
             max_words_per_line: Number(style.max_words_per_line ?? 6),
@@ -75,7 +82,7 @@ export default function ExportBar({ words, videoUrl, style }) {
         } catch (_) {
           /* ignore */
         }
-        throw new Error(detail)
+        throw new Error(detail || t("export.failed"))
       }
 
       const blob = await res.blob()
@@ -88,7 +95,7 @@ export default function ExportBar({ words, videoUrl, style }) {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (e) {
-      setError(e.message || "Export failed.")
+      setError(e.message || t("export.failed"))
     } finally {
       setBusy(false)
     }
@@ -108,7 +115,7 @@ export default function ExportBar({ words, videoUrl, style }) {
         disabled={busy}
         className="w-full px-4 py-2.5 rounded-lg border border-white/10 bg-dark text-white/85 text-sm font-medium hover:border-white/30 hover:text-white transition disabled:opacity-50"
       >
-        Download SRT
+        {t("export.downloadSrt")}
       </button>
 
       <button
@@ -125,7 +132,7 @@ export default function ExportBar({ words, videoUrl, style }) {
         {busy ? (
           <>
             <span className="inline-block w-4 h-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
-            Processing video…
+            {t("export.processing")}
           </>
         ) : (
           <>
@@ -143,7 +150,7 @@ export default function ExportBar({ words, videoUrl, style }) {
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Export Video
+            {t("export.exportVideo")}
           </>
         )}
       </button>

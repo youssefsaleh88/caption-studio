@@ -1,4 +1,6 @@
+import { useTranslation } from "react-i18next"
 import { BRAND } from "../utils/brand"
+import LanguageSwitcher from "./LanguageSwitcher"
 
 export default function BrandHeader({
   showBack = false,
@@ -6,6 +8,8 @@ export default function BrandHeader({
   rightSlot,
   compact = false,
 }) {
+  const { t } = useTranslation()
+
   return (
     <header
       className={[
@@ -34,7 +38,7 @@ export default function BrandHeader({
                 <line x1="19" y1="12" x2="5" y2="12" />
                 <polyline points="12 19 5 12 12 5" />
               </svg>
-              Back
+              {t("nav.back")}
             </button>
             <span className="w-px h-5 bg-white/10 shrink-0" />
           </>
@@ -57,17 +61,18 @@ export default function BrandHeader({
           </div>
           <div className="flex flex-col sm:flex-row sm:items-baseline gap-0 sm:gap-2 min-w-0">
             <span className="text-sm font-semibold tracking-tight truncate">
-              {BRAND.appName}
+              {t("brand.appName")}
             </span>
             <span className="text-xs text-white/45 truncate">
-              by {BRAND.ownerName}
+              {t("brand.byOwner", { name: BRAND.ownerName })}
             </span>
           </div>
         </div>
       </div>
-      {rightSlot ? (
-        <div className="shrink-0">{rightSlot}</div>
-      ) : null}
+      <div className="flex items-center gap-2 shrink-0">
+        <LanguageSwitcher />
+        {rightSlot ? <div>{rightSlot}</div> : null}
+      </div>
     </header>
   )
 }

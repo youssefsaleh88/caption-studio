@@ -6,7 +6,7 @@ export function useTranscription() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  async function transcribe(videoUrl) {
+  async function transcribe(videoUrl, languageHint = "auto") {
     setLoading(true)
     setError(null)
     try {
@@ -16,7 +16,10 @@ export function useTranscription() {
       const res = await fetch(`${BACKEND}/api/transcribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ video_url: videoUrl }),
+        body: JSON.stringify({
+          video_url: videoUrl,
+          language_hint: languageHint || "auto",
+        }),
       })
       if (!res.ok) {
         let detail = "Transcription failed"

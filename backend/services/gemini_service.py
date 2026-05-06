@@ -3,6 +3,7 @@ import os
 import base64
 import json
 import re
+from pathlib import Path
 from fastapi import HTTPException
 
 
@@ -25,14 +26,14 @@ def _collect_gemini_keys() -> list[str]:
         keys.append(value)
         idx += 1
 
-    # Keep insertion order while deduplicating.
     return list(dict.fromkeys(keys))
 
 
 def _collect_gemini_models() -> list[str]:
     default_models = [
-        "gemini-2.5-flash-lite",
+        "gemini-2.5-pro",
         "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
         "gemini-1.5-flash",
     ]
     configured = os.getenv("GEMINI_MODELS", "").strip()
@@ -42,9 +43,63 @@ def _collect_gemini_models() -> list[str]:
     return models or default_models
 
 
-async def transcribe_audio(audio_path: str) -> list[dict]:
+def _language_hint_line(language_hint: str) -> str:
+    h = (language_hint or "auto").strip().lower()
+    if h in ("ar", "arabic", "عربي"):
+        return (
+            "Language hint: The spoken language is Arabic "
+            "(MSA or dialect). Transcribe in Arabic script."
+        )
+    if h in ("en", "english", "إنجليزي"):
+        return "Language hint: The spoken language is English."
+    return (
+        "Language hint: Auto-detect the spoken language from the audio "
+        "and transcribe using the correct script."
+    )
+
+
+def _rebalance_word_timings(
+    words: list[dict],
+    *,
+    min_gap: float = 0.05,
+    max_extend: float = 2.0,
+) -> list[dict]:
+    """Extend each word end toward the next word start (minus gap), capped."""
+    if not words:
+        return []
+
+    sorted_words = sorted(words, key=lambda w: float(w["start"]))
+    out: list[dict] = []
+    for i, w in enumerate(sorted_words):
+        cur = dict(w)
+        s = float(cur["start"])
+        e = float(cur["end"])
+        if i < len(sorted_words) - 1:
+            nxt_start = float(sorted_words[i + 1]["start"])
+            room = max(0.02, nxt_start - s - min_gap)
+            target = max(e, min(nxt_start - min_gap, s + min(room, max_extend)))
+            cur["end"] = max(s + 0.02, min(target, nxt_start - min_gap))
+        else:
+            cur["end"] = max(e, s + min_gap)
+        out.append(cur)
+    return out
+
+
+def _audio_mime(path: str) -> str:
+    ext = Path(path).suffix.lower()
+    if ext == ".wav":
+        return "audio/wav"
+    if ext in (".mp3",):
+        return "audio/mp3"
+    return "audio/wav"
+
+
+async def transcribe_audio(
+    audio_path: str,
+    language_hint: str = "auto",
+) -> list[dict]:
     """
-    Send audio to Gemini 1.5 Flash and return word-level timestamps.
+    Send audio to Gemini and return word-level timestamps.
 
     Returns list of: {id, word, start, end}
     """
@@ -56,11 +111,31 @@ async def transcribe_audio(audio_path: str) -> list[dict]:
             status_code=500, detail=f"Could not read audio file: {e}"
         )
 
-    prompt = """Transcribe this audio exactly.
-Return ONLY a valid JSON array — no markdown, no explanation, nothing else.
-Format: [{"word": "hello", "start": 0.0, "end": 0.5}, ...]
-Every word must have start and end time in seconds as floats.
-If you cannot determine exact timestamps, distribute them evenly across the audio duration."""
+    mime = _audio_mime(audio_path)
+
+    lang_line = _language_hint_line(language_hint)
+
+    prompt = f"""You are a professional speech-to-text engine. Transcribe this audio VERBATIM.
+
+Rules:
+- Preserve the spoken language exactly (do NOT translate).
+- Preserve dialect words and filler sounds ("um", "ah", "يعني", "طب") AS-IS.
+- Do NOT paraphrase; do NOT "clean up" grammar unless fixing obvious ASR mistakes.
+- Output ONE JSON ARRAY ONLY — no markdown, no code fences, no commentary.
+
+Each element MUST be: {{"word": "<token>", "start": <seconds>, "end": <seconds>}}
+
+Timing rules:
+- Timestamps are in seconds as floats (two decimals minimum).
+- start = exact moment the word/token begins.
+- end = exact moment the word/token ends.
+- If two words are spoken back-to-back with no pause: end[i] should equal start[i+1]
+  (or differ by at most 0.02s due to rounding).
+- Every word must have end > start by at least 0.02s unless impossible.
+
+{lang_line}
+
+Return ONLY the JSON array."""
 
     keys = _collect_gemini_keys()
     if not keys:
@@ -82,7 +157,7 @@ If you cannot determine exact timestamps, distribute them evenly across the audi
                 genai.configure(api_key=key)
                 model = genai.GenerativeModel(model_name)
                 response = model.generate_content([
-                    {"mime_type": "audio/mp3", "data": audio_data},
+                    {"mime_type": mime, "data": audio_data},
                     prompt,
                 ])
                 break
@@ -131,5 +206,9 @@ If you cannot determine exact timestamps, distribute them evenly across the audi
                 status_code=500,
                 detail=f"Malformed word entry from Gemini at index {i}: {e}",
             )
+
+    result = _rebalance_word_timings(result)
+    for i, w in enumerate(result):
+        w["id"] = str(i)
 
     return result

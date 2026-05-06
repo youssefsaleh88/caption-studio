@@ -1,10 +1,13 @@
 import {
   forwardRef,
+  useCallback,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from "react"
+import { useTranslation } from "react-i18next"
 import {
   applyTimingOffsetToWords,
   groupIntoSegments,
@@ -43,12 +46,57 @@ function hexWithAlpha(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`
 }
 
+function resolveFontSizePct(style) {
+  if (style?.font_size_pct != null && style.font_size_pct !== "") {
+    return Number(style.font_size_pct)
+  }
+  if (style?.fontsize != null) {
+    return Math.min(12, Math.max(2, (Number(style.fontsize) / 720) * 100))
+  }
+  return 5.5
+}
+
 const VideoPreview = forwardRef(function VideoPreview(
   { videoUrl, words, style, onTimeUpdate },
   ref,
 ) {
+  const { t } = useTranslation()
+  const containerRef = useRef(null)
   const videoRef = useRef(null)
   const [currentTime, setCurrentTime] = useState(0)
+  const [layoutH, setLayoutH] = useState(400)
+  const [fsActive, setFsActive] = useState(false)
+
+  const measure = useCallback(() => {
+    const el = containerRef.current
+    if (!el) return
+    const h = el.getBoundingClientRect().height
+    if (h > 40) setLayoutH(h)
+  }, [])
+
+  useEffect(() => {
+    measure()
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => measure())
+        : null
+    if (containerRef.current && ro) ro.observe(containerRef.current)
+    window.addEventListener("resize", measure)
+    return () => {
+      ro?.disconnect()
+      window.removeEventListener("resize", measure)
+    }
+  }, [measure])
+
+  useEffect(() => {
+    function onFs() {
+      const active = Boolean(document.fullscreenElement)
+      setFsActive(active)
+      requestAnimationFrame(measure)
+    }
+    document.addEventListener("fullscreenchange", onFs)
+    return () => document.removeEventListener("fullscreenchange", onFs)
+  }, [measure])
 
   useImperativeHandle(ref, () => ({
     pause: () => videoRef.current?.pause(),
@@ -82,10 +130,7 @@ const VideoPreview = forwardRef(function VideoPreview(
   ])
 
   const chunkSegments = useMemo(() => {
-    const raw = chunkByWindow(
-      offsetWords,
-      style?.sliding_window ?? 3,
-    )
+    const raw = chunkByWindow(offsetWords, style?.sliding_window ?? 3)
     return applyMinDisplayTime(raw, minHold)
   }, [offsetWords, style?.sliding_window, minHold])
 
@@ -98,6 +143,14 @@ const VideoPreview = forwardRef(function VideoPreview(
     return seg?.text ?? ""
   }, [style?.caption_mode, chunkSegments, segments, currentTime])
 
+  const pct = resolveFontSizePct(style)
+  const displayFontPx = Math.max(10, Math.round((pct / 100) * layoutH))
+  const outlinePx = Math.max(
+    1,
+    Math.round((pct / 100) * layoutH * 0.06),
+  )
+  const padPx = Math.max(4, Math.round((pct / 100) * layoutH * 0.035))
+
   const positionStyle =
     POSITION_STYLES[style?.position] || POSITION_STYLES["bottom-center"]
 
@@ -105,26 +158,25 @@ const VideoPreview = forwardRef(function VideoPreview(
   const overlayStyle = {
     position: "absolute",
     ...positionStyle,
-    fontFamily: style?.fontFamily || "DM Sans, sans-serif",
-    fontSize: `${style?.fontsize ?? 28}px`,
+    fontFamily: style?.fontFamily || "Noto Sans Arabic, sans-serif",
+    fontSize: `${displayFontPx}px`,
     color: style?.color || "#FFFFFF",
     fontWeight: 600,
-    padding: showBg ? "8px 16px" : "0",
+    padding: showBg ? `${padPx}px ${padPx * 2}px` : "0",
     borderRadius: 8,
     backgroundColor: showBg
       ? hexWithAlpha(style?.bg_color || "#000000", style?.bg_opacity ?? 0.6)
       : "transparent",
-    textShadow: `0 0 ${(style?.shadow ?? 2) * 2}px rgba(0,0,0,0.9), ${
-      style?.shadow ?? 2
-    }px ${style?.shadow ?? 2}px 0 rgba(0,0,0,0.9)`,
+    textShadow: `0 0 ${outlinePx}px rgba(0,0,0,0.95), ${outlinePx}px ${outlinePx}px 0 rgba(0,0,0,0.85)`,
     WebkitTextStroke: style?.outline_enabled
-      ? `1px ${style?.outline_color || "#000000"}`
+      ? `${Math.max(1, outlinePx / 4)}px ${style?.outline_color || "#000000"}`
       : "0",
     pointerEvents: "none",
     maxWidth: "85%",
     textAlign: "center",
     whiteSpace: "pre-wrap",
-    lineHeight: 1.25,
+    lineHeight: 1.35,
+    zIndex: 10,
   }
 
   function handleTimeUpdate(e) {
@@ -133,18 +185,62 @@ const VideoPreview = forwardRef(function VideoPreview(
     if (onTimeUpdate) onTimeUpdate(t)
   }
 
+  function toggleFullscreen() {
+    const el = containerRef.current
+    if (!el) return
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.().catch(() => {})
+    } else {
+      document.exitFullscreen?.()
+    }
+  }
+
   return (
-    <div className="relative w-full h-full bg-black rounded-xl overflow-hidden flex items-center justify-center">
+    <div
+      ref={containerRef}
+      className={[
+        "relative w-full h-full bg-black rounded-xl overflow-hidden flex items-center justify-center",
+        fsActive ? "rounded-none" : "",
+      ].join(" ")}
+    >
       <video
         ref={videoRef}
         src={videoUrl}
         controls
+        controlsList="nofullscreen"
+        disablePictureInPicture
         className="w-full h-full max-h-full object-contain bg-black"
+        onLoadedMetadata={measure}
         onTimeUpdate={handleTimeUpdate}
       />
       {overlayLabel ? (
-        <div style={overlayStyle}>{overlayLabel}</div>
+        <div style={overlayStyle} dir="auto">
+          {overlayLabel}
+        </div>
       ) : null}
+
+      <button
+        type="button"
+        onClick={toggleFullscreen}
+        className="absolute bottom-3 right-3 z-20 rounded-lg border border-white/20 bg-black/55 px-3 py-2 text-xs font-medium text-white/90 backdrop-blur-sm hover:bg-black/70 transition pointer-events-auto"
+        aria-label={
+          fsActive ? t("video.exitFullscreen") : t("video.fullscreen")
+        }
+      >
+        {fsActive ? (
+          t("video.exitFullscreen")
+        ) : (
+          <span className="inline-flex items-center gap-1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 3 21 3 21 9" />
+              <polyline points="9 21 3 21 3 15" />
+              <line x1="21" y1="3" x2="14" y2="10" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
+            {t("video.fullscreen")}
+          </span>
+        )}
+      </button>
     </div>
   )
 })

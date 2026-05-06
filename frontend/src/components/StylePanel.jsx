@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 const FONT_FAMILIES = [
   "Cairo",
@@ -69,6 +70,7 @@ function Swatch({ color, active, onClick }) {
 }
 
 export default function StylePanel({ style, onChange }) {
+  const { t } = useTranslation()
   const [tab, setTab] = useState("font")
 
   function set(patch) {
@@ -78,18 +80,19 @@ export default function StylePanel({ style, onChange }) {
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="flex items-center gap-1 p-1 rounded-xl bg-dark border border-white/5 mb-4">
-        {TABS.map((t) => (
+        {TABS.map((tabItem) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tabItem.id}
+            type="button"
+            onClick={() => setTab(tabItem.id)}
             className={[
               "flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all",
-              tab === t.id
+              tab === tabItem.id
                 ? "bg-accent text-white shadow-lg shadow-accent/25"
                 : "text-white/60 hover:text-white",
             ].join(" ")}
           >
-            {t.label}
+            {t(`style.tabs.${tabItem.id}`)}
           </button>
         ))}
       </div>
@@ -97,7 +100,7 @@ export default function StylePanel({ style, onChange }) {
       <div className="flex-1 overflow-y-auto pr-1">
         {tab === "font" && (
           <>
-            <Section label="Font family">
+            <Section label={t("style.fontFamily")}>
               <select
                 value={style.fontFamily}
                 onChange={(e) => set({ fontFamily: e.target.value })}
@@ -111,18 +114,25 @@ export default function StylePanel({ style, onChange }) {
               </select>
             </Section>
 
-            <Section label={`Size — ${style.fontsize}px`}>
+            <Section
+              label={t("style.sizePct", {
+                pct: Number(style.font_size_pct ?? 5.5).toFixed(1),
+              })}
+            >
               <input
                 type="range"
-                min={12}
-                max={72}
-                value={style.fontsize}
-                onChange={(e) => set({ fontsize: Number(e.target.value) })}
+                min={2}
+                max={12}
+                step={0.5}
+                value={Number(style.font_size_pct ?? 5.5)}
+                onChange={(e) =>
+                  set({ font_size_pct: Number(e.target.value) })
+                }
                 className="w-full accent-accent"
               />
             </Section>
 
-            <Section label="Text color">
+            <Section label={t("style.textColor")}>
               <div className="flex items-center gap-2 flex-wrap">
                 {TEXT_COLORS.map((c) => (
                   <Swatch
@@ -146,7 +156,7 @@ export default function StylePanel({ style, onChange }) {
 
         {tab === "background" && (
           <>
-            <Section label="Background">
+            <Section label={t("style.bgSection")}>
               <label className="flex items-center gap-2 text-sm text-white/85 cursor-pointer">
                 <input
                   type="checkbox"
@@ -154,11 +164,11 @@ export default function StylePanel({ style, onChange }) {
                   onChange={(e) => set({ bg_enabled: e.target.checked })}
                   className="w-4 h-4 accent-accent"
                 />
-                Show background
+                {t("style.showBg")}
               </label>
             </Section>
 
-            <Section label="Color">
+            <Section label={t("style.bgColorLabel")}>
               <div className="flex items-center gap-2 flex-wrap">
                 {BG_COLORS.map((c) => (
                   <Swatch
@@ -179,7 +189,9 @@ export default function StylePanel({ style, onChange }) {
             </Section>
 
             <Section
-              label={`Opacity — ${Math.round((style.bg_opacity ?? 0.6) * 100)}%`}
+              label={t("style.opacity", {
+                pct: Math.round((style.bg_opacity ?? 0.6) * 100),
+              })}
             >
               <input
                 type="range"
@@ -196,7 +208,7 @@ export default function StylePanel({ style, onChange }) {
 
         {tab === "effects" && (
           <>
-            <Section label={`Shadow — ${style.shadow}px`}>
+            <Section label={t("style.shadow", { n: style.shadow })}>
               <input
                 type="range"
                 min={0}
@@ -207,7 +219,7 @@ export default function StylePanel({ style, onChange }) {
               />
             </Section>
 
-            <Section label="Outline">
+            <Section label={t("style.outline")}>
               <label className="flex items-center gap-2 text-sm text-white/85 cursor-pointer mb-3">
                 <input
                   type="checkbox"
@@ -215,7 +227,7 @@ export default function StylePanel({ style, onChange }) {
                   onChange={(e) => set({ outline_enabled: e.target.checked })}
                   className="w-4 h-4 accent-accent"
                 />
-                Show outline
+                {t("style.outlineShow")}
               </label>
               <div className="flex items-center gap-2 flex-wrap">
                 {TEXT_COLORS.map((c) => (
@@ -241,7 +253,7 @@ export default function StylePanel({ style, onChange }) {
         )}
 
         {tab === "position" && (
-          <Section label="Caption position">
+          <Section label={t("style.captionPos")}>
             <div className="grid grid-cols-3 gap-2">
               {POSITIONS.map((p) => {
                 const active = style.position === p.id
@@ -267,7 +279,7 @@ export default function StylePanel({ style, onChange }) {
 
         {tab === "captions" && (
           <>
-            <Section label="Display mode">
+            <Section label={t("style.captions.displayMode")}>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -279,7 +291,7 @@ export default function StylePanel({ style, onChange }) {
                       : "bg-dark text-white/70 border-white/10 hover:border-white/25",
                   ].join(" ")}
                 >
-                  Sentences
+                  {t("style.captions.sentences")}
                 </button>
                 <button
                   type="button"
@@ -291,13 +303,15 @@ export default function StylePanel({ style, onChange }) {
                       : "bg-dark text-white/70 border-white/10 hover:border-white/25",
                   ].join(" ")}
                 >
-                  Word chunks
+                  {t("style.captions.chunks")}
                 </button>
               </div>
             </Section>
 
             <Section
-              label={`Timing offset — ${(style.timing_offset ?? 0) >= 0 ? "+" : ""}${Number(style.timing_offset ?? 0).toFixed(1)}s`}
+              label={t("style.captions.timingOffset", {
+                v: `${(style.timing_offset ?? 0) >= 0 ? "+" : ""}${Number(style.timing_offset ?? 0).toFixed(1)}`,
+              })}
             >
               <input
                 type="range"
@@ -311,12 +325,14 @@ export default function StylePanel({ style, onChange }) {
                 className="w-full accent-accent"
               />
               <p className="text-[11px] text-white/45 mt-2">
-                Positive delays captions; negative moves them earlier.
+                {t("style.captions.timingHint")}
               </p>
             </Section>
 
             <Section
-              label={`Min display time — ${Number(style.min_display_time ?? 0.7).toFixed(1)}s`}
+              label={t("style.captions.minDisplay", {
+                v: Number(style.min_display_time ?? 0.7).toFixed(1),
+              })}
             >
               <input
                 type="range"
@@ -330,14 +346,16 @@ export default function StylePanel({ style, onChange }) {
                 className="w-full accent-accent"
               />
               <p className="text-[11px] text-white/45 mt-2">
-                Keeps each caption on screen at least this long (no flashing).
+                {t("style.captions.minDisplayHint")}
               </p>
             </Section>
 
             {style.caption_mode !== "sliding" && (
               <>
                 <Section
-                  label={`Max words per line — ${style.max_words_per_line ?? 6}`}
+                  label={t("style.captions.maxWords", {
+                    n: style.max_words_per_line ?? 6,
+                  })}
                 >
                   <input
                     type="range"
@@ -352,7 +370,9 @@ export default function StylePanel({ style, onChange }) {
                   />
                 </Section>
                 <Section
-                  label={`Max segment duration — ${Number(style.max_segment_duration ?? 3).toFixed(1)}s`}
+                  label={t("style.captions.maxDuration", {
+                    v: Number(style.max_segment_duration ?? 3).toFixed(1),
+                  })}
                 >
                   <input
                     type="range"
@@ -371,7 +391,9 @@ export default function StylePanel({ style, onChange }) {
 
             {style.caption_mode === "sliding" && (
               <Section
-                label={`Words per chunk — ${style.sliding_window ?? 3}`}
+                label={t("style.captions.wordsPerChunk", {
+                  n: style.sliding_window ?? 3,
+                })}
               >
                 <input
                   type="range"

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate } from "react-router-dom"
 import { v4 as uuidv4 } from "uuid"
 
@@ -10,8 +11,8 @@ import BrandHeader from "../components/BrandHeader"
 import BrandFooter from "../components/BrandFooter"
 
 const DEFAULT_STYLE = {
-  fontFamily: "DM Sans",
-  fontsize: 28,
+  fontFamily: "Noto Sans Arabic",
+  font_size_pct: 5.5,
   color: "#FFFFFF",
   bg_enabled: true,
   bg_color: "#000000",
@@ -29,6 +30,7 @@ const DEFAULT_STYLE = {
 }
 
 export default function Editor() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { state } = useLocation()
   const previewRef = useRef(null)
@@ -101,7 +103,8 @@ export default function Editor() {
         onBack={() => navigate("/")}
         rightSlot={
           <span className="text-xs text-white/40 font-mono">
-            {currentTime.toFixed(2)}s
+            {currentTime.toFixed(2)}
+            {t("editor.timeSuffix")}
           </span>
         }
       />

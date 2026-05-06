@@ -12,6 +12,7 @@ router = APIRouter()
 
 class TranscribeRequest(BaseModel):
     video_url: str
+    language_hint: str = "auto"
 
 
 @router.post("/transcribe")
@@ -37,7 +38,10 @@ async def transcribe(req: TranscribeRequest):
                 )
 
             audio_path = extract_audio(video_path, tmpdir)
-            words = await transcribe_audio(audio_path)
+            words = await transcribe_audio(
+                audio_path,
+                language_hint=req.language_hint or "auto",
+            )
 
         return {"words": words}
     except HTTPException:

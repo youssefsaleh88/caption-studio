@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next"
 import { BRAND } from "../utils/brand"
 
 export default function BrandFooter({ className = "" }) {
+  const { t } = useTranslation()
+
   return (
     <footer
       className={[
@@ -10,7 +13,7 @@ export default function BrandFooter({ className = "" }) {
     >
       <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-6">
         <span>
-          Made by{" "}
+          {t("footer.madeBy")}{" "}
           <span className="font-semibold text-white/85">{BRAND.ownerName}</span>
         </span>
         <a
@@ -30,7 +33,9 @@ export default function BrandFooter({ className = "" }) {
           </svg>
           {BRAND.instagramHandle}
         </a>
-        <span className="text-white/40">{BRAND.copyright}</span>
+        <span className="text-white/40">
+          {t("footer.rights", { text: BRAND.copyright })}
+        </span>
       </div>
     </footer>
   )

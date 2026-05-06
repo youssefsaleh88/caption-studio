@@ -1,0 +1,91 @@
+{
+  "brand": {
+    "appName": "AI Caption Studio",
+    "byOwner": "by {{name}}"
+  },
+  "nav": {
+    "back": "Back"
+  },
+  "lang": {
+    "en": "English",
+    "ar": "العربية"
+  },
+  "home": {
+    "title": "Add captions to any video in seconds",
+    "subtitle": "Powered by Gemini AI",
+    "poweredBy": "Powered by Gemini AI"
+  },
+  "upload": {
+    "dropTitle": "Drop your video here",
+    "dropHint": "or click to browse — MP4, MOV, WEBM, AVI · up to 200MB",
+    "uploading": "Uploading…",
+    "analyzing": "Analyzing audio with Gemini AI…",
+    "langLabel": "Video language (better accuracy)",
+    "langAuto": "Auto-detect",
+    "langAr": "Arabic",
+    "langEn": "English"
+  },
+  "editor": {
+    "timeSuffix": "s"
+  },
+  "caption": {
+    "title": "Captions",
+    "wordsCount": "words",
+    "noCaptions": "No captions yet.",
+    "editPlaceholder": "Edit word…",
+    "confirmTitle": "Confirm (Enter)",
+    "addAfterTitle": "Add word after",
+    "deleteTitle": "Delete"
+  },
+  "export": {
+    "downloadSrt": "Download SRT",
+    "exportVideo": "Export Video",
+    "processing": "Processing video…",
+    "noVideo": "No video to export.",
+    "noCaptions": "No captions to burn.",
+    "noBackend": "Backend URL is not configured.",
+    "failed": "Export failed."
+  },
+  "style": {
+    "tabs": {
+      "font": "Font",
+      "background": "Background",
+      "effects": "Effects",
+      "position": "Position",
+      "captions": "Captions"
+    },
+    "fontFamily": "Font family",
+    "sizePct": "Size — {{pct}}% of video height",
+    "textColor": "Text color",
+    "bgSection": "Background",
+    "showBg": "Show background",
+    "bgColorLabel": "Color",
+    "opacity": "Opacity — {{pct}}%",
+    "outline": "Text outline",
+    "outlineOn": "Enable outline",
+    "outlineShow": "Show outline",
+    "outlineColor": "Outline color",
+    "shadow": "Shadow — {{n}}",
+    "captionPos": "Caption position",
+    "captions": {
+      "displayMode": "Display mode",
+      "sentences": "Sentences",
+      "chunks": "Word chunks",
+      "timingOffset": "Timing offset — {{v}}s",
+      "timingHint": "Positive delays captions; negative moves them earlier.",
+      "minDisplay": "Min display time — {{v}}s",
+      "minDisplayHint": "Keeps each caption on screen long enough (no flashing).",
+      "maxWords": "Max words per line — {{n}}",
+      "maxDuration": "Max segment duration — {{v}}s",
+      "wordsPerChunk": "Words per chunk — {{n}}"
+    }
+  },
+  "footer": {
+    "madeBy": "Made by",
+    "rights": "{{text}}"
+  },
+  "video": {
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit"
+  }
+}

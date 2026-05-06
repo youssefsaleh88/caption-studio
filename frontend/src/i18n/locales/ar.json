@@ -1,0 +1,91 @@
+{
+  "brand": {
+    "appName": "AI Caption Studio",
+    "byOwner": "بواسطة {{name}}"
+  },
+  "nav": {
+    "back": "رجوع"
+  },
+  "lang": {
+    "en": "English",
+    "ar": "العربية"
+  },
+  "home": {
+    "title": "أضف ترجمات لأي فيديو في ثوانٍ",
+    "subtitle": "مدعوم بتقنية Gemini AI",
+    "poweredBy": "مدعوم بتقنية Gemini AI"
+  },
+  "upload": {
+    "dropTitle": "اسحب الفيديو هنا",
+    "dropHint": "أو انقر للاختيار — MP4, MOV, WEBM, AVI · حتى 200 ميجا",
+    "uploading": "جاري الرفع…",
+    "analyzing": "تحليل الصوت باستخدام Gemini AI…",
+    "langLabel": "لغة الفيديو (لدقة أعلى)",
+    "langAuto": "اكتشاف تلقائي",
+    "langAr": "العربية",
+    "langEn": "الإنجليزية"
+  },
+  "editor": {
+    "timeSuffix": "ث"
+  },
+  "caption": {
+    "title": "الترجمات",
+    "wordsCount": "كلمة",
+    "noCaptions": "لا توجد ترجمات بعد.",
+    "editPlaceholder": "تعديل الكلمة…",
+    "confirmTitle": "تأكيد (Enter)",
+    "addAfterTitle": "إضافة كلمة بعد",
+    "deleteTitle": "حذف"
+  },
+  "export": {
+    "downloadSrt": "تحميل SRT",
+    "exportVideo": "تصدير الفيديو",
+    "processing": "جاري معالجة الفيديو…",
+    "noVideo": "لا يوجد فيديو للتصدير.",
+    "noCaptions": "لا توجد ترجمات للحرق.",
+    "noBackend": "لم يتم ضبط عنوان الخادم.",
+    "failed": "فشل التصدير."
+  },
+  "style": {
+    "tabs": {
+      "font": "الخط",
+      "background": "الخلفية",
+      "effects": "المؤثرات",
+      "position": "الموضع",
+      "captions": "الترجمات"
+    },
+    "fontFamily": "عائلة الخط",
+    "sizePct": "الحجم — {{pct}}% من ارتفاع الفيديو",
+    "textColor": "لون النص",
+    "bgSection": "الخلفية",
+    "showBg": "إظهار الخلفية",
+    "bgColorLabel": "اللون",
+    "opacity": "الشفافية — {{pct}}%",
+    "outline": "حد النص",
+    "outlineOn": "تفعيل الحد",
+    "outlineShow": "إظهار الحد",
+    "outlineColor": "لون الحد",
+    "shadow": "الظل — {{n}}",
+    "captionPos": "موضع الترجمة",
+    "captions": {
+      "displayMode": "وضع العرض",
+      "sentences": "جمل",
+      "chunks": "مجموعات كلمات",
+      "timingOffset": "إزاحة التوقيت — {{v}}ث",
+      "timingHint": "القيم الموجبة تؤخر الترجمة؛ السالبة تقدمها.",
+      "minDisplay": "أقل مدة عرض — {{v}}ث",
+      "minDisplayHint": "تبقي كل مقطع ظاهرًا مدة كافية (بدون وميض).",
+      "maxWords": "أقصى كلمات في السطر — {{n}}",
+      "maxDuration": "أقصى مدة للمقطع — {{v}}ث",
+      "wordsPerChunk": "كلمات لكل مجموعة — {{n}}"
+    }
+  },
+  "footer": {
+    "madeBy": "صنع بواسطة",
+    "rights": "{{text}}"
+  },
+  "video": {
+    "fullscreen": "ملء الشاشة",
+    "exitFullscreen": "خروج"
+  }
+}

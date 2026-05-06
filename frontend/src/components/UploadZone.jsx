@@ -1,12 +1,15 @@
 import { useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { useVideoUpload } from "../hooks/useVideoUpload"
 import { useTranscription } from "../hooks/useTranscription"
 
 export default function UploadZone() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const inputRef = useRef(null)
   const [dragOver, setDragOver] = useState(false)
+  const [languageHint, setLanguageHint] = useState("auto")
 
   const { upload, progress, uploading, error: uploadError } = useVideoUpload()
   const {
@@ -21,7 +24,7 @@ export default function UploadZone() {
     if (!file) return
     const videoUrl = await upload(file)
     if (!videoUrl) return
-    const words = await transcribe(videoUrl)
+    const words = await transcribe(videoUrl, languageHint)
     if (!words) return
     navigate("/editor", { state: { videoUrl, words } })
   }
@@ -41,7 +44,23 @@ export default function UploadZone() {
   const busy = uploading || transcribing
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-6">
+    <div className="w-full max-w-2xl mx-auto px-6 space-y-4">
+      <div className="flex flex-col gap-2">
+        <label className="text-xs font-medium text-white/55 uppercase tracking-wider">
+          {t("upload.langLabel")}
+        </label>
+        <select
+          value={languageHint}
+          disabled={busy}
+          onChange={(e) => setLanguageHint(e.target.value)}
+          className="w-full bg-dark text-white border border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-accent"
+        >
+          <option value="auto">{t("upload.langAuto")}</option>
+          <option value="ar">{t("upload.langAr")}</option>
+          <option value="en">{t("upload.langEn")}</option>
+        </select>
+      </div>
+
       <div
         onClick={() => !busy && inputRef.current?.click()}
         onDragOver={(e) => {
@@ -80,11 +99,9 @@ export default function UploadZone() {
         </div>
 
         <h2 className="text-xl font-semibold text-white">
-          Drop your video here
+          {t("upload.dropTitle")}
         </h2>
-        <p className="mt-2 text-sm text-white/60">
-          or click to browse — MP4, MOV, WEBM, AVI · up to 200MB
-        </p>
+        <p className="mt-2 text-sm text-white/60">{t("upload.dropHint")}</p>
 
         <input
           ref={inputRef}
@@ -97,7 +114,7 @@ export default function UploadZone() {
         {uploading && (
           <div className="w-full max-w-md mt-8">
             <div className="flex justify-between text-xs text-white/70 mb-2 font-mono">
-              <span>Uploading…</span>
+              <span>{t("upload.uploading")}</span>
               <span>{progress}%</span>
             </div>
             <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
@@ -112,13 +129,13 @@ export default function UploadZone() {
         {transcribing && (
           <div className="mt-8 flex items-center gap-3 text-white/80">
             <span className="inline-block w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-            <span className="text-sm">Analyzing audio with Gemini AI…</span>
+            <span className="text-sm">{t("upload.analyzing")}</span>
           </div>
         )}
       </div>
 
       {error && (
-        <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       )}

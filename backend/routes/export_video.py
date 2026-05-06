@@ -19,13 +19,18 @@ class Caption(BaseModel):
 
 
 class StyleOptions(BaseModel):
-    fontsize: int = 28
+    fontsize: int | None = None
+    font_size_pct: float = 5.5
+    fontFamily: str | None = None
     color: str = "white"
+    bg_enabled: bool = True
     bg_color: str = "black"
     bg_opacity: float = 0.6
     shadow: int = 2
     position: str = "bottom-center"
     font: str | None = None
+    outline_enabled: bool = False
+    outline_color: str = "#000000"
     caption_mode: str = "sentences"
     timing_offset: float = 0.0
     max_words_per_line: int = 6
@@ -65,8 +70,15 @@ async def export(req: ExportRequest, background_tasks: BackgroundTasks):
                 detail=f"Network error while downloading video: {e}",
             )
 
-        captions_dicts = [c.dict() for c in req.captions]
-        style_dict = req.style.dict()
+        captions_dicts = [
+            c.model_dump() if hasattr(c, "model_dump") else c.dict()
+            for c in req.captions
+        ]
+        style_dict = (
+            req.style.model_dump()
+            if hasattr(req.style, "model_dump")
+            else req.style.dict()
+        )
 
         output_path = burn_captions(
             video_path, captions_dicts, style_dict, tmpdir

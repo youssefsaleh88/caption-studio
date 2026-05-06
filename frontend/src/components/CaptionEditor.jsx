@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 export default function CaptionEditor({
   words,
@@ -10,6 +11,7 @@ export default function CaptionEditor({
   onDelete,
   onAddAfter,
 }) {
+  const { t } = useTranslation()
   const [draftValue, setDraftValue] = useState("")
   const inputRef = useRef(null)
 
@@ -66,10 +68,10 @@ export default function CaptionEditor({
     <div className="flex flex-col h-full min-h-0">
       <div className="flex items-center justify-between px-1 mb-3">
         <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">
-          Captions
+          {t("caption.title")}
         </h3>
         <span className="text-xs text-white/40 font-mono">
-          {words.length} words
+          {words.length} {t("caption.wordsCount")}
         </span>
       </div>
 
@@ -109,7 +111,7 @@ export default function CaptionEditor({
           })}
           {words.length === 0 && (
             <div className="text-sm text-white/40 px-2 py-4">
-              No captions yet.
+              {t("caption.noCaptions")}
             </div>
           )}
         </div>
@@ -127,12 +129,12 @@ export default function CaptionEditor({
             onChange={(e) => setDraftValue(e.target.value)}
             onKeyDown={handleKey}
             className="flex-1 bg-dark px-3 py-2 rounded-lg outline-none text-white border border-transparent focus:border-accent text-sm"
-            placeholder="Edit word…"
+            placeholder={t("caption.editPlaceholder")}
           />
           <button
             type="button"
             onClick={commitEdit}
-            title="Confirm (Enter)"
+            title={t("caption.confirmTitle")}
             className="w-9 h-9 flex items-center justify-center rounded-lg bg-accent hover:bg-accent-hover text-white"
           >
             <svg
@@ -151,7 +153,7 @@ export default function CaptionEditor({
           <button
             type="button"
             onClick={() => onAddAfter(selectedWord.id)}
-            title="Add word after"
+            title={t("caption.addAfterTitle")}
             className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white/85 border border-white/10"
           >
             <svg
@@ -171,7 +173,7 @@ export default function CaptionEditor({
           <button
             type="button"
             onClick={() => onDelete(selectedWord.id)}
-            title="Delete"
+            title={t("caption.deleteTitle")}
             className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20"
           >
             <svg

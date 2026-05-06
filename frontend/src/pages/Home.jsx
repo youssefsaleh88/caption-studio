@@ -1,8 +1,11 @@
+import { useTranslation } from "react-i18next"
 import UploadZone from "../components/UploadZone"
 import BrandHeader from "../components/BrandHeader"
 import BrandFooter from "../components/BrandFooter"
 
 export default function Home() {
+  const { t } = useTranslation()
+
   return (
     <div className="min-h-screen w-full bg-dark text-white relative overflow-hidden flex flex-col">
       <div
@@ -18,10 +21,10 @@ export default function Home() {
 
       <main className="relative z-10 flex flex-col items-center justify-center px-6 pt-10 pb-12 flex-1 w-full">
         <h1 className="text-4xl md:text-5xl font-semibold text-center tracking-tight max-w-3xl">
-          Add captions to any video in seconds
+          {t("home.title")}
         </h1>
         <p className="mt-3 text-white/60 text-center text-base">
-          Powered by Gemini AI
+          {t("home.poweredBy")}
         </p>
 
         <div className="mt-12 w-full">
