@@ -1,10 +1,13 @@
 import google.generativeai as genai
+import logging
 import os
 import base64
 import json
 import re
 from pathlib import Path
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
 
 
 def _collect_gemini_keys() -> list[str]:
@@ -31,10 +34,11 @@ def _collect_gemini_keys() -> list[str]:
 
 def _collect_gemini_models() -> list[str]:
     default_models = [
+        "gemini-3-flash-preview",
         "gemini-2.5-pro",
         "gemini-2.5-flash",
-        "gemini-2.5-flash-lite",
         "gemini-1.5-flash",
+        "gemini-2.5-flash-lite",
     ]
     configured = os.getenv("GEMINI_MODELS", "").strip()
     if not configured:
@@ -83,6 +87,59 @@ def _rebalance_word_timings(
             cur["end"] = max(e, s + min_gap)
         out.append(cur)
     return out
+
+
+def _coerce_float(val: object, default: float | None = None) -> float | None:
+    if val is None:
+        return default
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return default
+
+
+def _extract_word_entry(raw: object, prev_end: float) -> dict | None:
+    """
+    Normalize one Gemini array element to {word, start, end}.
+    Returns None if the row cannot be recovered.
+    """
+    if not isinstance(raw, dict):
+        return None
+
+    word_text: str | None = None
+    for key in ("word", "text", "token", "w"):
+        if key in raw and raw[key] is not None:
+            word_text = str(raw[key]).strip()
+            break
+    if not word_text:
+        return None
+
+    start = _coerce_float(raw.get("start"))
+    if start is None:
+        start = _coerce_float(raw.get("s"))
+    if start is None:
+        start = _coerce_float(raw.get("begin"))
+
+    end = _coerce_float(raw.get("end"))
+    if end is None:
+        end = _coerce_float(raw.get("e"))
+    if end is None:
+        end = _coerce_float(raw.get("stop"))
+
+    if start is None:
+        start = max(0.0, float(prev_end))
+
+    if end is None:
+        end = float(start) + 0.2
+
+    if end < float(start) + 0.02:
+        end = float(start) + 0.02
+
+    return {
+        "word": word_text,
+        "start": float(start),
+        "end": float(end),
+    }
 
 
 def _audio_mime(path: str) -> str:
@@ -193,19 +250,36 @@ Return ONLY the JSON array."""
         )
 
     result: list[dict] = []
+    prev_end = 0.0
+    skipped = 0
     for i, w in enumerate(words):
-        try:
-            result.append({
-                "id": str(i),
-                "word": str(w["word"]),
-                "start": float(w["start"]),
-                "end": float(w["end"]),
-            })
-        except (KeyError, TypeError, ValueError) as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Malformed word entry from Gemini at index {i}: {e}",
+        entry = _extract_word_entry(w, prev_end)
+        if entry is None:
+            skipped += 1
+            logger.warning(
+                "Skipping malformed Gemini word entry at index %s: %r",
+                i,
+                w,
             )
+            continue
+        prev_end = entry["end"]
+        result.append(entry)
+
+    if not result:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Gemini returned no parseable word entries. "
+                f"Skipped {skipped} malformed rows. Preview: {text[:200]}"
+            ),
+        )
+
+    if skipped:
+        logger.warning(
+            "Gemini transcription: skipped %s malformed entries out of %s",
+            skipped,
+            len(words),
+        )
 
     result = _rebalance_word_timings(result)
     for i, w in enumerate(result):
