@@ -43,6 +43,8 @@
     "sentenceStart": "Sentence start",
     "sentenceEnd": "Sentence end",
     "playFromHere": "Play from here",
+    "tapExpand": "Tap for details & timings",
+    "tapCollapse": "Collapse details",
     "confirmTitle": "Confirm (Enter)",
     "addAfterTitle": "Add word after",
     "deleteTitle": "Delete"

@@ -78,18 +78,23 @@ export default function StylePanel({ style, onChange }) {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="flex gap-1 p-1 rounded-xl bg-dark border border-white/5 mb-4 overflow-x-auto overscroll-x-contain flex-nowrap scrollbar-thin pb-1 [-webkit-overflow-scrolling:touch]">
+    <div dir="ltr" className="flex flex-col h-full min-h-0">
+      <div
+        role="tablist"
+        className="flex gap-2 p-1.5 rounded-2xl bg-dark-elevated/80 border border-white/10 mb-4 overflow-x-auto overscroll-x-contain flex-nowrap [-webkit-overflow-scrolling:touch] min-h-[52px] items-center"
+      >
         {TABS.map((tabItem) => (
           <button
             key={tabItem.id}
             type="button"
+            role="tab"
+            aria-selected={tab === tabItem.id}
             onClick={() => setTab(tabItem.id)}
             className={[
-              "shrink-0 px-4 py-3 min-h-[44px] text-xs font-medium rounded-lg transition-all whitespace-nowrap",
+              "shrink-0 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-xl transition-all duration-200 whitespace-nowrap hover:scale-[1.02]",
               tab === tabItem.id
-                ? "bg-accent text-white shadow-lg shadow-accent/25"
-                : "text-white/60 hover:text-white",
+                ? "bg-accent text-white shadow-md shadow-accent/30"
+                : "text-white/65 hover:text-white bg-dark/60",
             ].join(" ")}
           >
             {t(`style.tabs.${tabItem.id}`)}

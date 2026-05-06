@@ -2,6 +2,22 @@ import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { groupIntoSegments, chunkByWindow } from "../utils/captions"
 
+function boundsFromWords(wordIds, wordMap) {
+  const ws = wordIds
+    .map((id) => wordMap.get(String(id)))
+    .filter(Boolean)
+  if (!ws.length) return null
+  let lo = Infinity
+  let hi = -Infinity
+  for (const w of ws) {
+    lo = Math.min(lo, w.start, w.end)
+    hi = Math.max(hi, w.start, w.end)
+  }
+  const start = Number.isFinite(lo) ? lo : 0
+  const end = Number.isFinite(hi) ? Math.max(start + 0.02, hi) : start + 0.02
+  return { start, end }
+}
+
 /**
  * @typedef {{ id: string, word: string, start: number, end: number }} WordItem
  */
@@ -17,33 +33,44 @@ export default function CaptionEditor({
   onDelete,
   onAddAfter,
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [expandedId, setExpandedId] = useState(null)
 
   const o = Number(timingOffset) || 0
-
-  const segments = useMemo(() => {
-    const sliding = style?.caption_mode === "sliding"
-    if (sliding) {
-      return chunkByWindow(words, style?.sliding_window ?? 3)
-    }
-    return groupIntoSegments(words, {
-      maxWords: style?.max_words_per_line ?? 6,
-      maxDuration: style?.max_segment_duration ?? 3,
-    })
-  }, [
-    words,
-    style?.caption_mode,
-    style?.sliding_window,
-    style?.max_words_per_line,
-    style?.max_segment_duration,
-  ])
 
   const wordMap = useMemo(() => {
     const m = new Map()
     for (const w of words) m.set(String(w.id), w)
     return m
   }, [words])
+
+  const segments = useMemo(() => {
+    const sliding = style?.caption_mode === "sliding"
+    let segs = sliding
+      ? chunkByWindow(words, style?.sliding_window ?? 3)
+      : groupIntoSegments(words, {
+          maxWords: style?.max_words_per_line ?? 6,
+          maxDuration: style?.max_segment_duration ?? 3,
+        })
+    return segs.map((seg) => {
+      const b = boundsFromWords(seg.wordIds, wordMap)
+      if (b) return { ...seg, start: b.start, end: b.end }
+      const s = Math.min(seg.start, seg.end)
+      const e = Math.max(seg.start, seg.end)
+      return {
+        ...seg,
+        start: s,
+        end: Math.max(s + 0.02, e),
+      }
+    })
+  }, [
+    words,
+    wordMap,
+    style?.caption_mode,
+    style?.sliding_window,
+    style?.max_words_per_line,
+    style?.max_segment_duration,
+  ])
 
   function segActive(seg) {
     const t0 = currentTime
@@ -66,63 +93,73 @@ export default function CaptionEditor({
     }
   }
 
+  const chromeDir = i18n.language?.startsWith("ar") ? "rtl" : "ltr"
+
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center justify-between px-1 mb-3 shrink-0">
-        <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">
+    <div
+      className="flex flex-col h-full min-h-0"
+      dir={chromeDir}
+    >
+      <div className="flex items-center justify-between px-1 mb-4 shrink-0 gap-2">
+        <h3 className="text-[13px] font-semibold text-white/90 tracking-wide">
           {t("caption.title")}
         </h3>
-        <span className="text-xs text-white/40 font-mono">
+        <span className="text-xs text-white/45 font-mono tabular-nums shrink-0">
           {words.length} {t("caption.wordsCount")}
         </span>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3 pb-2">
+      <div className="flex-1 min-h-0 overflow-y-auto ps-1 space-y-3 pb-2">
         {segments.map((seg) => {
           const active = segActive(seg)
           const open = expandedId === seg.id
+          const tStart = seg.start + o
+          const tEnd = seg.end + o
           return (
             <article
               key={seg.id}
               className={[
-                "rounded-2xl border transition-all duration-200",
+                "rounded-2xl border transition-all duration-200 overflow-hidden",
                 active
-                  ? "border-accent/80 bg-accent/10 shadow-lg shadow-accent/10"
-                  : "border-white/10 bg-dark-surface/50 hover:border-white/20",
+                  ? "border-accent/70 bg-gradient-to-br from-accent/15 to-transparent ring-1 ring-accent/25"
+                  : "border-white/12 bg-dark-elevated/40 hover:border-white/22",
               ].join(" ")}
             >
-              <button
-                type="button"
-                onClick={() => toggleExpand(seg.id)}
-                className="w-full text-left px-4 py-3 flex flex-col gap-1"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-[15px] font-medium text-white/95 leading-snug flex-1">
-                    {seg.text || "…"}
-                  </p>
-                  <span className="text-[10px] font-mono text-white/45 shrink-0 pt-0.5">
-                    {(seg.start + o).toFixed(2)} → {(seg.end + o).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 mt-1">
+              <div className="px-4 py-3.5 flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(seg.id)}
+                  className="w-full text-start group"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+                    <p className="text-[15px] font-medium text-white leading-relaxed flex-1 order-2 sm:order-1">
+                      {seg.text || "…"}
+                    </p>
+                    <div className="flex items-center gap-2 justify-between sm:flex-col sm:items-end sm:gap-1 shrink-0 order-1 sm:order-2">
+                      <span className="text-[11px] font-mono tabular-nums text-accent/90 bg-black/35 px-2 py-1 rounded-lg border border-white/10 whitespace-nowrap">
+                        {tStart.toFixed(2)} — {tEnd.toFixed(2)}
+                        <span className="text-white/40 ms-1">s</span>
+                      </span>
+                      <span className="text-[11px] text-white/40 sm:text-end">
+                        {open ? t("caption.tapCollapse") : t("caption.tapExpand")}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onSeek?.(Math.max(0, seg.start + o))
-                    }}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white/90 transition-all duration-200"
+                    onClick={() => onSeek?.(Math.max(0, tStart))}
+                    className="text-xs px-4 py-2.5 rounded-xl bg-accent/90 hover:bg-accent text-white font-medium transition-all duration-200 hover:scale-[1.02] min-h-[44px]"
                   >
                     {t("caption.playFromHere")}
                   </button>
-                  <span className="text-[11px] text-white/35">
-                    {open ? "−" : "+"}
-                  </span>
                 </div>
-              </button>
+              </div>
 
               {open && (
-                <div className="px-4 pb-4 pt-0 border-t border-white/5 space-y-4">
+                <div className="px-4 pb-4 pt-1 border-t border-white/10 space-y-4 bg-black/25">
                   <div className="grid grid-cols-2 gap-3 pt-3">
                     <label className="block">
                       <span className="text-[11px] text-white/50 uppercase tracking-wide block mb-1">

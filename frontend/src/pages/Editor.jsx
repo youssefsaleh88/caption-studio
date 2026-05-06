@@ -182,12 +182,15 @@ export default function Editor() {
         }
       />
 
-      {/* Desktop: 3 columns */}
-      <div className="hidden lg:flex flex-1 min-h-0">
+      {/* Desktop: ثابت مسارًا بصريًا — معاينة | محرّر | نمط (لا عكس RTL) */}
+      <div
+        dir="ltr"
+        className="hidden lg:flex flex-1 min-h-0 min-w-0"
+      >
         <section
           className={[
-            "shrink-0 flex flex-col p-4 gap-3 border-r border-white/5 bg-dark/40",
-            videoLayout.isVertical ? "w-[min(380px,32vw)]" : "flex-[1.15] min-w-0",
+            "shrink-0 flex flex-col p-4 gap-3 border-e border-white/8 bg-dark-elevated/30",
+            videoLayout.isVertical ? "w-[min(380px,32vw)]" : "flex-[1.05] min-w-0 max-w-[min(520px,40vw)]",
           ].join(" ")}
         >
           <div
@@ -200,24 +203,29 @@ export default function Editor() {
           </div>
         </section>
 
-        <section className="flex-[1.4] min-w-0 flex flex-col p-4 min-h-0">
-          <div className="flex-1 min-h-0 rounded-2xl border border-white/8 bg-dark-surface/50 p-4 shadow-inner">
+        <section className="flex-[1.65] min-w-0 flex flex-col p-4 min-h-0">
+          <div className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-dark-surface/60 p-5 shadow-xl shadow-black/20">
             {editorBlock}
           </div>
         </section>
 
-        <aside className="w-[min(360px,28vw)] shrink-0 border-l border-white/5 bg-dark-surface/30 p-4 flex flex-col min-h-0">
+        <aside className="w-[min(340px,26vw)] shrink-0 border-s border-white/8 bg-dark-elevated/25 p-4 flex flex-col min-h-0">
           {styleExportBlock}
         </aside>
       </div>
 
       {/* Tablet / mobile */}
-      <div className="lg:hidden flex flex-col flex-1 min-h-0">
-        <div className="shrink-0 z-20 bg-dark/90 backdrop-blur-md border-b border-white/8 px-3 pt-3 pb-2">
-          <div className="max-h-[42vh] min-h-[180px]">{previewBlock}</div>
+      <div className="lg:hidden flex flex-col flex-1 min-h-0 min-w-0">
+        <div className="shrink-0 z-10 bg-gradient-to-b from-dark to-dark/95 border-b border-white/10 px-3 pt-2 pb-2">
+          <div className="max-h-[min(34vh,280px)] min-h-[160px] mx-auto">
+            {previewBlock}
+          </div>
         </div>
 
-        <div className="flex gap-2 px-3 pt-3 pb-2 border-b border-white/10 shrink-0 overflow-x-auto">
+        <div
+          dir="ltr"
+          className="grid grid-cols-3 gap-2 px-3 py-2 shrink-0 border-b border-white/10 bg-dark/98 backdrop-blur-md sticky top-0 z-20"
+        >
           {[
             { id: "edit", label: t("editor.tabEdit") },
             { id: "style", label: t("editor.tabStyle") },
@@ -228,10 +236,10 @@ export default function Editor() {
               type="button"
               onClick={() => setMobileTab(tab.id)}
               className={[
-                "shrink-0 px-5 py-3 rounded-xl text-sm font-semibold min-h-[48px] transition-all duration-200",
+                "w-full px-2 py-3 rounded-xl text-sm font-semibold min-h-[48px] transition-all duration-200 flex items-center justify-center text-center leading-tight",
                 mobileTab === tab.id
-                  ? "bg-accent text-white shadow-lg shadow-accent/25"
-                  : "bg-white/5 text-white/70 border border-white/10",
+                  ? "bg-accent text-white shadow-lg shadow-accent/30 scale-[1.02]"
+                  : "bg-dark-surface text-white/75 border border-white/10 hover:border-white/25",
               ].join(" ")}
             >
               {tab.label}
@@ -239,7 +247,7 @@ export default function Editor() {
           ))}
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden p-3">
+        <div className="flex-1 min-h-0 overflow-hidden p-3 bg-dark">
           {mobileTab === "edit" && (
             <div className="h-full min-h-0 rounded-2xl border border-white/8 bg-dark-surface/50 p-3 overflow-hidden">
               {editorBlock}

@@ -22,9 +22,9 @@ const POSITION_STYLES = {
   "middle-left":   { top: "50%", left: 24, transform: "translateY(-50%)" },
   "center":        { top: "50%", left: "50%", transform: "translate(-50%,-50%)" },
   "middle-right":  { top: "50%", right: 24, transform: "translateY(-50%)" },
-  "bottom-left":   { bottom: 32, left: 24, transform: "none" },
-  "bottom-center": { bottom: 32, left: "50%", transform: "translateX(-50%)" },
-  "bottom-right":  { bottom: 32, right: 24, transform: "none" },
+  "bottom-left":   { bottom: 72, left: 24, transform: "none" },
+  "bottom-center": { bottom: 72, left: "50%", transform: "translateX(-50%)" },
+  "bottom-right":  { bottom: 72, right: 24, transform: "none" },
 }
 
 function hexWithAlpha(hex, alpha) {
@@ -234,7 +234,7 @@ const VideoPreview = forwardRef(function VideoPreview(
       <button
         type="button"
         onClick={toggleFullscreen}
-        className="absolute bottom-3 right-3 z-20 rounded-lg border border-white/20 bg-black/55 px-3 py-2 text-xs font-medium text-white/90 backdrop-blur-sm hover:bg-black/70 transition pointer-events-auto"
+        className="absolute top-3 end-4 z-30 rounded-xl border border-white/15 bg-black/65 px-3 py-2 text-[11px] font-medium text-white/95 backdrop-blur-md hover:bg-black/80 hover:border-white/25 shadow-lg pointer-events-auto sm:top-4 sm:end-5"
         aria-label={
           fsActive ? t("video.exitFullscreen") : t("video.fullscreen")
         }

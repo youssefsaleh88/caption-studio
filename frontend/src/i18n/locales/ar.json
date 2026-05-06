@@ -43,6 +43,8 @@
     "sentenceStart": "بداية الجملة",
     "sentenceEnd": "نهاية الجملة",
     "playFromHere": "تشغيل من هنا",
+    "tapExpand": "لمسًا للتفاصيل والتوقيت",
+    "tapCollapse": "طيّ التفاصيل",
     "confirmTitle": "تأكيد (Enter)",
     "addAfterTitle": "إضافة كلمة بعد",
     "deleteTitle": "حذف"
