@@ -29,6 +29,7 @@
   },
   "editor": {
     "timeSuffix": "s",
+    "mobileTabsNav": "Editor tabs",
     "tabEdit": "Edit",
     "tabStyle": "Style",
     "tabExport": "Export",
@@ -102,6 +103,15 @@
       "end": "End",
       "save": "Save changes",
       "delete": "Delete"
+    },
+    "sheet": {
+      "title": "Edit word",
+      "close": "Close"
+    },
+    "transcript": {
+      "title": "Transcript",
+      "searchPlaceholder": "Search text…",
+      "edit": "Edit"
     },
     "action": {
       "downloadSrt": "Download SRT",

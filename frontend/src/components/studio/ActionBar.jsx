@@ -9,6 +9,7 @@ export default function ActionBar({
   style,
   onDownloadSrt,
   embedded = false,
+  exportAnchorId,
 }) {
   const { t } = useTranslation()
   const [phase, setPhase] = useState("idle") // idle | loading | success | error
@@ -133,7 +134,7 @@ export default function ActionBar({
     : "fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 bg-[var(--bg-base)]/92 backdrop-blur-lg border-t border-[var(--border-subtle)] space-y-2"
 
   return (
-    <div className={wrapClass}>
+    <div id={exportAnchorId || undefined} className={wrapClass}>
       {error ? (
         <p
           className="mb-1 text-center text-xs text-[var(--danger)]"

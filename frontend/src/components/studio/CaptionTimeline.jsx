@@ -10,6 +10,8 @@ import {
   splitWordAtTime,
 } from "../../utils/timelineUtils"
 
+const TAP_THRESHOLD_PX = 8
+
 function formatTime(sec) {
   const s = Math.max(0, Number(sec) || 0)
   const m = Math.floor(s / 60)
@@ -24,15 +26,24 @@ export default function CaptionTimeline({
   onSeek,
   onWordsChange,
   newId,
+  selectedWordId = null,
+  onSelectWord,
+  onRequestEditWord,
+  variant = "default",
 }) {
   const { t } = useTranslation()
   const scrollRef = useRef(null)
   const trackRef = useRef(null)
   const [pps, setPps] = useState(72)
-  const [selectedId, setSelectedId] = useState(null)
   const dragRef = useRef(null)
+  const pendingRef = useRef(null)
 
-  const dur = Number.isFinite(Number(duration)) && Number(duration) > 0 ? Number(duration) : 0
+  const roomy = variant === "roomy"
+
+  const dur =
+    Number.isFinite(Number(duration)) && Number(duration) > 0
+      ? Number(duration)
+      : 0
   const innerW = Math.max(280, (dur || 8) * pps + 48)
 
   const sorted = useMemo(() => sortWordsByStart(words), [words])
@@ -67,44 +78,109 @@ export default function CaptionTimeline({
     [dur, pps, onSeek],
   )
 
-  function startDrag(mode, word, e) {
-    e.stopPropagation()
-    e.preventDefault()
-    setSelectedId(word.id)
-    const snapshot = sortWordsByStart(words).map((w) => ({ ...w }))
-    const originX = e.clientX
-    const dragState = {
-      mode,
-      id: word.id,
-      originX,
-      originStart: Number(word.start),
-      originEnd: Number(word.end),
-      wordsSnapshot: snapshot,
-    }
-    dragRef.current = dragState
+  const startDrag = useCallback(
+    function startDrag(mode, word, e) {
+      e.stopPropagation()
+      e.preventDefault()
+      onSelectWord?.(word.id)
+      const snapshot = sortWordsByStart(words).map((w) => ({ ...w }))
+      const originX = e.clientX
+      const dragState = {
+        mode,
+        id: word.id,
+        originX,
+        originStart: Number(word.start),
+        originEnd: Number(word.end),
+        wordsSnapshot: snapshot,
+      }
+      dragRef.current = dragState
 
-    const ppsLocal = pps
-    const durLocal = dur || 1e12
+      const ppsLocal = pps
+      const durLocal = dur || 1e12
+
+      function onMove(ev) {
+        const drag = dragRef.current
+        if (!drag) return
+        const dt = (ev.clientX - drag.originX) / ppsLocal
+        const snap = drag.wordsSnapshot
+        if (drag.mode === "move") {
+          applyWords(moveWordByDelta(snap, drag.id, dt, durLocal))
+        } else if (drag.mode === "resizeL") {
+          applyWords(
+            resizeWordStart(snap, drag.id, drag.originStart + dt, durLocal),
+          )
+        } else if (drag.mode === "resizeR") {
+          applyWords(
+            resizeWordEnd(snap, drag.id, drag.originEnd + dt, durLocal),
+          )
+        }
+      }
+
+      function onUp() {
+        window.removeEventListener("pointermove", onMove)
+        window.removeEventListener("pointerup", onUp)
+        window.removeEventListener("pointercancel", onUp)
+        dragRef.current = null
+      }
+
+      window.addEventListener("pointermove", onMove)
+      window.addEventListener("pointerup", onUp)
+      window.addEventListener("pointercancel", onUp)
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId)
+      } catch {
+        /* ignore */
+      }
+    },
+    [applyWords, dur, onSelectWord, pps, words],
+  )
+
+  function onBlockPointerDown(w, e) {
+    if (e.button !== 0) return
+    if (e.target.closest("[data-handle]")) return
+    e.stopPropagation()
+    onSelectWord?.(w.id)
+
+    const ox = e.clientX
+    const oy = e.clientY
+    const pid = e.pointerId
+    const target = e.currentTarget
+    const state = { w, ox, oy, pid, target, dragStarted: false }
+    pendingRef.current = state
+
+    function cleanup() {
+      window.removeEventListener("pointermove", onMove)
+      window.removeEventListener("pointerup", onUp)
+      window.removeEventListener("pointercancel", onUp)
+    }
 
     function onMove(ev) {
-      const drag = dragRef.current
-      if (!drag) return
-      const dt = (ev.clientX - drag.originX) / ppsLocal
-      const snap = drag.wordsSnapshot
-      if (drag.mode === "move") {
-        applyWords(moveWordByDelta(snap, drag.id, dt, durLocal))
-      } else if (drag.mode === "resizeL") {
-        applyWords(resizeWordStart(snap, drag.id, drag.originStart + dt, durLocal))
-      } else if (drag.mode === "resizeR") {
-        applyWords(resizeWordEnd(snap, drag.id, drag.originEnd + dt, durLocal))
+      const p = pendingRef.current
+      if (!p || p.dragStarted) return
+      const dx = ev.clientX - p.ox
+      const dy = ev.clientY - p.oy
+      if (dx * dx + dy * dy >= TAP_THRESHOLD_PX * TAP_THRESHOLD_PX) {
+        p.dragStarted = true
+        pendingRef.current = null
+        cleanup()
+        const fakeE = {
+          clientX: p.ox,
+          pointerId: p.pid,
+          currentTarget: p.target,
+          stopPropagation: () => {},
+          preventDefault: () => {},
+        }
+        startDrag("move", p.w, fakeE)
       }
     }
 
     function onUp() {
-      window.removeEventListener("pointermove", onMove)
-      window.removeEventListener("pointerup", onUp)
-      window.removeEventListener("pointercancel", onUp)
-      dragRef.current = null
+      const p = pendingRef.current
+      cleanup()
+      pendingRef.current = null
+      if (p && !p.dragStarted) {
+        onRequestEditWord?.(p.w.id)
+      }
     }
 
     window.addEventListener("pointermove", onMove)
@@ -123,6 +199,12 @@ export default function CaptionTimeline({
   }
 
   const canSplit = findWordIndexForSplit(sorted, currentTime) >= 0
+
+  const scrollClass = roomy
+    ? "flex-1 min-h-[120px] max-h-[200px] overflow-x-auto overflow-y-hidden"
+    : "flex-1 min-h-[88px] max-h-[120px] overflow-x-auto overflow-y-hidden"
+
+  const trackH = roomy ? "h-[96px]" : "h-[76px]"
 
   return (
     <div
@@ -156,14 +238,14 @@ export default function CaptionTimeline({
         </span>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex-1 min-h-[88px] max-h-[120px] overflow-x-auto overflow-y-hidden"
-      >
+      <div ref={scrollRef} className={scrollClass}>
         <div
           ref={trackRef}
           data-timeline-track
-          className="relative h-[76px] mt-1 mb-2 mx-1 rounded-[var(--radius-sm)] bg-[var(--editor-timeline-track)] cursor-crosshair"
+          className={[
+            "relative mt-1 mb-2 mx-1 rounded-[var(--radius-sm)] bg-[var(--editor-timeline-track)] cursor-crosshair touch-pan-x",
+            trackH,
+          ].join(" ")}
           style={{ width: innerW }}
           onPointerDown={(e) => {
             if (e.button !== 0) return
@@ -188,7 +270,9 @@ export default function CaptionTimeline({
           {dur > 0 ? (
             <div
               className="absolute top-0 bottom-0 w-0.5 bg-[var(--accent-bright)] z-20 pointer-events-none shadow-[0_0_8px_var(--accent)]"
-              style={{ left: Math.min(innerW - 2, Math.max(0, currentTime * pps)) }}
+              style={{
+                left: Math.min(innerW - 2, Math.max(0, currentTime * pps)),
+              }}
             />
           ) : null}
 
@@ -198,36 +282,37 @@ export default function CaptionTimeline({
               const we = Number(w.end)
               const left = ws * pps
               const width = Math.max(6, (we - ws) * pps)
-              const active = String(w.id) === String(selectedId)
+              const active = String(w.id) === String(selectedWordId)
               return (
                 <div
                   key={w.id}
                   data-word-block
                   className={[
-                    "absolute top-0 bottom-0 rounded-md border flex items-stretch overflow-hidden select-none pointer-events-auto",
+                    "absolute top-0 bottom-0 rounded-md border flex items-stretch overflow-hidden select-none pointer-events-auto touch-none",
                     active
-                      ? "border-[var(--accent-bright)] bg-[var(--accent)]/25 z-10"
+                      ? "border-[var(--accent-bright)] bg-[var(--accent)]/25 z-10 ring-1 ring-[var(--accent)]/35"
                       : "border-white/15 bg-[var(--bg-card)]/95 z-[5]",
                   ].join(" ")}
                   style={{ left, width }}
-                  onPointerDown={(e) => {
-                    if (e.target.closest("[data-handle]")) return
-                    e.stopPropagation()
-                    setSelectedId(w.id)
-                    startDrag("move", w, e)
-                  }}
+                  onPointerDown={(e) => onBlockPointerDown(w, e)}
                 >
                   <button
                     type="button"
                     data-handle="L"
-                    className="w-2 shrink-0 cursor-ew-resize bg-black/40 hover:bg-[var(--accent)]/40 border-0 p-0"
+                    className="min-w-[10px] w-3 sm:w-2 shrink-0 cursor-ew-resize bg-black/40 hover:bg-[var(--accent)]/40 border-0 p-0"
                     aria-label={t("studio.timeline.resizeStart")}
                     onPointerDown={(e) => {
                       e.stopPropagation()
                       startDrag("resizeL", w, e)
                     }}
                   />
-                  <div className="flex-1 min-w-0 px-1 py-0.5 flex items-center">
+                  <div className="flex-1 min-w-0 px-1 py-0.5 flex items-center gap-0.5">
+                    <span
+                      className="shrink-0 text-[9px] font-bold text-[var(--accent-bright)] opacity-90"
+                      aria-hidden
+                    >
+                      T
+                    </span>
                     <span className="truncate text-[10px] font-medium text-[var(--text-primary)]">
                       {w.word || "·"}
                     </span>
@@ -235,7 +320,7 @@ export default function CaptionTimeline({
                   <button
                     type="button"
                     data-handle="R"
-                    className="w-2 shrink-0 cursor-ew-resize bg-black/40 hover:bg-[var(--accent)]/40 border-0 p-0"
+                    className="min-w-[10px] w-3 sm:w-2 shrink-0 cursor-ew-resize bg-black/40 hover:bg-[var(--accent)]/40 border-0 p-0"
                     aria-label={t("studio.timeline.resizeEnd")}
                     onPointerDown={(e) => {
                       e.stopPropagation()

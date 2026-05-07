@@ -29,6 +29,7 @@
   },
   "editor": {
     "timeSuffix": "ث",
+    "mobileTabsNav": "تبويبات المحرّر",
     "tabEdit": "تحرير",
     "tabStyle": "النمط",
     "tabExport": "تصدير",
@@ -102,6 +103,15 @@
       "end": "النهاية",
       "save": "حفظ التعديل",
       "delete": "حذف"
+    },
+    "sheet": {
+      "title": "تحرير الكلمة",
+      "close": "إغلاق"
+    },
+    "transcript": {
+      "title": "النص",
+      "searchPlaceholder": "بحث في النص…",
+      "edit": "تحرير"
     },
     "action": {
       "downloadSrt": "تحميل SRT",
