@@ -295,6 +295,7 @@ export default function Editor() {
                   onSelectWord={setSelectedWordId}
                   onRequestEditWord={handleTimelineRequestEdit}
                   variant="roomy"
+                  mediaControlRef={previewRef}
                 />
               ) : null}
 

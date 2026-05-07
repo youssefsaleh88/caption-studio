@@ -70,6 +70,11 @@
     "timeline": {
       "split": "Split at playhead",
       "zoom": "Track zoom",
+      "zoomPanel": "Show or hide zoom slider",
+      "play": "Play",
+      "pause": "Pause",
+      "seekStart": "Go to start of video",
+      "videoStrip": "Video",
       "resizeStart": "Drag word start",
       "resizeEnd": "Drag word end"
     },

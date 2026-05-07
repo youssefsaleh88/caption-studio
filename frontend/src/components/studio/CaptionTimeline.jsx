@@ -12,11 +12,23 @@ import {
 
 const TAP_THRESHOLD_PX = 8
 
+const MOB_RULER_H = 24
+const MOB_TOOLBAR_H = 40
+const MOB_VIDEO_STRIP_H = 28
+const MOB_WORDS_TRACK_H = 54
+
 function formatTime(sec) {
   const s = Math.max(0, Number(sec) || 0)
   const m = Math.floor(s / 60)
   const r = s - m * 60
   return `${m}:${r.toFixed(2).padStart(5, "0")}`
+}
+
+function formatMMSS(sec) {
+  const s = Math.floor(Math.max(0, Number(sec) || 0))
+  const m = Math.floor(s / 60)
+  const r = s % 60
+  return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`
 }
 
 export default function CaptionTimeline({
@@ -30,11 +42,14 @@ export default function CaptionTimeline({
   onSelectWord,
   onRequestEditWord,
   variant = "default",
+  mediaControlRef = null,
 }) {
   const { t } = useTranslation()
   const scrollRef = useRef(null)
   const trackRef = useRef(null)
   const [pps, setPps] = useState(72)
+  const [zoomOpen, setZoomOpen] = useState(false)
+  const [mediaPaused, setMediaPaused] = useState(true)
   const dragRef = useRef(null)
   const pendingRef = useRef(null)
 
@@ -65,6 +80,41 @@ export default function CaptionTimeline({
       el.scrollLeft = next
     }
   }, [currentTime, dur, innerW])
+
+  useEffect(() => {
+    if (!roomy || !mediaControlRef) return
+    let dead = false
+    let pendingRaf = 0
+    let videoEl = null
+
+    const sync = () => {
+      if (!dead && videoEl) setMediaPaused(Boolean(videoEl.paused))
+    }
+
+    function tryAttach() {
+      if (dead) return
+      const v = mediaControlRef.current?.element ?? null
+      if (!v) {
+        cancelAnimationFrame(pendingRaf)
+        pendingRaf = requestAnimationFrame(tryAttach)
+        return
+      }
+      videoEl = v
+      v.addEventListener("play", sync)
+      v.addEventListener("pause", sync)
+      setMediaPaused(Boolean(v.paused))
+    }
+
+    tryAttach()
+    return () => {
+      dead = true
+      cancelAnimationFrame(pendingRaf)
+      if (videoEl) {
+        videoEl.removeEventListener("play", sync)
+        videoEl.removeEventListener("pause", sync)
+      }
+    }
+  }, [roomy, mediaControlRef])
 
   const scrubFromClientX = useCallback(
     (clientX) => {
@@ -198,13 +248,296 @@ export default function CaptionTimeline({
     if (next) applyWords(next)
   }
 
+  function handleTogglePlay() {
+    mediaControlRef?.current?.togglePlay?.()
+    requestAnimationFrame(() => {
+      setMediaPaused(Boolean(mediaControlRef?.current?.isPaused?.()))
+    })
+  }
+
+  function handleSeekStart() {
+    onSeek?.(0)
+    mediaControlRef?.current?.pause?.()
+  }
+
   const canSplit = findWordIndexForSplit(sorted, currentTime) >= 0
 
+  const playLeft = Math.min(innerW - 2, Math.max(0, currentTime * pps))
+
   const scrollClass = roomy
-    ? "flex-1 min-h-[120px] max-h-[200px] overflow-x-auto overflow-y-hidden"
+    ? "flex-1 min-h-[150px] max-h-[min(240px,42vh)] overflow-x-auto overflow-y-hidden touch-pan-x"
     : "flex-1 min-h-[88px] max-h-[120px] overflow-x-auto overflow-y-hidden"
 
-  const trackH = roomy ? "h-[96px]" : "h-[76px]"
+  const trackH = roomy ? "h-[76px]" : "h-[76px]"
+
+  const rulerTicks = useMemo(() => {
+    if (!dur) return [0]
+    const step = 5
+    const out = []
+    for (let s = 0; s < dur; s += step) {
+      out.push(s)
+    }
+    const last = out[out.length - 1]
+    if (last === undefined || last < dur) out.push(dur)
+    return out
+  }, [dur])
+
+  const stackH =
+    MOB_RULER_H +
+    MOB_TOOLBAR_H +
+    (zoomOpen ? 36 : 0) +
+    MOB_VIDEO_STRIP_H +
+    MOB_WORDS_TRACK_H +
+    8
+
+  if (roomy) {
+    return (
+      <div
+        className="flex flex-col border-t border-[var(--border-subtle)] bg-[var(--editor-rail)] text-[var(--text-primary)] shrink-0"
+        dir="ltr"
+      >
+        <div ref={scrollRef} className={scrollClass}>
+          <div
+            className="relative mx-1 my-1 rounded-[var(--radius-sm)] border border-[var(--border-subtle)]/60 bg-[var(--bg-base)]/50 overflow-hidden"
+            style={{ width: innerW, minHeight: stackH }}
+          >
+            {dur > 0 ? (
+              <div
+                className="absolute top-0 bottom-0 z-[35] w-[2px] bg-white pointer-events-none shadow-[0_0_10px_rgba(255,255,255,0.55)]"
+                style={{ left: playLeft }}
+                aria-hidden
+              />
+            ) : null}
+
+            <div
+              className="relative border-b border-white/10 bg-black/35"
+              style={{ height: MOB_RULER_H }}
+              onPointerDown={(e) => {
+                if (e.button !== 0) return
+                scrubFromClientX(e.clientX)
+              }}
+            >
+              {dur > 0
+                ? rulerTicks.map((sec) => (
+                    <div
+                      key={`r-${sec}`}
+                      className="absolute top-0 bottom-0 w-px bg-white/20 pointer-events-none"
+                      style={{ left: sec * pps }}
+                    >
+                      <span className="absolute left-0.5 top-0.5 text-[9px] font-mono tabular-nums text-[var(--text-muted)] whitespace-nowrap">
+                        {formatMMSS(sec)}
+                      </span>
+                    </div>
+                  ))
+                : null}
+            </div>
+
+            <div
+              className="flex items-center gap-1 px-1 border-b border-[var(--border-subtle)]/50 bg-[var(--editor-rail)]"
+              style={{ height: MOB_TOOLBAR_H }}
+            >
+              <button
+                type="button"
+                onClick={handleTogglePlay}
+                disabled={!mediaControlRef}
+                className="cap-focus-visible shrink-0 flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-white/15 bg-[var(--bg-surface)] text-[var(--text-primary)] disabled:opacity-40"
+                aria-label={
+                  mediaPaused
+                    ? t("studio.timeline.play")
+                    : t("studio.timeline.pause")
+                }
+              >
+                {mediaPaused ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" />
+                  </svg>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleSeekStart}
+                className="cap-focus-visible shrink-0 flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-white/15 bg-[var(--bg-surface)] text-[var(--text-primary)]"
+                aria-label={t("studio.timeline.seekStart")}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  aria-hidden
+                >
+                  <polygon points="5 4 15 12 5 20 5 4" />
+                  <line x1="19" y1="5" x2="19" y2="19" strokeLinecap="round" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={handleSplit}
+                disabled={!canSplit}
+                className="cap-focus-visible shrink-0 flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-white/15 bg-[var(--bg-surface)] text-[var(--accent-bright)] disabled:opacity-40"
+                aria-label={t("studio.timeline.split")}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  aria-hidden
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoomOpen((z) => !z)}
+                className={[
+                  "cap-focus-visible ms-auto shrink-0 flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border",
+                  zoomOpen
+                    ? "border-[var(--accent-bright)] bg-[var(--accent)]/20 text-[var(--accent-bright)]"
+                    : "border-white/15 bg-[var(--bg-surface)] text-[var(--text-secondary)]",
+                ].join(" ")}
+                aria-expanded={zoomOpen}
+                aria-label={t("studio.timeline.zoomPanel")}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2" />
+                </svg>
+              </button>
+              <span className="shrink-0 text-[10px] font-mono tabular-nums text-[var(--text-secondary)] pe-1">
+                {formatTime(currentTime)}
+                {dur > 0 ? ` / ${formatTime(dur)}` : ""}
+              </span>
+            </div>
+
+            {zoomOpen ? (
+              <div className="flex items-center gap-2 px-2 py-1 border-b border-[var(--border-subtle)]/40 bg-black/25">
+                <span className="text-[9px] text-[var(--text-muted)] whitespace-nowrap">
+                  {t("studio.timeline.zoom")}
+                </span>
+                <input
+                  type="range"
+                  min={28}
+                  max={160}
+                  value={pps}
+                  onChange={(e) => setPps(Number(e.target.value))}
+                  className="flex-1 min-w-0 touch-range"
+                  aria-label={t("studio.timeline.zoom")}
+                />
+              </div>
+            ) : null}
+
+            <div
+              className="mx-1 mt-1 flex items-center rounded-md border border-white/10 bg-gradient-to-r from-zinc-800/90 via-zinc-700/80 to-zinc-900/90 px-2 text-[10px] font-semibold text-white/70"
+              style={{ height: MOB_VIDEO_STRIP_H }}
+            >
+              <span className="me-1.5 inline-flex h-4 w-4 items-center justify-center rounded bg-white/10 text-[8px]">
+                ▶
+              </span>
+              {t("studio.timeline.videoStrip")}
+            </div>
+
+            <div
+              ref={trackRef}
+              data-timeline-track
+              className="relative mx-1 mt-1 mb-2 rounded-md bg-[var(--editor-timeline-track)] cursor-crosshair touch-pan-x"
+              style={{ height: MOB_WORDS_TRACK_H }}
+              onPointerDown={(e) => {
+                if (e.button !== 0) return
+                if (e.target.closest("[data-word-block]")) return
+                scrubFromClientX(e.clientX)
+              }}
+            >
+              <div className="absolute inset-x-0 top-0 bottom-0 pointer-events-none overflow-hidden rounded-md">
+                {dur > 0
+                  ? rulerTicks.map((sec) => (
+                      <div
+                        key={`g-${sec}`}
+                        className="absolute top-0 bottom-0 w-px bg-white/[0.08]"
+                        style={{ left: sec * pps }}
+                      />
+                    ))
+                  : null}
+              </div>
+
+              <div className="absolute inset-0 px-0.5 py-0.5">
+                {sorted.map((w) => {
+                  const ws = Number(w.start)
+                  const we = Number(w.end)
+                  const left = ws * pps
+                  const width = Math.max(8, (we - ws) * pps)
+                  const active = String(w.id) === String(selectedWordId)
+                  return (
+                    <div
+                      key={w.id}
+                      data-word-block
+                      className={[
+                        "absolute top-0.5 bottom-0.5 rounded-md border-2 flex items-stretch overflow-hidden select-none pointer-events-auto touch-none",
+                        active
+                          ? "border-[var(--accent-bright)] bg-[var(--accent)]/30 z-10 ring-2 ring-amber-400/40 shadow-[0_0_12px_var(--accent-glow)]"
+                          : "border-white/20 bg-[var(--bg-card)]/95 z-[5]",
+                      ].join(" ")}
+                      style={{ left, width }}
+                      onPointerDown={(e) => onBlockPointerDown(w, e)}
+                    >
+                      <button
+                        type="button"
+                        data-handle="L"
+                        className="min-w-[12px] shrink-0 cursor-ew-resize bg-black/50 hover:bg-[var(--accent)]/45 border-0 p-0"
+                        aria-label={t("studio.timeline.resizeStart")}
+                        onPointerDown={(e) => {
+                          e.stopPropagation()
+                          startDrag("resizeL", w, e)
+                        }}
+                      />
+                      <div className="flex-1 min-w-0 px-1 flex items-center gap-0.5">
+                        <span
+                          className="shrink-0 text-[9px] font-bold text-[var(--accent-bright)]"
+                          aria-hidden
+                        >
+                          T
+                        </span>
+                        <span className="truncate text-[11px] font-medium text-[var(--text-primary)]">
+                          {w.word || "·"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        data-handle="R"
+                        className="min-w-[12px] shrink-0 cursor-ew-resize bg-black/50 hover:bg-[var(--accent)]/45 border-0 p-0"
+                        aria-label={t("studio.timeline.resizeEnd")}
+                        onPointerDown={(e) => {
+                          e.stopPropagation()
+                          startDrag("resizeR", w, e)
+                        }}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -271,7 +604,7 @@ export default function CaptionTimeline({
             <div
               className="absolute top-0 bottom-0 w-0.5 bg-[var(--accent-bright)] z-20 pointer-events-none shadow-[0_0_8px_var(--accent)]"
               style={{
-                left: Math.min(innerW - 2, Math.max(0, currentTime * pps)),
+                left: playLeft,
               }}
             />
           ) : null}

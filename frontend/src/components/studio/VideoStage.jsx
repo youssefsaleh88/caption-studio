@@ -129,7 +129,14 @@ const VideoStage = forwardRef(function VideoStage(
 
   useImperativeHandle(ref, () => ({
     pause: () => videoRef.current?.pause(),
-    play: () => videoRef.current?.play(),
+    play: () => void videoRef.current?.play(),
+    togglePlay: () => {
+      const v = videoRef.current
+      if (!v) return
+      if (v.paused) void v.play()
+      else v.pause()
+    },
+    isPaused: () => Boolean(videoRef.current?.paused),
     seek: (time) => {
       if (videoRef.current) videoRef.current.currentTime = time
     },
