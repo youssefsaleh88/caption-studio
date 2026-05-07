@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import SettingCard from "./SettingCard"
-import PositionControl from "./PositionControl"
 import ColorPicker from "./ColorPicker"
 import RangeSlider from "./RangeSlider"
 import AnimationPicker from "./AnimationPicker"
@@ -172,13 +171,6 @@ export default function SettingsSection({ style, onChange }) {
             />
           </div>
         ) : null}
-      </SettingCard>
-
-      <SettingCard title={t("style.captionPos")}>
-        <PositionControl
-          value={style.position}
-          onChange={(id) => set({ position: id })}
-        />
       </SettingCard>
 
       <SettingCard title={t("style.captions.displayMode")}>

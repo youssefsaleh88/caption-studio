@@ -74,6 +74,92 @@ def _animation_prefix(mode: str) -> str:
     return mapping.get(m, "")
 
 
+def _pos_prefix(style: dict, prx: int, pry: int) -> str:
+    x = style.get("position_x_pct")
+    y = style.get("position_y_pct")
+    if x is None or y is None:
+        return ""
+    xp = max(0.0, min(100.0, float(x)))
+    yp = max(0.0, min(100.0, float(y)))
+    xi = int(round(xp / 100.0 * prx))
+    yi = int(round(yp / 100.0 * pry))
+    return rf"{{\an5\pos({xi},{yi})}}"
+
+
+def _snapshots_word(
+    words: list[dict],
+    seg_start: float,
+    seg_end: float,
+    min_gap: float,
+) -> list[tuple[float, float, str]]:
+    out: list[tuple[float, float, str]] = []
+    cum: list[str] = []
+    n = len(words)
+    for i, w in enumerate(words):
+        raw = str(w.get("word", "")).strip()
+        if raw:
+            cum.append(raw)
+        t_in = max(float(seg_start), float(w.get("start", seg_start)))
+        if i + 1 < n:
+            t_next = float(words[i + 1].get("start", seg_end))
+            t_out = max(t_in + min_gap, min(t_next, seg_end))
+        else:
+            t_out = max(t_in + min_gap, float(seg_end))
+        t_out = min(float(seg_end), max(t_out, t_in + min_gap))
+        text = " ".join(cum).strip()
+        out.append((t_in, t_out, text))
+    return out
+
+
+def _snapshots_typewriter(
+    words: list[dict],
+    seg_start: float,
+    seg_end: float,
+    min_gap: float,
+) -> list[tuple[float, float, str]]:
+    steps: list[tuple[float, str]] = []
+    completed: list[str] = []
+
+    for w in words:
+        raw = str(w.get("word", ""))
+        st = float(w.get("start", seg_start))
+        en = float(w.get("end", st))
+        dur = max(0.06, en - st)
+        spread = dur * 0.7
+        chars = list(raw)
+        nc = len(chars)
+        if nc == 0:
+            continue
+        base = " ".join(completed).strip()
+        for i, _ch in enumerate(chars):
+            if nc == 1:
+                t_char = st
+            else:
+                t_char = st + (i / (nc - 1)) * spread
+            t_char = max(float(seg_start), t_char)
+            fragment = "".join(chars[: i + 1])
+            if base:
+                display = f"{base} {fragment}".strip()
+            else:
+                display = fragment
+            steps.append((t_char, display))
+        if raw.strip():
+            completed.append(raw.strip())
+
+    if not steps:
+        return []
+
+    out: list[tuple[float, float, str]] = []
+    for i, (t_in, txt) in enumerate(steps):
+        t_next = steps[i + 1][0] if i + 1 < len(steps) else float(seg_end)
+        t_out = max(t_in + min_gap, min(float(t_next), float(seg_end)))
+        t_out = min(float(seg_end), t_out)
+        if t_out <= t_in:
+            t_out = min(float(seg_end), t_in + min_gap)
+        out.append((t_in, t_out, txt))
+    return out
+
+
 def _karaoke_ass_body(words: list[dict]) -> str:
     parts: list[str] = []
     for w in words:
@@ -174,23 +260,68 @@ Style: Default,{font_name},{font_size_px},{primary},{secondary},{outline_col},{b
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
 
+    min_gap = 0.05
+    pos_pre = _pos_prefix(style, prx, pry)
+
     events: list[str] = []
     for cap in sorted(lines, key=lambda x: float(x["start"])):
-        start = _format_ass_time(float(cap["start"]))
-        end = _format_ass_time(float(cap["end"]))
-        if end <= start:
-            end = _format_ass_time(float(cap["start"]) + 0.05)
-
+        seg_start = float(cap["start"])
+        seg_end = float(cap["end"])
         words_inner = cap.get("words")
-        if anim_mode == "karaoke" and isinstance(words_inner, list) and len(words_inner) > 0:
-            text = _karaoke_ass_body(words_inner)
-            if not text.strip():
-                text = _escape_ass_text(str(cap["word"]))
-        else:
-            base = _escape_ass_text(str(cap["word"]))
-            prefix = _animation_prefix(anim_mode)
-            text = prefix + base
+        if not isinstance(words_inner, list):
+            words_inner = []
 
+        if anim_mode == "karaoke" and len(words_inner) > 0:
+            body = _karaoke_ass_body(words_inner)
+            if not body.strip():
+                body = _escape_ass_text(str(cap["word"]))
+            text = pos_pre + body
+            start = _format_ass_time(seg_start)
+            end = _format_ass_time(seg_end)
+            if end <= start:
+                end = _format_ass_time(seg_start + min_gap)
+            events.append(
+                f"Dialogue: 0,{start},{end},Default,,0,0,0,,{text}"
+            )
+            continue
+
+        if anim_mode == "word" and len(words_inner) > 0:
+            for t_in, t_out, plain in _snapshots_word(
+                words_inner, seg_start, seg_end, min_gap
+            ):
+                if not str(plain).strip():
+                    continue
+                st = _format_ass_time(t_in)
+                en = _format_ass_time(t_out)
+                if en <= st:
+                    en = _format_ass_time(t_in + min_gap)
+                body = pos_pre + _escape_ass_text(plain)
+                events.append(
+                    f"Dialogue: 0,{st},{en},Default,,0,0,0,,{body}"
+                )
+            continue
+
+        if anim_mode == "typewriter" and len(words_inner) > 0:
+            for t_in, t_out, plain in _snapshots_typewriter(
+                words_inner, seg_start, seg_end, min_gap
+            ):
+                st = _format_ass_time(t_in)
+                en = _format_ass_time(t_out)
+                if en <= st:
+                    en = _format_ass_time(t_in + min_gap)
+                body = pos_pre + _escape_ass_text(plain)
+                events.append(
+                    f"Dialogue: 0,{st},{en},Default,,0,0,0,,{body}"
+                )
+            continue
+
+        base = _escape_ass_text(str(cap["word"]))
+        prefix = _animation_prefix(anim_mode)
+        text = pos_pre + prefix + base
+        start = _format_ass_time(seg_start)
+        end = _format_ass_time(seg_end)
+        if end <= start:
+            end = _format_ass_time(seg_start + min_gap)
         events.append(
             f"Dialogue: 0,{start},{end},Default,,0,0,0,,{text}"
         )

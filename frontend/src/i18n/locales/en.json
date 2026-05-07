@@ -63,19 +63,22 @@
       "toggleShow": "Show word list",
       "toggleHide": "Hide word list",
       "autoFollow": "Auto-follow active word",
-      "panelCollapsedHint": "List hidden for less scrolling — tap above to show words and edit timings."
+      "panelCollapsedHint": "List hidden for less scrolling — tap above to show words and edit timings.",
+      "dragHint": "Drag the caption to position it on the video."
     },
     "animations": {
       "none": "None",
       "fade": "Fade",
       "pop": "Pop",
       "bounce": "Bounce",
-      "karaoke": "Karaoke"
+      "karaoke": "Karaoke",
+      "word": "Word reveal",
+      "typewriter": "Typewriter"
     },
     "settings": {
       "typography": "Typography & colors",
       "animations": "Motion effects",
-      "animationsHint": "Shown in preview and burned into exported video (karaoke follows word timings).",
+      "animationsHint": "Shown in preview and burned into export. Drag the caption on the video to position it.",
       "karaokeColor": "Karaoke highlight color",
       "advanced": "Advanced timing",
       "advancedHint": "Segment timing & grouping — use when you need finer control.",

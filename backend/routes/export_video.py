@@ -39,6 +39,8 @@ class StyleOptions(BaseModel):
     min_display_time: float = 0.7
     caption_animation: str = "none"
     karaoke_color: str = "#8B80FF"
+    position_x_pct: float | None = None
+    position_y_pct: float | None = None
 
 
 class ExportRequest(BaseModel):

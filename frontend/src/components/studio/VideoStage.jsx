@@ -17,20 +17,10 @@ import {
 import { getAnimationCssClass } from "../../utils/captionAnimations"
 import VideoControls from "./VideoControls"
 
-const POSITION_STYLES = {
-  "top-left": { top: 16, left: 16, transform: "none" },
-  "top-center": { top: 16, left: "50%", transform: "translateX(-50%)" },
-  "top-right": { top: 16, right: 16, transform: "none" },
-  "middle-left": { top: "50%", left: 16, transform: "translateY(-50%)" },
-  center: { top: "50%", left: "50%", transform: "translate(-50%,-50%)" },
-  "middle-right": { top: "50%", right: 16, transform: "translateY(-50%)" },
-  "bottom-left": { bottom: 104, left: 16, transform: "none" },
-  "bottom-center": {
-    bottom: 104,
-    left: "50%",
-    transform: "translateX(-50%)",
-  },
-  "bottom-right": { bottom: 104, right: 16, transform: "none" },
+function clampPct(v, lo = 4, hi = 96) {
+  const n = Number(v)
+  if (!Number.isFinite(n)) return (lo + hi) / 2
+  return Math.min(hi, Math.max(lo, n))
 }
 
 function hexWithAlpha(hex, alpha) {
@@ -63,7 +53,7 @@ function resolveFontSizePct(style) {
 }
 
 const VideoStage = forwardRef(function VideoStage(
-  { videoUrl, words, style, onTimeUpdate, onVideoDimensions },
+  { videoUrl, words, style, onTimeUpdate, onVideoDimensions, onStyleChange },
   ref,
 ) {
   const { t } = useTranslation()
@@ -74,6 +64,8 @@ const VideoStage = forwardRef(function VideoStage(
   const [playing, setPlaying] = useState(false)
   const [layoutH, setLayoutH] = useState(400)
   const [fsActive, setFsActive] = useState(false)
+  const [dragging, setDragging] = useState(false)
+  const [showDragHint, setShowDragHint] = useState(true)
   const lastRoundedHeightRef = useRef(-1)
 
   const measure = useCallback(() => {
@@ -83,10 +75,7 @@ const VideoStage = forwardRef(function VideoStage(
     if (h <= 40) return
     const rounded = Math.round(h)
     const prev = lastRoundedHeightRef.current
-    if (
-      prev !== -1 &&
-      Math.abs(rounded - prev) <= 1
-    ) {
+    if (prev !== -1 && Math.abs(rounded - prev) <= 1) {
       return
     }
     lastRoundedHeightRef.current = rounded
@@ -116,6 +105,11 @@ const VideoStage = forwardRef(function VideoStage(
     document.addEventListener("fullscreenchange", onFs)
     return () => document.removeEventListener("fullscreenchange", onFs)
   }, [measure])
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setShowDragHint(false), 4000)
+    return () => window.clearTimeout(id)
+  }, [])
 
   useImperativeHandle(ref, () => ({
     pause: () => videoRef.current?.pause(),
@@ -168,6 +162,26 @@ const VideoStage = forwardRef(function VideoStage(
     return activeList.find((s) => t0 >= s.start && t0 <= s.end) ?? null
   }, [activeList, currentTime])
 
+  const animMode = style?.caption_animation || "none"
+
+  const enterAnimClass = useMemo(() => {
+    if (
+      !animMode ||
+      animMode === "none" ||
+      animMode === "karaoke" ||
+      animMode === "word" ||
+      animMode === "typewriter"
+    ) {
+      return ""
+    }
+    const c = getAnimationCssClass(animMode)
+    return c ? `${c} motion-reduce:!animate-none` : ""
+  }, [animMode])
+
+  const overlayReactKey = activeSeg
+    ? `${activeSeg.id}-${animMode}`
+    : "no-seg"
+
   const pct = resolveFontSizePct(style)
   const displayFontPx = Math.max(10, Math.round((pct / 100) * layoutH))
   const outlinePx = Math.max(
@@ -176,15 +190,17 @@ const VideoStage = forwardRef(function VideoStage(
   )
   const padPx = Math.max(4, Math.round((pct / 100) * layoutH * 0.035))
 
-  const positionStyle =
-    POSITION_STYLES[style?.position] || POSITION_STYLES["bottom-center"]
+  const posX = clampPct(style?.position_x_pct ?? 50)
+  const posY = clampPct(style?.position_y_pct ?? 88)
 
   const showBg = style?.bg_enabled !== false
 
   function overlayBaseStyle() {
     return {
       position: "absolute",
-      ...positionStyle,
+      left: `${posX}%`,
+      top: `${posY}%`,
+      transform: "translate(-50%, -50%)",
       fontFamily: style?.fontFamily || "Tajawal, sans-serif",
       fontSize: `${displayFontPx}px`,
       color: style?.color || "#FFFFFF",
@@ -198,25 +214,116 @@ const VideoStage = forwardRef(function VideoStage(
       WebkitTextStroke: style?.outline_enabled
         ? `${Math.max(1, outlinePx / 4)}px ${style?.outline_color || "#000000"}`
         : "0",
-      pointerEvents: "none",
+      pointerEvents: "auto",
       maxWidth: "85%",
       textAlign: "center",
       whiteSpace: "pre-wrap",
       lineHeight: 1.35,
       zIndex: 15,
+      cursor: dragging ? "grabbing" : "grab",
+      touchAction: "none",
+    }
+  }
+
+  const updatePositionFromClient = useCallback(
+    (clientX, clientY) => {
+      const el = containerRef.current
+      if (!el || !onStyleChange) return
+      const r = el.getBoundingClientRect()
+      const xPct = ((clientX - r.left) / r.width) * 100
+      const yPct = ((clientY - r.top) / r.height) * 100
+      onStyleChange({
+        position_x_pct: clampPct(xPct),
+        position_y_pct: clampPct(yPct),
+      })
+    },
+    [onStyleChange],
+  )
+
+  function onOverlayPointerDown(e) {
+    if (e.button !== 0 && e.pointerType !== "touch") return
+    setShowDragHint(false)
+    setDragging(true)
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      /* ignore */
+    }
+    updatePositionFromClient(e.clientX, e.clientY)
+  }
+
+  function onOverlayPointerMove(e) {
+    if (!dragging) return
+    updatePositionFromClient(e.clientX, e.clientY)
+  }
+
+  function onOverlayPointerUp(e) {
+    setDragging(false)
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      /* ignore */
     }
   }
 
   function renderCaptionContent() {
     if (!activeSeg) return null
     const ids = activeSeg.wordIds || []
-    const animMode = style?.caption_animation || "none"
     const isKaraoke = animMode === "karaoke"
     const karaokeCol = style?.karaoke_color || "#8B80FF"
 
     if (!ids.length) {
       return activeSeg.text || ""
     }
+
+    if (animMode === "word") {
+      return ids.map((wid) => {
+        const w = wordMap.get(String(wid))
+        if (!w) return null
+        const visible = currentTime >= Number(w.start) - 0.05
+        return (
+          <span
+            key={wid}
+            style={{
+              opacity: visible ? 1 : 0,
+              transition: "opacity 0.14s linear",
+            }}
+          >
+            {w.word}{" "}
+          </span>
+        )
+      })
+    }
+
+    if (animMode === "typewriter") {
+      return ids.map((wid) => {
+        const w = wordMap.get(String(wid))
+        if (!w) return null
+        const raw = String(w.word ?? "")
+        const st = Number(w.start)
+        const en = Number(w.end)
+        const dur = Math.max(0.06, en - st)
+        const spread = dur * 0.7
+        const prog = Math.min(
+          1,
+          Math.max(0, (currentTime - st) / Math.max(0.001, spread)),
+        )
+        const nVisible = Math.floor(prog * raw.length + 0.001)
+        const shown = raw.slice(0, nVisible)
+        const rest = raw.slice(nVisible)
+        return (
+          <span key={wid} className="inline">
+            {shown}
+            {rest ? (
+              <span className="opacity-0 select-none pointer-events-none" aria-hidden>
+                {rest}
+              </span>
+            ) : null}{" "}
+          </span>
+        )
+      })
+    }
+
     return ids.map((wid) => {
       const w = wordMap.get(String(wid))
       if (!w) return null
@@ -324,19 +431,30 @@ const VideoStage = forwardRef(function VideoStage(
         onPause={() => setPlaying(false)}
       />
 
+      {showDragHint ? (
+        <p
+          className="absolute top-2 left-1/2 -translate-x-1/2 z-20 max-w-[90%] rounded-[var(--radius-sm)] border border-white/15 bg-black/70 px-2.5 py-1.5 text-[10px] text-white/90 text-center pointer-events-none backdrop-blur-sm"
+          role="status"
+        >
+          {t("studio.captions.dragHint")}
+        </p>
+      ) : null}
+
       {activeSeg ? (
         <div
-          key={activeSeg.id}
+          key={overlayReactKey}
           style={overlayBaseStyle()}
           dir="auto"
           className={[
-            (() => {
-              const a = style?.caption_animation || "none"
-              if (a === "none" || a === "karaoke") return ""
-              const c = getAnimationCssClass(a)
-              return c ? `${c} motion-reduce:!animate-none` : ""
-            })(),
+            enterAnimClass,
+            dragging
+              ? "outline outline-2 outline-dashed outline-[var(--accent)]/80 outline-offset-2 rounded-[10px]"
+              : "",
           ].join(" ")}
+          onPointerDown={onOverlayPointerDown}
+          onPointerMove={onOverlayPointerMove}
+          onPointerUp={onOverlayPointerUp}
+          onPointerCancel={onOverlayPointerUp}
         >
           {renderCaptionContent()}
         </div>

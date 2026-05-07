@@ -79,6 +79,14 @@ export default function ActionBar({
             min_display_time: Number(style.min_display_time ?? 0.7),
             caption_animation: style.caption_animation || "none",
             karaoke_color: style.karaoke_color || "#8B80FF",
+            position_x_pct:
+              style.position_x_pct != null
+                ? Number(style.position_x_pct)
+                : null,
+            position_y_pct:
+              style.position_y_pct != null
+                ? Number(style.position_y_pct)
+                : null,
           },
         }),
       })

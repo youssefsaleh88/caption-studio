@@ -56,6 +56,8 @@ const DEFAULT_STYLE = {
   outline_enabled: false,
   outline_color: "#000000",
   position: "bottom-center",
+  position_x_pct: 50,
+  position_y_pct: 88,
   caption_mode: "sentences",
   timing_offset: 0,
   max_words_per_line: 6,
@@ -165,6 +167,9 @@ export default function Editor() {
               style={{ ...style, timing_offset: 0 }}
               onTimeUpdate={setCurrentTime}
               onVideoDimensions={() => {}}
+              onStyleChange={(patch) =>
+                setStyle((s) => ({ ...s, ...patch }))
+              }
             />
           </div>
 

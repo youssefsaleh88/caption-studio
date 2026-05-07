@@ -134,15 +134,15 @@
 }
 
 .cap-anim-fade {
-  animation: cap-anim-fade-in 0.22s ease forwards;
+  animation: cap-anim-fade-in 0.38s ease forwards;
 }
 
 .cap-anim-pop {
-  animation: cap-anim-pop-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: cap-anim-pop-in 0.36s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .cap-anim-bounce {
-  animation: cap-anim-bounce-in 0.32s ease forwards;
+  animation: cap-anim-bounce-in 0.42s ease forwards;
 }
 
 .cap-anim-karaoke {
@@ -217,6 +217,38 @@
   animation: cap-preview-karaoke 2s ease-in-out infinite;
 }
 
+@keyframes cap-preview-word {
+  0%,
+  40% {
+    opacity: 0.35;
+  }
+  60%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes cap-preview-typewriter {
+  0% {
+    width: 0;
+    opacity: 0.5;
+  }
+  100% {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+.cap-anim-preview-word {
+  animation: cap-preview-word 2.4s ease-in-out infinite;
+}
+
+.cap-anim-preview-typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: cap-preview-typewriter 2.8s steps(8, end) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --capt-slide-duration: 0.01ms;
@@ -232,7 +264,9 @@
   .cap-anim-preview-fade,
   .cap-anim-preview-pop,
   .cap-anim-preview-bounce,
-  .cap-anim-preview-karaoke {
+  .cap-anim-preview-karaoke,
+  .cap-anim-preview-word,
+  .cap-anim-preview-typewriter {
     animation: none !important;
   }
 }

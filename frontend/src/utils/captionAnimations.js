@@ -7,6 +7,8 @@ export const CAPTION_ANIMATION_IDS = [
   "pop",
   "bounce",
   "karaoke",
+  "word",
+  "typewriter",
 ]
 
 export const CAPTION_ANIMATIONS = {
@@ -35,9 +37,20 @@ export const CAPTION_ANIMATIONS = {
     cssClass: "cap-anim-karaoke",
     previewClass: "cap-anim-preview-karaoke",
   },
+  word: {
+    id: "word",
+    cssClass: null,
+    previewClass: "cap-anim-preview-word",
+  },
+  typewriter: {
+    id: "typewriter",
+    cssClass: null,
+    previewClass: "cap-anim-preview-typewriter",
+  },
 }
 
 export function getAnimationCssClass(animationId) {
-  const id = animationId && CAPTION_ANIMATIONS[animationId] ? animationId : "none"
+  const id =
+    animationId && CAPTION_ANIMATIONS[animationId] ? animationId : "none"
   return CAPTION_ANIMATIONS[id].cssClass
 }
