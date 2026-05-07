@@ -26,11 +26,12 @@ export default function CaptionList({
     return null
   }, [sorted, currentTime])
 
+  /* تجنِّب حلقة إعادة رسم لا نهاية (React #185): لا ترتبِط بتقدُّم الفيديو — فقط بتغيّر الكلمة النشطة */
   useEffect(() => {
     if (!activeId) return
     const el = itemRefs.current.get(activeId)
     el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" })
-  }, [activeId, currentTime])
+  }, [activeId])
 
   useEffect(() => {
     if (!expandedId) return

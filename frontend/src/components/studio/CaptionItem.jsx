@@ -125,11 +125,15 @@ const CaptionItem = forwardRef(function CaptionItem(
                   type="number"
                   step={timeStep}
                   min={0}
-                  value={Number(draft.start).toFixed(2)}
+                  value={
+                    Number.isFinite(Number(draft.start))
+                      ? Number(draft.start).toFixed(2)
+                      : ""
+                  }
                   onChange={(e) =>
                     setDraft((d) => ({
                       ...d,
-                      start: Number(e.target.value),
+                      start: Number(e.target.value) || 0,
                     }))
                   }
                   className="flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2 py-2 text-sm font-mono text-center"
@@ -159,9 +163,16 @@ const CaptionItem = forwardRef(function CaptionItem(
                   type="number"
                   step={timeStep}
                   min={0}
-                  value={Number(draft.end).toFixed(2)}
+                  value={
+                    Number.isFinite(Number(draft.end))
+                      ? Number(draft.end).toFixed(2)
+                      : ""
+                  }
                   onChange={(e) =>
-                    setDraft((d) => ({ ...d, end: Number(e.target.value) }))
+                    setDraft((d) => ({
+                      ...d,
+                      end: Number(e.target.value) || d.start + 0.02,
+                    }))
                   }
                   className="flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2 py-2 text-sm font-mono text-center"
                 />

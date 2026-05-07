@@ -73,12 +73,23 @@ const VideoStage = forwardRef(function VideoStage(
   const [playing, setPlaying] = useState(false)
   const [layoutH, setLayoutH] = useState(400)
   const [fsActive, setFsActive] = useState(false)
+  const lastRoundedHeightRef = useRef(-1)
 
   const measure = useCallback(() => {
     const el = containerRef.current
     if (!el) return
     const h = el.getBoundingClientRect().height
-    if (h > 40) setLayoutH(h)
+    if (h <= 40) return
+    const rounded = Math.round(h)
+    const prev = lastRoundedHeightRef.current
+    if (
+      prev !== -1 &&
+      Math.abs(rounded - prev) <= 1
+    ) {
+      return
+    }
+    lastRoundedHeightRef.current = rounded
+    setLayoutH(rounded)
   }, [])
 
   useEffect(() => {
