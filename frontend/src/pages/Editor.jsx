@@ -15,6 +15,7 @@ import LanguageSwitcher from "../components/LanguageSwitcher"
 import SettingsSection from "../components/studio/SettingsSection"
 import StudioNavBar from "../components/studio/StudioNavBar"
 import TranscriptPanel from "../components/studio/TranscriptPanel"
+import WordListStrip from "../components/studio/WordListStrip"
 import VideoStage from "../components/studio/VideoStage"
 import WordEditBottomSheet from "../components/studio/WordEditBottomSheet"
 import { BRAND } from "../utils/brand"
@@ -316,19 +317,26 @@ export default function Editor() {
           <div className="flex-1 flex flex-col min-h-0">
             <div className="lg:hidden flex-1 min-h-0 flex flex-col gap-2 px-2">
               {activeMobileTab === "edit" ? (
-                <CaptionTimeline
-                  words={words}
-                  duration={timelineDuration}
-                  currentTime={currentTime}
-                  onSeek={seekTo}
-                  onWordsChange={handleWordsFromTimeline}
-                  newId={() => uuidv4()}
-                  selectedWordId={selectedWordId}
-                  onSelectWord={setSelectedWordId}
-                  onRequestEditWord={handleTimelineRequestEdit}
-                  variant="roomy"
-                  mediaControlRef={previewRef}
-                />
+                <>
+                  <CaptionTimeline
+                    words={words}
+                    duration={timelineDuration}
+                    currentTime={currentTime}
+                    onSeek={seekTo}
+                    onWordsChange={handleWordsFromTimeline}
+                    newId={() => uuidv4()}
+                    selectedWordId={selectedWordId}
+                    onSelectWord={setSelectedWordId}
+                    onRequestEditWord={handleTimelineRequestEdit}
+                    variant="roomy"
+                    mediaControlRef={previewRef}
+                  />
+                  <WordListStrip
+                    words={words}
+                    selectedWordId={selectedWordId}
+                    onPickWord={handleTimelineRequestEdit}
+                  />
+                </>
               ) : null}
 
               {activeMobileTab === "style" ? (

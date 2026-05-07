@@ -11,11 +11,14 @@ import {
 } from "../../utils/timelineUtils"
 
 const TAP_THRESHOLD_PX = 8
+const TAP_THRESHOLD_ROOMY_PX = 14
 
 const MOB_RULER_H = 24
 const MOB_TOOLBAR_H = 40
 const MOB_VIDEO_STRIP_H = 28
-const MOB_WORDS_TRACK_H = 54
+const MOB_WORDS_TRACK_H = 68
+const MOB_ZOOM_MIN = 48
+const MIN_WORD_PIXEL_FOR_FLOOR = 18
 
 function formatTime(sec) {
   const s = Math.max(0, Number(sec) || 0)
@@ -47,21 +50,42 @@ export default function CaptionTimeline({
   const { t } = useTranslation()
   const scrollRef = useRef(null)
   const trackRef = useRef(null)
-  const [pps, setPps] = useState(() => (variant === "roomy" ? 96 : 72))
+  const roomy = variant === "roomy"
+  const [pps, setPps] = useState(() => (roomy ? 110 : 72))
+  const [editOnlyMode, setEditOnlyMode] = useState(false)
   const [zoomOpen, setZoomOpen] = useState(false)
   const [mediaPaused, setMediaPaused] = useState(true)
   const dragRef = useRef(null)
   const pendingRef = useRef(null)
 
-  const roomy = variant === "roomy"
-
   const dur =
     Number.isFinite(Number(duration)) && Number(duration) > 0
       ? Number(duration)
       : 0
-  const innerW = Math.max(280, (dur || 8) * pps + 48)
 
   const sorted = useMemo(() => sortWordsByStart(words), [words])
+
+  const autoFloorPps = useMemo(() => {
+    if (!roomy || !sorted.length) return 0
+    let maxNeed = 0
+    for (const w of sorted) {
+      const dt = Math.max(0.02, Number(w.end) - Number(w.start))
+      maxNeed = Math.max(maxNeed, MIN_WORD_PIXEL_FOR_FLOOR / dt)
+    }
+    return Math.min(160, maxNeed)
+  }, [roomy, sorted])
+
+  const effectivePps = useMemo(() => {
+    if (!roomy) return pps
+    return Math.min(160, Math.max(pps, autoFloorPps))
+  }, [roomy, pps, autoFloorPps])
+
+  const innerW = Math.max(280, (dur || 8) * effectivePps + 48)
+
+  useEffect(() => {
+    if (!roomy) return
+    if (pps < MOB_ZOOM_MIN) setPps(MOB_ZOOM_MIN)
+  }, [roomy, pps])
 
   const applyWords = useCallback(
     (next) => {
@@ -122,10 +146,10 @@ export default function CaptionTimeline({
       if (!sc || !dur) return
       const pr = sc.getBoundingClientRect()
       const x = sc.scrollLeft + (clientX - pr.left)
-      const t = Math.max(0, Math.min(dur, x / pps))
+      const t = Math.max(0, Math.min(dur, x / effectivePps))
       onSeek?.(t)
     },
-    [dur, pps, onSeek],
+    [dur, effectivePps, onSeek],
   )
 
   const startDrag = useCallback(
@@ -145,7 +169,7 @@ export default function CaptionTimeline({
       }
       dragRef.current = dragState
 
-      const ppsLocal = pps
+      const ppsLocal = effectivePps
       const durLocal = dur || 1e12
 
       function onMove(ev) {
@@ -182,7 +206,7 @@ export default function CaptionTimeline({
         /* ignore */
       }
     },
-    [applyWords, dur, onSelectWord, pps, words],
+    [applyWords, dur, effectivePps, onSelectWord, words],
   )
 
   function onBlockPointerDown(w, e) {
@@ -190,6 +214,13 @@ export default function CaptionTimeline({
     if (e.target.closest("[data-handle]")) return
     e.stopPropagation()
     onSelectWord?.(w.id)
+
+    if (editOnlyMode) {
+      onRequestEditWord?.(w.id)
+      return
+    }
+
+    const tapPx = roomy ? TAP_THRESHOLD_ROOMY_PX : TAP_THRESHOLD_PX
 
     const ox = e.clientX
     const oy = e.clientY
@@ -209,7 +240,7 @@ export default function CaptionTimeline({
       if (!p || p.dragStarted) return
       const dx = ev.clientX - p.ox
       const dy = ev.clientY - p.oy
-      if (dx * dx + dy * dy >= TAP_THRESHOLD_PX * TAP_THRESHOLD_PX) {
+      if (dx * dx + dy * dy >= tapPx * tapPx) {
         p.dragStarted = true
         pendingRef.current = null
         cleanup()
@@ -262,7 +293,10 @@ export default function CaptionTimeline({
 
   const canSplit = findWordIndexForSplit(sorted, currentTime) >= 0
 
-  const playLeft = Math.min(innerW - 2, Math.max(0, currentTime * pps))
+  const playLeft = Math.min(
+    innerW - 2,
+    Math.max(0, currentTime * effectivePps),
+  )
 
   const scrollClass = roomy
     ? "flex-1 min-h-[150px] max-h-[min(240px,42vh)] overflow-x-auto overflow-y-hidden touch-pan-x"
@@ -322,7 +356,7 @@ export default function CaptionTimeline({
                     <div
                       key={`r-${sec}`}
                       className="absolute top-0 bottom-0 w-px bg-white/20 pointer-events-none"
-                      style={{ left: sec * pps }}
+                      style={{ left: sec * effectivePps }}
                     >
                       <span className="absolute left-0.5 top-0.5 text-[9px] font-mono tabular-nums text-[var(--text-muted)] whitespace-nowrap">
                         {formatMMSS(sec)}
@@ -336,6 +370,20 @@ export default function CaptionTimeline({
               className="flex items-center gap-1 px-1 border-b border-[var(--border-subtle)]/50 bg-[var(--editor-rail)]"
               style={{ height: MOB_TOOLBAR_H }}
             >
+              <button
+                type="button"
+                onClick={() => setEditOnlyMode((v) => !v)}
+                className={[
+                  "cap-focus-visible shrink-0 rounded-[var(--radius-sm)] border px-1.5 py-1 text-[9px] font-bold leading-tight max-w-[4.5rem]",
+                  editOnlyMode
+                    ? "border-[var(--accent-bright)] bg-[var(--accent)]/25 text-[var(--accent-bright)]"
+                    : "border-white/15 bg-[var(--bg-surface)] text-[var(--text-secondary)]",
+                ].join(" ")}
+                aria-pressed={editOnlyMode}
+                title={t("studio.timeline.editOnlyHint")}
+              >
+                {t("studio.timeline.editOnly")}
+              </button>
               <button
                 type="button"
                 onClick={handleTogglePlay}
@@ -434,7 +482,7 @@ export default function CaptionTimeline({
                 </span>
                 <input
                   type="range"
-                  min={28}
+                  min={MOB_ZOOM_MIN}
                   max={160}
                   value={pps}
                   onChange={(e) => setPps(Number(e.target.value))}
@@ -471,7 +519,7 @@ export default function CaptionTimeline({
                       <div
                         key={`g-${sec}`}
                         className="absolute top-0 bottom-0 w-px bg-white/[0.08]"
-                        style={{ left: sec * pps }}
+                        style={{ left: sec * effectivePps }}
                       />
                     ))
                   : null}
@@ -481,8 +529,8 @@ export default function CaptionTimeline({
                 {sorted.map((w) => {
                   const ws = Number(w.start)
                   const we = Number(w.end)
-                  const left = ws * pps
-                  const width = Math.max(8, (we - ws) * pps)
+                  const left = ws * effectivePps
+                  const width = Math.max(8, (we - ws) * effectivePps)
                   const active = String(w.id) === String(selectedWordId)
                   return (
                     <div
@@ -591,7 +639,7 @@ export default function CaptionTimeline({
                 <div
                   key={`tick-${i}`}
                   className="absolute top-0 bottom-0 w-px bg-white/10 pointer-events-none"
-                  style={{ left: i * pps }}
+                  style={{ left: i * effectivePps }}
                 >
                   <span className="absolute -top-0.5 left-0.5 text-[9px] text-[var(--text-muted)] font-mono">
                     {i}s
@@ -613,8 +661,8 @@ export default function CaptionTimeline({
             {sorted.map((w) => {
               const ws = Number(w.start)
               const we = Number(w.end)
-              const left = ws * pps
-              const width = Math.max(6, (we - ws) * pps)
+              const left = ws * effectivePps
+              const width = Math.max(6, (we - ws) * effectivePps)
               const active = String(w.id) === String(selectedWordId)
               return (
                 <div

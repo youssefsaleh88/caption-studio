@@ -75,8 +75,13 @@
       "pause": "Pause",
       "seekStart": "Go to start of video",
       "videoStrip": "Video",
+      "editOnly": "Tap",
+      "editOnlyHint": "Disable block drag: tap opens editor only (handles still resize)",
       "resizeStart": "Drag word start",
       "resizeEnd": "Drag word end"
+    },
+    "wordList": {
+      "title": "Word list (tap to expand)"
     },
     "animations": {
       "none": "None",
