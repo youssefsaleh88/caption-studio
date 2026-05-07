@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 
@@ -65,6 +64,30 @@ def _format_ass_time(seconds: float) -> str:
     return f"{h}:{m:02d}:{whole:02d}.{cs:02d}"
 
 
+def _animation_prefix(mode: str) -> str:
+    m = str(mode or "none").lower()
+    mapping = {
+        "fade": r"{\fad(180,140)}",
+        "pop": r"{\fscx70\fscy70\t(0,200,\fscx100\fscy100)}",
+        "bounce": r"{\fscx60\fscy60\t(0,180,\fscx112\fscy112)\t(180,300,\fscx100\fscy100)}",
+    }
+    return mapping.get(m, "")
+
+
+def _karaoke_ass_body(words: list[dict]) -> str:
+    parts: list[str] = []
+    for w in words:
+        raw = str(w.get("word", "")).strip()
+        if not raw:
+            continue
+        st = float(w.get("start", 0))
+        en = float(w.get("end", 0))
+        dur_cs = max(1, int(round(max(0.0, en - st) * 100)))
+        escaped = _escape_ass_text(raw)
+        parts.append(rf"{{\k{dur_cs}}}{escaped}")
+    return " ".join(parts)
+
+
 def _resolve_font_size_px(style: dict, play_res_y: int) -> int:
     pct = style.get("font_size_pct")
     if pct is not None:
@@ -104,7 +127,15 @@ def write_ass_for_burn_in(
     elif "Noto" in font_name or "Arabic" in font_name:
         font_name = "Noto Sans Arabic"
 
-    primary = _hex_to_ass_bgr(str(style.get("color") or "#FFFFFF"), 0.0)
+    anim_mode = str(style.get("caption_animation") or "none").lower()
+
+    if anim_mode == "karaoke":
+        primary = _hex_to_ass_bgr(str(style.get("karaoke_color") or "#8B80FF"), 0.0)
+        secondary = _hex_to_ass_bgr(str(style.get("color") or "#FFFFFF"), 0.0)
+    else:
+        primary = _hex_to_ass_bgr(str(style.get("color") or "#FFFFFF"), 0.0)
+        secondary = "&H000000FF"
+
     outline_col = _hex_to_ass_bgr("#000000", 0.0)
 
     bg_enabled = style.get("bg_enabled", True)
@@ -137,7 +168,7 @@ WrapStyle: 2
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,{font_name},{font_size_px},{primary},&H000000FF,{outline_col},{back_col},-1,0,0,0,100,100,0,0,{border_style},{effective_outline},{shadow_w},{alignment},{margin_lr},{margin_lr},{margin_v},1
+Style: Default,{font_name},{font_size_px},{primary},{secondary},{outline_col},{back_col},-1,0,0,0,100,100,0,0,{border_style},{effective_outline},{shadow_w},{alignment},{margin_lr},{margin_lr},{margin_v},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -145,11 +176,21 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
     events: list[str] = []
     for cap in sorted(lines, key=lambda x: float(x["start"])):
-        text = _escape_ass_text(str(cap["word"]))
         start = _format_ass_time(float(cap["start"]))
         end = _format_ass_time(float(cap["end"]))
         if end <= start:
             end = _format_ass_time(float(cap["start"]) + 0.05)
+
+        words_inner = cap.get("words")
+        if anim_mode == "karaoke" and isinstance(words_inner, list) and len(words_inner) > 0:
+            text = _karaoke_ass_body(words_inner)
+            if not text.strip():
+                text = _escape_ass_text(str(cap["word"]))
+        else:
+            base = _escape_ass_text(str(cap["word"]))
+            prefix = _animation_prefix(anim_mode)
+            text = prefix + base
+
         events.append(
             f"Dialogue: 0,{start},{end},Default,,0,0,0,,{text}"
         )

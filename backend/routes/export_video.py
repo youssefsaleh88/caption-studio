@@ -37,6 +37,8 @@ class StyleOptions(BaseModel):
     max_segment_duration: float = 3.0
     sliding_window: int = 3
     min_display_time: float = 0.7
+    caption_animation: str = "none"
+    karaoke_color: str = "#8B80FF"
 
 
 class ExportRequest(BaseModel):

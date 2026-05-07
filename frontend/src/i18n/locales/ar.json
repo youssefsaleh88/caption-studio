@@ -59,8 +59,26 @@
     "sectionWords": "الكلمات",
     "wordsCount": "كلمات",
     "sectionSettings": "الإعدادات",
+    "captions": {
+      "toggleShow": "إظهار قائمة الكلمات",
+      "toggleHide": "إخفاء قائمة الكلمات",
+      "autoFollow": "متابعة تلقائية للكلمة الحالية",
+      "panelCollapsedHint": "القائمة مخفية لتوفير التمرير — اضغط أعلى لعرض الكلمات وتعديل التوقيت."
+    },
+    "animations": {
+      "none": "بدون",
+      "fade": "تلاشي",
+      "pop": "ظهور بنبضة",
+      "bounce": "ارتداد",
+      "karaoke": "كاريوكي"
+    },
     "settings": {
       "typography": "الخط والألوان",
+      "animations": "تأثيرات الحركة",
+      "animationsHint": "تُعرض في المعاينة وتُحرق في الفيديو المصدّر (ما عدا الكاريوكي يعتمد على توقيت كل كلمة).",
+      "karaokeColor": "لون تسليط الكاريوكي",
+      "advanced": "إعدادات متقدّمة",
+      "advancedHint": "توقيت المقاطع وتجميع الجمل — استخدمها عند الحاجة فقط.",
       "positionSimple": {
         "top": "أعلى",
         "middle": "وسط",
@@ -77,6 +95,7 @@
       "delete": "حذف"
     },
     "action": {
+      "downloadSrt": "تحميل SRT",
       "export": "تصدير الفيديو",
       "exporting": "جاري التصدير…",
       "exported": "بدأ التحميل",
@@ -127,7 +146,12 @@
   },
   "footer": {
     "madeBy": "صنع بواسطة",
-    "rights": "{{text}}"
+    "rights": "{{text}}",
+    "tagline": "ترجمات ذكية، تصدير سريع، جاهز لريلز ويوتيوب.",
+    "shortcuts": "اختصارات",
+    "linkHome": "الرئيسية",
+    "linkNew": "ابدأ كابشن جديد",
+    "bottomLine": "© 2026 {{app}} · Made by {{name}}"
   },
   "video": {
     "fullscreen": "ملء الشاشة",

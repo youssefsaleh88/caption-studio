@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next"
+import CaptainLogo from "../CaptainLogo"
 import LanguageSwitcher from "../LanguageSwitcher"
 
 export default function StudioNavBar({ onBack, showBack = true }) {
@@ -32,9 +33,7 @@ export default function StudioNavBar({ onBack, showBack = true }) {
         ) : null}
 
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
-          <span className="font-display font-extrabold text-base sm:text-lg bg-gradient-to-r from-[var(--accent)] via-[var(--blue)] to-[var(--accent-bright)] bg-clip-text text-transparent truncate max-w-[min(200px,46vw)] sm:max-w-none">
-            {t("brand.appName")}
-          </span>
+          <CaptainLogo size="sm" wordmark className="max-w-[min(220px,52vw)] sm:max-w-none" />
           <span className="shrink-0 rounded-[var(--radius-pill)] bg-[var(--accent-dim)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--accent-bright)] border border-[var(--accent)]/25">
             {t("studio.badge")}
           </span>

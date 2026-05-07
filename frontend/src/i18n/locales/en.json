@@ -59,8 +59,26 @@
     "sectionWords": "Words",
     "wordsCount": "words",
     "sectionSettings": "Settings",
+    "captions": {
+      "toggleShow": "Show word list",
+      "toggleHide": "Hide word list",
+      "autoFollow": "Auto-follow active word",
+      "panelCollapsedHint": "List hidden for less scrolling — tap above to show words and edit timings."
+    },
+    "animations": {
+      "none": "None",
+      "fade": "Fade",
+      "pop": "Pop",
+      "bounce": "Bounce",
+      "karaoke": "Karaoke"
+    },
     "settings": {
       "typography": "Typography & colors",
+      "animations": "Motion effects",
+      "animationsHint": "Shown in preview and burned into exported video (karaoke follows word timings).",
+      "karaokeColor": "Karaoke highlight color",
+      "advanced": "Advanced timing",
+      "advancedHint": "Segment timing & grouping — use when you need finer control.",
       "positionSimple": {
         "top": "Top",
         "middle": "Middle",
@@ -77,6 +95,7 @@
       "delete": "Delete"
     },
     "action": {
+      "downloadSrt": "Download SRT",
       "export": "Export video",
       "exporting": "Exporting…",
       "exported": "Download started",
@@ -127,7 +146,12 @@
   },
   "footer": {
     "madeBy": "Made by",
-    "rights": "{{text}}"
+    "rights": "{{text}}",
+    "tagline": "Smart captions, fast export — ready for Reels & YouTube.",
+    "shortcuts": "Shortcuts",
+    "linkHome": "Home",
+    "linkNew": "New caption",
+    "bottomLine": "© 2026 {{app}} · Made by {{name}}"
   },
   "video": {
     "fullscreen": "Fullscreen",

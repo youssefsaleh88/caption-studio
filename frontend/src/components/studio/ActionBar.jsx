@@ -3,7 +3,12 @@ import { useTranslation } from "react-i18next"
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL
 
-export default function ActionBar({ words, videoUrl, style }) {
+export default function ActionBar({
+  words,
+  videoUrl,
+  style,
+  onDownloadSrt,
+}) {
   const { t } = useTranslation()
   const [phase, setPhase] = useState("idle") // idle | loading | success | error
   const [error, setError] = useState(null)
@@ -72,6 +77,8 @@ export default function ActionBar({ words, videoUrl, style }) {
             max_segment_duration: Number(style.max_segment_duration ?? 3),
             sliding_window: Number(style.sliding_window ?? 3),
             min_display_time: Number(style.min_display_time ?? 0.7),
+            caption_animation: style.caption_animation || "none",
+            karaoke_color: style.karaoke_color || "#8B80FF",
           },
         }),
       })
@@ -81,7 +88,7 @@ export default function ActionBar({ words, videoUrl, style }) {
         try {
           const data = await res.json()
           detail = data.detail || detail
-        } catch (_) {
+        } catch {
           /* ignore */
         }
         throw new Error(detail || t("export.failed"))
@@ -113,10 +120,10 @@ export default function ActionBar({ words, videoUrl, style }) {
         : "bg-gradient-to-r from-[var(--accent)] via-[var(--blue)] to-[var(--accent-bright)] text-white shadow-lg shadow-[var(--accent)]/35"
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 bg-[var(--bg-base)]/92 backdrop-blur-lg border-t border-[var(--border-subtle)]">
+    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 bg-[var(--bg-base)]/92 backdrop-blur-lg border-t border-[var(--border-subtle)] space-y-2">
       {error ? (
         <p
-          className="mb-2 text-center text-xs text-[var(--danger)]"
+          className="mb-1 text-center text-xs text-[var(--danger)]"
           role="alert"
           aria-live="polite"
         >
@@ -126,11 +133,20 @@ export default function ActionBar({ words, videoUrl, style }) {
 
       <button
         type="button"
+        onClick={() => onDownloadSrt?.()}
+        disabled={busy}
+        className="cap-focus-visible w-full min-h-[48px] rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-3 text-sm font-semibold text-[var(--accent-bright)] hover:bg-[var(--bg-surface)] hover:border-[var(--accent)]/35 transition-colors"
+      >
+        {t("studio.action.downloadSrt")}
+      </button>
+
+      <button
+        type="button"
         onClick={() => void handleExport()}
         disabled={busy}
         aria-busy={busy}
         className={[
-          "cap-focus-visible relative w-full min-h-[52px] rounded-[var(--radius-card)] overflow-hidden font-semibold transition-all",
+          "cap-focus-visible relative w-full min-h-[48px] rounded-[var(--radius-card)] overflow-hidden font-semibold transition-all",
           btnSurface,
           busy ? "opacity-95 cursor-wait" : "hover:brightness-110 active:scale-[0.99]",
         ].join(" ")}
@@ -141,7 +157,7 @@ export default function ActionBar({ words, videoUrl, style }) {
             aria-hidden
           />
         ) : null}
-        <span className="relative z-10 flex items-center justify-center gap-2 px-4 py-3.5">
+        <span className="relative z-10 flex items-center justify-center gap-2 px-4 py-3">
           {phase === "loading" ? (
             <>
               <span className="inline-block w-5 h-5 rounded-full border-2 border-white/90 border-t-transparent animate-spin" />
@@ -188,7 +204,7 @@ export default function ActionBar({ words, videoUrl, style }) {
             setPhase("idle")
             void handleExport()
           }}
-          className="cap-focus-visible mt-2 w-full py-2 text-xs font-semibold text-[var(--accent-bright)]"
+          className="cap-focus-visible w-full py-2 text-xs font-semibold text-[var(--accent-bright)]"
         >
           {t("studio.action.retry")}
         </button>

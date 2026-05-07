@@ -14,6 +14,7 @@ import {
   chunkByWindow,
   applyMinDisplayTime,
 } from "../../utils/captions"
+import { getAnimationCssClass } from "../../utils/captionAnimations"
 import VideoControls from "./VideoControls"
 
 const POSITION_STYLES = {
@@ -209,6 +210,10 @@ const VideoStage = forwardRef(function VideoStage(
   function renderCaptionContent() {
     if (!activeSeg) return null
     const ids = activeSeg.wordIds || []
+    const animMode = style?.caption_animation || "none"
+    const isKaraoke = animMode === "karaoke"
+    const karaokeCol = style?.karaoke_color || "#8B80FF"
+
     if (!ids.length) {
       return activeSeg.text || ""
     }
@@ -221,9 +226,14 @@ const VideoStage = forwardRef(function VideoStage(
         <span
           key={wid}
           aria-current={isActive ? "true" : undefined}
+          style={
+            isActive && isKaraoke ? { color: karaokeCol } : undefined
+          }
           className={
             isActive
-              ? "text-[var(--accent-bright)] capt-word-active motion-reduce:!animate-none"
+              ? isKaraoke
+                ? "font-semibold drop-shadow-[0_0_12px_rgb(0_0_0_/_.85)]"
+                : "text-[var(--accent-bright)] capt-word-active motion-reduce:!animate-none"
               : ""
           }
         >
@@ -315,7 +325,19 @@ const VideoStage = forwardRef(function VideoStage(
       />
 
       {activeSeg ? (
-        <div style={overlayBaseStyle()} dir="auto">
+        <div
+          key={activeSeg.id}
+          style={overlayBaseStyle()}
+          dir="auto"
+          className={[
+            (() => {
+              const a = style?.caption_animation || "none"
+              if (a === "none" || a === "karaoke") return ""
+              const c = getAnimationCssClass(a)
+              return c ? `${c} motion-reduce:!animate-none` : ""
+            })(),
+          ].join(" ")}
+        >
           {renderCaptionContent()}
         </div>
       ) : null}

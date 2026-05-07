@@ -76,7 +76,17 @@ def group_into_segments(
         start = bucket_start if bucket_start is not None else float(bucket[0]["start"])
         end = float(bucket[-1]["end"])
         text = " ".join(str(w["word"]) for w in bucket).strip()
-        segments.append({"word": text, "start": start, "end": end})
+        words_payload = [
+            {
+                "word": str(w["word"]),
+                "start": float(w["start"]),
+                "end": float(w["end"]),
+            }
+            for w in bucket
+        ]
+        segments.append(
+            {"word": text, "start": start, "end": end, "words": words_payload}
+        )
         bucket = []
         bucket_start = None
 
@@ -122,7 +132,22 @@ def build_chunked_lines(
         text = " ".join(str(w["word"]) for w in slice_).strip()
         start = float(slice_[0]["start"])
         end = float(slice_[-1]["end"])
-        lines.append({"word": text, "start": start, "end": end})
+        words_payload = [
+            {
+                "word": str(w["word"]),
+                "start": float(w["start"]),
+                "end": float(w["end"]),
+            }
+            for w in slice_
+        ]
+        lines.append(
+            {
+                "word": text,
+                "start": start,
+                "end": end,
+                "words": words_payload,
+            }
+        )
     return lines
 
 

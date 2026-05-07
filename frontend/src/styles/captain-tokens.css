@@ -96,6 +96,127 @@
   animation: cap-glow-pulse 1.2s ease-in-out infinite;
 }
 
+/* Segment enter (preview in editor) */
+@keyframes cap-anim-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cap-anim-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cap-anim-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.cap-anim-fade {
+  animation: cap-anim-fade-in 0.22s ease forwards;
+}
+
+.cap-anim-pop {
+  animation: cap-anim-pop-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.cap-anim-bounce {
+  animation: cap-anim-bounce-in 0.32s ease forwards;
+}
+
+.cap-anim-karaoke {
+  /* Word-level highlight only; no block enter animation */
+}
+
+/* Picker card mini previews (subtle loop) */
+@keyframes cap-preview-fade {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(3px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cap-preview-pop {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.88);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cap-preview-bounce {
+  0%,
+  100% {
+    transform: scale(0.85);
+  }
+  40% {
+    transform: scale(1.08);
+  }
+  70% {
+    transform: scale(0.98);
+  }
+}
+
+@keyframes cap-preview-karaoke {
+  0%,
+  100% {
+    filter: brightness(0.75);
+  }
+  50% {
+    filter: brightness(1.15);
+  }
+}
+
+.cap-anim-preview-none {
+  /* static */
+}
+
+.cap-anim-preview-fade {
+  animation: cap-preview-fade 2.4s ease-in-out infinite;
+}
+
+.cap-anim-preview-pop {
+  animation: cap-preview-pop 2.2s ease-in-out infinite;
+}
+
+.cap-anim-preview-bounce {
+  animation: cap-preview-bounce 2.5s ease-in-out infinite;
+}
+
+.cap-anim-preview-karaoke {
+  animation: cap-preview-karaoke 2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --capt-slide-duration: 0.01ms;
@@ -104,7 +225,14 @@
 
   .capt-slide-up,
   .capt-shimmer-bg,
-  .capt-word-active {
+  .capt-word-active,
+  .cap-anim-fade,
+  .cap-anim-pop,
+  .cap-anim-bounce,
+  .cap-anim-preview-fade,
+  .cap-anim-preview-pop,
+  .cap-anim-preview-bounce,
+  .cap-anim-preview-karaoke {
     animation: none !important;
   }
 }
