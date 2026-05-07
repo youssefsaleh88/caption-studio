@@ -8,23 +8,11 @@ export default function ExportBar({ words, videoUrl, style }) {
   const { t } = useTranslation()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
-
-  useEffect(() => {
-    if (!error) return
-    const id = setTimeout(() => setError(null), 4000)
-    return () => clearTimeout(id)
-  }, [error])
-
-  function handleSrt() {
-    try {
-      downloadSRT(words)
-    } catch (e) {
-      setError(e.message || t("export.failed"))
-    }
-  }
+  const [retryKind, setRetryKind] = useState(null)
 
   async function handleExport() {
     setError(null)
+    setRetryKind(null)
     if (!videoUrl) {
       setError(t("export.noVideo"))
       return
@@ -95,17 +83,61 @@ export default function ExportBar({ words, videoUrl, style }) {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (e) {
+      setRetryKind("export")
       setError(e.message || t("export.failed"))
     } finally {
       setBusy(false)
     }
   }
 
+  function handleSrt() {
+    setError(null)
+    setRetryKind(null)
+    try {
+      downloadSRT(words)
+    } catch (e) {
+      setRetryKind("srt")
+      setError(e.message || t("export.failed"))
+    }
+  }
+
+  function handleRetry() {
+    const kind = retryKind
+    setError(null)
+    setRetryKind(null)
+    if (kind === "export") void handleExport()
+    else if (kind === "srt") handleSrt()
+  }
+
+  const showRetry =
+    !!error &&
+    !busy &&
+    (retryKind === "export" || retryKind === "srt")
+
+  /* إخفاء شريط التنبيه تلقائيًا للأخطاء التحقق من الشروط فقط (بدون إعادة محاولة ذات معنى) */
+  useEffect(() => {
+    if (!error || showRetry) return
+    const id = setTimeout(() => setError(null), 5000)
+    return () => clearTimeout(id)
+  }, [error, showRetry])
+
   return (
     <div className="border-t border-white/5 pt-4 mt-4 space-y-3 relative">
       {error && (
-        <div className="absolute -top-12 left-0 right-0 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-          {error}
+        <div
+          dir="auto"
+          className="absolute -top-[5.75rem] sm:-top-12 left-0 right-0 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200 space-y-2"
+        >
+          <p className="leading-snug">{error}</p>
+          {showRetry ? (
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="cap-focus-visible min-h-11 px-3 py-2 rounded-lg bg-red-400/25 border border-red-400/50 text-white text-xs font-semibold hover:bg-red-400/35 w-full"
+            >
+              {t("export.retry")}
+            </button>
+          ) : null}
         </div>
       )}
 
@@ -113,17 +145,18 @@ export default function ExportBar({ words, videoUrl, style }) {
         type="button"
         onClick={handleSrt}
         disabled={busy}
-        className="w-full px-4 py-2.5 rounded-lg border border-white/10 bg-dark text-white/85 text-sm font-medium hover:border-white/30 hover:text-white transition disabled:opacity-50"
+        className="cap-focus-visible min-h-11 w-full px-4 py-2.5 rounded-lg border border-white/10 bg-dark text-white/85 text-sm font-medium hover:border-white/30 hover:text-white transition disabled:opacity-50"
       >
         {t("export.downloadSrt")}
       </button>
 
       <button
         type="button"
-        onClick={handleExport}
+        onClick={() => void handleExport()}
         disabled={busy}
+        aria-busy={busy}
         className={[
-          "w-full px-4 py-3 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2",
+          "cap-focus-visible min-h-11 w-full px-4 py-3 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2 [&:dir(rtl)_svg]:order-[-1]",
           busy
             ? "bg-accent-muted text-white/80 cursor-not-allowed"
             : "bg-accent hover:bg-accent-hover text-white shadow-lg shadow-accent/30",
@@ -131,8 +164,8 @@ export default function ExportBar({ words, videoUrl, style }) {
       >
         {busy ? (
           <>
-            <span className="inline-block w-4 h-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
-            {t("export.processing")}
+            <span className="inline-block w-4 h-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin shrink-0" />
+            <span aria-live="polite">{t("export.processing")}</span>
           </>
         ) : (
           <>
@@ -145,6 +178,7 @@ export default function ExportBar({ words, videoUrl, style }) {
               strokeWidth="2.2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              className="shrink-0"
             >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />

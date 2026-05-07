@@ -13,7 +13,9 @@
   "home": {
     "title": "Add captions to any video in seconds",
     "subtitle": "Powered by Gemini AI",
-    "poweredBy": "Powered by Gemini AI"
+    "poweredBy": "Powered by Gemini AI",
+    "editorSessionMissing": "The editor opens after you upload a video. Upload a video from this page to continue.",
+    "dismissHint": "Dismiss"
   },
   "upload": {
     "dropTitle": "Drop your video here",
@@ -59,7 +61,8 @@
     "noVideo": "No video to export.",
     "noCaptions": "No captions to burn.",
     "noBackend": "Backend URL is not configured.",
-    "failed": "Export failed."
+    "failed": "Export failed.",
+    "retry": "Retry"
   },
   "style": {
     "tabs": {

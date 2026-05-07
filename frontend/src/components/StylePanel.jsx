@@ -91,7 +91,7 @@ export default function StylePanel({ style, onChange }) {
             aria-selected={tab === tabItem.id}
             onClick={() => setTab(tabItem.id)}
             className={[
-              "shrink-0 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-xl transition-all duration-200 whitespace-nowrap hover:scale-[1.02]",
+              "cap-focus-visible shrink-0 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-xl transition-all duration-200 whitespace-nowrap hover:scale-[1.02]",
               tab === tabItem.id
                 ? "bg-accent text-white shadow-md shadow-accent/30"
                 : "text-white/65 hover:text-white bg-dark/60",

@@ -13,7 +13,9 @@
   "home": {
     "title": "أضف ترجمات لأي فيديو في ثوانٍ",
     "subtitle": "مدعوم بتقنية Gemini AI",
-    "poweredBy": "مدعوم بتقنية Gemini AI"
+    "poweredBy": "مدعوم بتقنية Gemini AI",
+    "editorSessionMissing": "المحرّر يُفتح بعد رفع الفيديو. ارفع فيديوًا من هذه الصفحة للمتابعة.",
+    "dismissHint": "إغلاق التنبيه"
   },
   "upload": {
     "dropTitle": "اسحب الفيديو هنا",
@@ -59,7 +61,8 @@
     "noVideo": "لا يوجد فيديو للتصدير.",
     "noCaptions": "لا توجد ترجمات للحرق.",
     "noBackend": "لم يتم ضبط عنوان الخادم.",
-    "failed": "فشل التصدير."
+    "failed": "فشل التصدير.",
+    "retry": "إعادة المحاولة"
   },
   "style": {
     "tabs": {

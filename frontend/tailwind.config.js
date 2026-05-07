@@ -5,14 +5,14 @@ export default {
     extend: {
       colors: {
         dark: {
-          DEFAULT: "#0B0B10",
-          surface: "#16161E",
-          elevated: "#1E1E2A",
+          DEFAULT: "var(--cap-bg-root)",
+          surface: "var(--cap-bg-surface)",
+          elevated: "var(--cap-bg-elevated)",
         },
         accent: {
-          DEFAULT: "#8B7CFF",
-          hover: "#A395FF",
-          muted: "#4A3F8C",
+          DEFAULT: "var(--cap-accent)",
+          hover: "var(--cap-accent-hover)",
+          muted: "var(--cap-accent-muted)",
         },
       },
       fontFamily: {
@@ -28,10 +28,17 @@ export default {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
         },
+        "caret-pulse-soft": {
+          "0%, 100%": { opacity: "0.35" },
+          "50%": { opacity: "1" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.55s ease forwards",
-        "gradient-shift": "gradient-shift 14s ease infinite",
+        "gradient-shift":
+          "gradient-shift var(--cap-duration-gradient, 14s) ease infinite",
+        "caret-pulse-soft":
+          "caret-pulse-soft 1.1s ease-in-out infinite",
       },
     },
   },

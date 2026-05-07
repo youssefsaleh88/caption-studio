@@ -63,7 +63,10 @@ export default function Editor() {
 
   useEffect(() => {
     if (!state?.videoUrl || !Array.isArray(state?.words)) {
-      navigate("/", { replace: true })
+      navigate("/", {
+        replace: true,
+        state: { editorSessionMissing: true },
+      })
     }
   }, [state, navigate])
 
@@ -264,7 +267,7 @@ export default function Editor() {
             <button
               type="button"
               onClick={() => setStyleSheetOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl min-h-[52px] text-sm font-semibold bg-dark-elevated border border-white/15 text-white/90 hover:bg-dark-surface hover:border-accent/40 transition-all duration-200 active:scale-[0.99]"
+              className="cap-focus-visible w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl min-h-[52px] text-sm font-semibold bg-dark-elevated border border-white/15 text-white/90 hover:bg-dark-surface hover:border-accent/40 transition-all duration-200 active:scale-[0.99]"
             >
               <svg
                 width="18"
@@ -296,7 +299,7 @@ export default function Editor() {
                 type="button"
                 onClick={() => setMobileTab(tab.id)}
                 className={[
-                  "w-full px-2 py-3 rounded-xl text-sm font-semibold min-h-[48px] transition-all duration-200 flex items-center justify-center text-center leading-tight",
+                  "cap-focus-visible w-full px-2 py-3 rounded-xl text-sm font-semibold min-h-[48px] transition-all duration-200 flex items-center justify-center text-center leading-tight",
                   mobileTab === tab.id
                     ? "bg-accent text-white shadow-lg shadow-accent/30 scale-[1.02]"
                     : "bg-dark-surface text-white/75 border border-white/10 hover:border-white/25",
@@ -348,7 +351,7 @@ export default function Editor() {
                       <button
                         type="button"
                         onClick={() => setStyleSheetOpen(false)}
-                        className="shrink-0 w-11 h-11 rounded-xl border border-white/15 bg-white/5 text-white/90 hover:bg-white/10 flex items-center justify-center text-lg leading-none"
+                        className="cap-focus-visible shrink-0 w-11 h-11 rounded-xl border border-white/15 bg-white/5 text-white/90 hover:bg-white/10 flex items-center justify-center text-lg leading-none"
                         aria-label={t("editor.styleSheetClose")}
                       >
                         ×

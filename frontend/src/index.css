@@ -52,3 +52,27 @@ input[type="range"] {
   );
   background-size: 200% 200%;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-gradient-shift {
+    animation: none !important;
+  }
+  .animate-fade-up {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .cap-typing-caret {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+
+.cap-focus-visible:focus-visible {
+  outline: var(--cap-focus-ring-width) solid var(--cap-focus-ring-color);
+  outline-offset: var(--cap-focus-ring-offset);
+}
+
+.cap-focus-visible:focus:not(:focus-visible) {
+  outline: none;
+}
