@@ -44,16 +44,16 @@ export default function UploadZone() {
   const busy = uploading || transcribing
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-6 space-y-4">
+    <div className="w-full max-w-2xl mx-auto px-2 sm:px-4 space-y-4">
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-medium text-white/55 uppercase tracking-wider">
+        <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
           {t("upload.langLabel")}
         </label>
         <select
           value={languageHint}
           disabled={busy}
           onChange={(e) => setLanguageHint(e.target.value)}
-          className="w-full bg-dark text-white border border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-accent"
+          className="w-full bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)] min-h-[44px]"
         >
           <option value="auto">{t("upload.langAuto")}</option>
           <option value="ar">{t("upload.langAr")}</option>
@@ -70,16 +70,16 @@ export default function UploadZone() {
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
         className={[
-          "relative cursor-pointer rounded-2xl border-2 border-dashed transition-all",
+          "relative cursor-pointer rounded-[var(--radius-card)] border-2 border-dashed transition-all",
           "flex flex-col items-center justify-center text-center px-8 py-20",
-          "bg-dark-surface/60 backdrop-blur-sm",
+          "bg-[var(--bg-card)]/90 backdrop-blur-sm",
           dragOver
-            ? "border-accent bg-accent-muted/20 scale-[1.01]"
-            : "border-white/10 hover:border-accent/60 hover:bg-dark-surface",
+            ? "border-[var(--accent)] bg-[var(--accent-dim)] scale-[1.01]"
+            : "border-[var(--border-subtle)] hover:border-[var(--accent)]/60 hover:bg-[var(--bg-surface)]",
           busy ? "pointer-events-none opacity-90" : "",
         ].join(" ")}
       >
-        <div className="w-16 h-16 rounded-full bg-accent-muted/30 flex items-center justify-center mb-6">
+        <div className="w-16 h-16 rounded-full bg-[var(--accent-dim)] flex items-center justify-center mb-6">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="28"
@@ -90,7 +90,7 @@ export default function UploadZone() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-accent"
+            className="text-[var(--accent)]"
           >
             <path d="M12 3v12" />
             <path d="m6 9 6-6 6 6" />
@@ -98,10 +98,10 @@ export default function UploadZone() {
           </svg>
         </div>
 
-        <h2 className="text-xl font-semibold text-white">
+        <h2 className="text-xl font-semibold text-[var(--text-primary)]">
           {t("upload.dropTitle")}
         </h2>
-        <p className="mt-2 text-sm text-white/60">{t("upload.dropHint")}</p>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">{t("upload.dropHint")}</p>
 
         <input
           ref={inputRef}
@@ -113,13 +113,13 @@ export default function UploadZone() {
 
         {uploading && (
           <div className="w-full max-w-md mt-8">
-            <div className="flex justify-between text-xs text-white/70 mb-2 font-mono">
+            <div className="flex justify-between text-xs text-[var(--text-secondary)] mb-2 font-mono">
               <span>{t("upload.uploading")}</span>
               <span>{progress}%</span>
             </div>
             <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
               <div
-                className="h-full bg-accent transition-all duration-200"
+                className="h-full bg-[var(--accent)] transition-all duration-200"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -127,8 +127,8 @@ export default function UploadZone() {
         )}
 
         {transcribing && (
-          <div className="mt-8 flex items-center gap-3 text-white/80">
-            <span className="inline-block w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+          <div className="mt-8 flex items-center gap-3 text-[var(--text-secondary)]">
+            <span className="inline-block w-4 h-4 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
             <span className="text-sm">{t("upload.analyzing")}</span>
           </div>
         )}

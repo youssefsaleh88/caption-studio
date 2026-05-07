@@ -54,6 +54,35 @@
     "addAfterTitle": "إضافة كلمة بعد",
     "deleteTitle": "حذف"
   },
+  "studio": {
+    "badge": "استوديو",
+    "sectionWords": "الكلمات",
+    "wordsCount": "كلمات",
+    "sectionSettings": "الإعدادات",
+    "settings": {
+      "typography": "الخط والألوان",
+      "positionSimple": {
+        "top": "أعلى",
+        "middle": "وسط",
+        "bottom": "أسفل"
+      },
+      "positionAdvanced": "مواضع دقيقة (شبكة)",
+      "positionHideAdvanced": "إخفاء الشبكة"
+    },
+    "captionItem": {
+      "editText": "تعديل النص",
+      "start": "البداية",
+      "end": "النهاية",
+      "save": "حفظ التعديل",
+      "delete": "حذف"
+    },
+    "action": {
+      "export": "تصدير الفيديو",
+      "exporting": "جاري التصدير…",
+      "exported": "بدأ التحميل",
+      "retry": "إعادة المحاولة"
+    }
+  },
   "export": {
     "downloadSrt": "تحميل SRT",
     "exportVideo": "تصدير الفيديو",

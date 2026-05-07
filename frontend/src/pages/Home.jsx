@@ -7,8 +7,8 @@ import {
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate } from "react-router-dom"
 import UploadZone from "../components/UploadZone"
-import BrandHeader from "../components/BrandHeader"
 import BrandFooter from "../components/BrandFooter"
+import StudioNavBar from "../components/studio/StudioNavBar"
 
 function subscribeTypingMotion(cb) {
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -72,11 +72,13 @@ function TypingTitle({ text }) {
   }, [text, motion.enabled, motion.charDelayMs])
 
   return (
-    <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-center tracking-tight max-w-3xl mx-auto leading-tight min-h-[3.5rem] sm:min-h-[4rem]">
-      <span>{shown}</span>
+    <h1 className="font-display font-extrabold text-3xl sm:text-4xl md:text-5xl text-center tracking-tight max-w-3xl mx-auto leading-tight min-h-[3.5rem] sm:min-h-[4rem]">
+      <span className="bg-gradient-to-r from-[var(--accent)] via-[var(--blue)] to-[var(--accent-bright)] bg-clip-text text-transparent">
+        {shown}
+      </span>
       {!done ? (
         <span
-          className="cap-typing-caret inline-block w-0.5 h-[1em] ms-1 bg-accent align-middle animate-caret-pulse-soft rounded-sm"
+          className="cap-typing-caret inline-block w-0.5 h-[1em] ms-1 bg-[var(--accent)] align-middle animate-caret-pulse-soft rounded-sm"
           aria-hidden
         />
       ) : null}
@@ -105,26 +107,22 @@ export default function Home() {
   }, [navigate, location.pathname, location.search, location.hash])
 
   return (
-    <div className="min-h-screen w-full bg-dark text-white relative overflow-hidden flex flex-col">
+    <div className="min-h-screen w-full bg-[var(--bg-base)] text-[var(--text-primary)] relative overflow-hidden flex flex-col">
       <div
         aria-hidden
-        className="absolute inset-0 pointer-events-none bg-mesh-gradient animate-gradient-shift opacity-90"
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
+        className="pointer-events-none absolute inset-0 opacity-90"
         style={{
           background:
-            "radial-gradient(ellipse at 15% 20%, rgba(139,124,255,0.22) 0%, transparent 50%), radial-gradient(ellipse at 85% 80%, rgba(139,124,255,0.12) 0%, transparent 55%)",
+            "radial-gradient(ellipse 80% 50% at 50% -20%, rgb(108 99 255 / 0.35), transparent 55%), radial-gradient(ellipse at 100% 100%, rgb(79 172 254 / 0.12), transparent 45%)",
         }}
       />
 
-      <BrandHeader />
+      <StudioNavBar showBack={false} onBack={() => navigate("/")} />
 
-      <main className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-6 pt-8 sm:pt-12 pb-10 flex-1 w-full max-w-5xl mx-auto">
+      <main className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-6 pt-6 sm:pt-10 pb-10 flex-1 w-full max-w-lg mx-auto">
         {showColdBanner ? (
           <div
-            className="w-full max-w-xl mb-6 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-3 sm:px-4 text-sm text-amber-100/95 flex gap-3 items-start"
+            className="w-full mb-6 rounded-[var(--radius-card)] border border-amber-500/35 bg-amber-500/10 px-3 py-3 sm:px-4 text-sm text-amber-100/95 flex gap-3 items-start"
             role="status"
           >
             <p className="flex-1 leading-snug text-start">
@@ -136,7 +134,7 @@ export default function Home() {
                 setColdDismissed(true)
                 clearLocationFlag()
               }}
-              className="cap-focus-visible shrink-0 min-h-11 min-w-11 px-2 rounded-lg border border-white/15 bg-white/5 text-white/90 hover:bg-white/10 text-lg leading-none"
+              className="cap-focus-visible shrink-0 min-h-11 min-w-11 px-2 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-white/5 text-[var(--text-primary)] hover:bg-white/10 text-lg leading-none"
               aria-label={t("home.dismissHint")}
             >
               ×
@@ -144,23 +142,23 @@ export default function Home() {
           </div>
         ) : null}
 
-        <div className="animate-fade-up opacity-0 w-full">
+        <div className="animate-cap-slide-up opacity-0 w-full [animation-fill-mode:forwards]">
           <TypingTitle text={t("home.title")} />
         </div>
-        <p className="mt-4 text-white/55 text-center text-sm sm:text-base opacity-0 animate-fade-up [animation-delay:120ms]">
+        <p className="mt-4 text-[var(--text-secondary)] text-center text-sm sm:text-base animate-cap-slide-up opacity-0 [animation-delay:90ms] [animation-fill-mode:forwards]">
           {t("home.poweredBy")}
         </p>
 
-        <div className="mt-10 sm:mt-14 w-full max-w-xl opacity-0 animate-fade-up [animation-delay:220ms]">
+        <div className="mt-10 sm:mt-12 w-full animate-cap-slide-up opacity-0 [animation-delay:160ms] [animation-fill-mode:forwards]">
           <UploadZone />
         </div>
 
-        <p className="mt-8 text-xs text-white/35 text-center opacity-0 animate-fade-up [animation-delay:320ms]">
+        <p className="mt-8 text-xs text-[var(--text-muted)] text-center animate-cap-slide-up opacity-0 [animation-delay:240ms] [animation-fill-mode:forwards]">
           {t("home.subtitle")}
         </p>
       </main>
 
-      <BrandFooter className="relative z-10 mt-auto" />
+      <BrandFooter className="relative z-10 mt-auto border-[var(--border-subtle)] bg-[var(--bg-card)]/80 text-[var(--text-secondary)]" />
     </div>
   )
 }

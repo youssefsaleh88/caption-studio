@@ -54,6 +54,35 @@
     "addAfterTitle": "Add word after",
     "deleteTitle": "Delete"
   },
+  "studio": {
+    "badge": "Studio",
+    "sectionWords": "Words",
+    "wordsCount": "words",
+    "sectionSettings": "Settings",
+    "settings": {
+      "typography": "Typography & colors",
+      "positionSimple": {
+        "top": "Top",
+        "middle": "Middle",
+        "bottom": "Bottom"
+      },
+      "positionAdvanced": "Fine grid (9 positions)",
+      "positionHideAdvanced": "Hide grid"
+    },
+    "captionItem": {
+      "editText": "Edit text",
+      "start": "Start",
+      "end": "End",
+      "save": "Save changes",
+      "delete": "Delete"
+    },
+    "action": {
+      "export": "Export video",
+      "exporting": "Exporting…",
+      "exported": "Download started",
+      "retry": "Retry"
+    }
+  },
   "export": {
     "downloadSrt": "Download SRT",
     "exportVideo": "Export Video",

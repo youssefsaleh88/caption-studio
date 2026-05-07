@@ -1,4 +1,5 @@
 @import "./tokens.css";
+@import "./styles/captain-tokens.css";
 
 @tailwind base;
 @tailwind components;
@@ -11,28 +12,32 @@ html, body, #root {
 }
 
 body {
-  background: var(--cap-bg-root);
-  color: var(--cap-text-primary);
-  font-family: var(--cap-font-body);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-ar-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 [dir="rtl"] body {
-  font-family: var(--cap-font-body-rtl);
+  font-family: var(--font-ar-body);
+}
+
+[dir="ltr"] body {
+  font-family: var(--font-display);
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--cap-bg-root); }
-::-webkit-scrollbar-thumb { background: var(--cap-accent-muted); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--cap-accent); }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: rgb(108 99 255 / 0.35); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 input[type="range"] {
   width: 100%;
   height: 10px;
   border-radius: 6px;
   background: rgba(255,255,255,0.12);
-  accent-color: var(--cap-accent);
+  accent-color: var(--accent);
 }
 
 .touch-range {
@@ -60,6 +65,14 @@ input[type="range"] {
   .animate-fade-up {
     opacity: 1 !important;
     transform: none !important;
+    animation: none !important;
+  }
+  .animate-cap-slide-up {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .capt-word-active {
     animation: none !important;
   }
   .cap-typing-caret {
