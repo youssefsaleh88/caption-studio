@@ -1,0 +1,159 @@
+/**
+ * Caption Studio — semantic design tokens (CSS custom properties).
+ * الوضع الافتراضي: داكن موافق لتطبيق الإنتاج الحالي.
+ * الوضع الفاتح: مفعّل فقط إذا ضُيف لاحقًا `data-theme="light"` على <html>.
+ * المرجع المعماري: .design/caption-studio-ui/DESIGN_TOKENS.md
+ */
+
+:root {
+  /* —— Color · surfaces —— */
+  --cap-bg-root: #0b0b10;
+  --cap-bg-surface: #16161e;
+  --cap-bg-elevated: #1e1e2a;
+  --cap-bg-inverse: #e8e8f2;
+
+  /* —— Color · text —— */
+  --cap-text-primary: #e8e8f2;
+  --cap-text-secondary: rgb(232 232 242 / 0.65);
+  --cap-text-tertiary: rgb(232 232 242 / 0.4);
+  --cap-text-muted: rgb(232 232 242 / 0.35);
+  --cap-text-inverse: #0b0b10;
+
+  /* —— Color · border —— */
+  --cap-border-subtle: rgb(255 255 255 / 0.08);
+  --cap-border-default: rgb(255 255 255 / 0.12);
+  --cap-border-strong: rgb(255 255 255 / 0.22);
+
+  /* —— Color · accent (primary actions) —— */
+  --cap-accent: #8b7cff;
+  --cap-accent-hover: #a395ff;
+  --cap-accent-muted: #4a3f8c;
+  --cap-accent-on-accent: #ffffff;
+
+  /* —— Color · status —— */
+  --cap-status-success: #3dd68c;
+  --cap-status-warning: #f5a524;
+  --cap-status-error: #f97171;
+  --cap-status-info: #63b8ff;
+
+  /* —— Color · overlays —— */
+  --cap-overlay-scrim: rgb(0 0 0 / 0.65);
+  --cap-overlay-accent-glow: rgb(139 124 255 / 0.14);
+
+  /* —— Spacing (4px grid) —— */
+  --cap-space-0: 0;
+  --cap-space-1: 0.25rem;
+  --cap-space-2: 0.5rem;
+  --cap-space-3: 0.75rem;
+  --cap-space-4: 1rem;
+  --cap-space-5: 1.25rem;
+  --cap-space-6: 1.5rem;
+  --cap-space-8: 2rem;
+  --cap-space-10: 2.5rem;
+  --cap-space-12: 3rem;
+
+  /* —— Typography stacks —— */
+  --cap-font-display: Inter, Cairo, Noto Sans Arabic, system-ui, sans-serif;
+  --cap-font-body: Inter, Cairo, Noto Sans Arabic, system-ui, sans-serif;
+  --cap-font-body-rtl: Cairo, Noto Sans Arabic, Inter, system-ui, sans-serif;
+  --cap-font-mono: "Space Mono", ui-monospace, monospace;
+
+  /* —— Typography scale (rem · 16px root) —— */
+  --cap-text-xs: 0.6875rem;
+  --cap-text-sm: 0.8125rem;
+  --cap-text-base: 0.9375rem;
+  --cap-text-md: 1rem;
+  --cap-text-lg: 1.125rem;
+  --cap-text-xl: 1.25rem;
+  --cap-text-2xl: 1.375rem;
+  --cap-text-3xl: 1.875rem;
+  --cap-text-4xl: 2.375rem;
+
+  --cap-leading-tight: 1.25;
+  --cap-leading-snug: 1.35;
+  --cap-leading-normal: 1.45;
+  --cap-leading-relaxed: 1.6;
+
+  --cap-tracking-tight: -0.02em;
+  --cap-tracking-normal: 0;
+
+  --cap-weight-regular: 400;
+  --cap-weight-medium: 500;
+  --cap-weight-semibold: 600;
+  --cap-weight-bold: 700;
+
+  /* —— Radius —— */
+  --cap-radius-sm: 0.5rem;
+  --cap-radius-md: 0.75rem;
+  --cap-radius-lg: 1rem;
+  --cap-radius-xl: 1.25rem;
+  --cap-radius-2xl: 1.5rem;
+
+  /* —— Shadows (dark-first: soft glow ، ليس ظل عميق أسود) —— */
+  --cap-shadow-ring-accent: 0 0 0 1px rgb(139 124 255 / 0.25);
+  --cap-shadow-sheet: 0 24px 60px rgb(0 0 0 / 0.5);
+
+  /* —— Motion —— */
+  --cap-duration-fast: 150ms;
+  --cap-duration-normal: 200ms;
+  --cap-duration-slow: 320ms;
+  --cap-duration-gradient: 14s;
+
+  --cap-easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* أنيميشن الكتابة على الصفحة الرئيسية (يُكمِّن عبر prefers-reduced-motion) */
+  --cap-motion-typing-char-delay: 38ms;
+  --cap-motion-enable-typing: 1;
+
+  /* —— Focus —— */
+  --cap-focus-ring-color: rgb(139 124 255 / 0.75);
+  --cap-focus-ring-width: 2px;
+  --cap-focus-ring-offset: 2px;
+
+  /* —— Layout —— */
+  --cap-max-content: 72ch;
+  --cap-max-reading: min(56rem, 100% - 2rem);
+
+  color-scheme: dark;
+}
+
+/* الوضع الفاتح · تمهيد لمفتاح مستقبلي؛ غير نشط بينما لا يوجد data-theme على html */
+:root[data-theme="light"] {
+  --cap-bg-root: #f6f6fa;
+  --cap-bg-surface: #ebebf2;
+  --cap-bg-elevated: #e2e2ec;
+  --cap-bg-inverse: #16161e;
+
+  --cap-text-primary: #121218;
+  --cap-text-secondary: rgb(18 18 24 / 0.68);
+  --cap-text-tertiary: rgb(18 18 24 / 0.45);
+  --cap-text-muted: rgb(18 18 24 / 0.38);
+  --cap-text-inverse: #f6f6fa;
+
+  --cap-border-subtle: rgb(0 0 0 / 0.06);
+  --cap-border-default: rgb(0 0 0 / 0.1);
+  --cap-border-strong: rgb(0 0 0 / 0.18);
+
+  /* بنفسجي أقل إشراقًا على خلفيات فاتحة لتحسين WCAG تجاه الخلفيات */
+  --cap-accent: #6b54e8;
+  --cap-accent-hover: #8368f0;
+  --cap-accent-muted: #c9c3f5;
+  --cap-accent-on-accent: #ffffff;
+
+  --cap-overlay-scrim: rgb(12 12 22 / 0.45);
+
+  --cap-shadow-sheet: 0 20px 50px rgb(0 0 0 / 0.12);
+
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cap-duration-fast: 0.01ms;
+    --cap-duration-normal: 0.01ms;
+    --cap-duration-slow: 0.01ms;
+    --cap-duration-gradient: 0.01ms;
+    --cap-motion-typing-char-delay: 0ms;
+    --cap-motion-enable-typing: 0;
+  }
+}

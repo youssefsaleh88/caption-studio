@@ -1,3 +1,5 @@
+@import "./tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,28 +11,28 @@ html, body, #root {
 }
 
 body {
-  background: #0B0B10;
-  color: #E8E8F2;
-  font-family: "Inter", "Cairo", "Noto Sans Arabic", system-ui, sans-serif;
+  background: var(--cap-bg-root);
+  color: var(--cap-text-primary);
+  font-family: var(--cap-font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 [dir="rtl"] body {
-  font-family: "Cairo", "Noto Sans Arabic", "Inter", system-ui, sans-serif;
+  font-family: var(--cap-font-body-rtl);
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0B0B10; }
-::-webkit-scrollbar-thumb { background: #4A3F8C; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #8B7CFF; }
+::-webkit-scrollbar-track { background: var(--cap-bg-root); }
+::-webkit-scrollbar-thumb { background: var(--cap-accent-muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cap-accent); }
 
 input[type="range"] {
   width: 100%;
   height: 10px;
   border-radius: 6px;
   background: rgba(255,255,255,0.12);
-  accent-color: #8b7cff;
+  accent-color: var(--cap-accent);
 }
 
 .touch-range {
@@ -38,6 +40,8 @@ input[type="range"] {
   min-height: 44px;
   box-sizing: border-box;
 }
+
+/* عام للتركيز: استخدم المتغيرات من tokens.css حيث تُضاف ring يدوياً لتجنب تضارب مع أزرار Tailwind الحالية */
 
 .bg-mesh-gradient {
   background: linear-gradient(
