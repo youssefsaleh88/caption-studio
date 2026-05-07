@@ -107,6 +107,11 @@ export default function TranscriptPanel({
                       ? "border-[var(--accent)]/50 bg-[var(--bg-card)]"
                       : "border-[var(--border-subtle)] bg-[var(--bg-card)]/80 hover:border-[var(--accent)]/35",
                 ].join(" ")}
+                title={t("studio.transcript.doubleClickHint")}
+                onDoubleClick={(e) => {
+                  e.preventDefault()
+                  onEditWord?.(w.id)
+                }}
               >
                 <button
                   type="button"
@@ -126,7 +131,7 @@ export default function TranscriptPanel({
                     e.stopPropagation()
                     onEditWord?.(w.id)
                   }}
-                  className="cap-focus-visible shrink-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] px-2 py-1 text-[10px] font-semibold text-[var(--accent-bright)] hover:bg-[var(--accent-dim)]"
+                  className="cap-focus-visible shrink-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] px-3 py-2.5 min-h-[44px] min-w-[4.5rem] text-xs font-semibold text-[var(--accent-bright)] hover:bg-[var(--accent-dim)]"
                 >
                   {t("studio.transcript.edit")}
                 </button>

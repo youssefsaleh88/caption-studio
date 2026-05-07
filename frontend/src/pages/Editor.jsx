@@ -19,6 +19,7 @@ import VideoStage from "../components/studio/VideoStage"
 import WordEditBottomSheet from "../components/studio/WordEditBottomSheet"
 import { BRAND } from "../utils/brand"
 import { downloadSRT } from "../utils/srtExport"
+import { sortWordsByStart } from "../utils/timelineUtils"
 
 const LS_AUTO_FOLLOW = "cap.captionsAutoFollow"
 
@@ -97,6 +98,16 @@ export default function Editor() {
   const [activeMobileTab, setActiveMobileTab] = useState("edit")
   const [selectedWordId, setSelectedWordId] = useState(null)
   const [sheetWordId, setSheetWordId] = useState(null)
+  const [coarseEditorTouch, setCoarseEditorTouch] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const mq = window.matchMedia("(max-width: 1023px)")
+    const sync = () => setCoarseEditorTouch(mq.matches)
+    sync()
+    mq.addEventListener("change", sync)
+    return () => mq.removeEventListener("change", sync)
+  }, [])
 
   useEffect(() => {
     try {
@@ -152,6 +163,11 @@ export default function Editor() {
     [words, sheetWordId],
   )
 
+  const wordsSortedByStart = useMemo(
+    () => sortWordsByStart(words),
+    [words],
+  )
+
   const selectTranscriptRow = useCallback(
     (id) => {
       setSelectedWordId(id)
@@ -177,6 +193,22 @@ export default function Editor() {
       onPatchWord(sheetWordId, patch)
     },
     [sheetWordId, onPatchWord],
+  )
+
+  const handleSheetPatchKeepOpen = useCallback(
+    (patch) => {
+      if (!sheetWordId) return
+      onPatchWord(sheetWordId, patch)
+    },
+    [sheetWordId, onPatchWord],
+  )
+
+  const handleNavigateSheetWord = useCallback(
+    (id) => {
+      setSheetWordId(id)
+      setSelectedWordId(id)
+    },
+    [],
   )
 
   const handleSheetDelete = useCallback(() => {
@@ -394,10 +426,15 @@ export default function Editor() {
       <WordEditBottomSheet
         open={Boolean(sheetWordId && sheetWord)}
         word={sheetWord}
+        sortedWords={wordsSortedByStart}
         onClose={() => setSheetWordId(null)}
         onPatch={handleSheetPatch}
+        onPatchKeepOpen={handleSheetPatchKeepOpen}
         onDelete={handleSheetDelete}
         onSeek={seekTo}
+        onNavigateToWordId={handleNavigateSheetWord}
+        timeStep={coarseEditorTouch ? 0.1 : 0.05}
+        largeTouch={coarseEditorTouch}
       />
     </div>
   )

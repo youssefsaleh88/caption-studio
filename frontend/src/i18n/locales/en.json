@@ -111,12 +111,15 @@
     },
     "sheet": {
       "title": "Edit word",
-      "close": "Close"
+      "close": "Close",
+      "prevWord": "Previous word",
+      "nextWord": "Next word"
     },
     "transcript": {
       "title": "Transcript",
       "searchPlaceholder": "Search text…",
-      "edit": "Edit"
+      "edit": "Edit",
+      "doubleClickHint": "Double-click row for quick edit"
     },
     "action": {
       "downloadSrt": "Download SRT",

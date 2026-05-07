@@ -47,7 +47,7 @@ export default function CaptionTimeline({
   const { t } = useTranslation()
   const scrollRef = useRef(null)
   const trackRef = useRef(null)
-  const [pps, setPps] = useState(72)
+  const [pps, setPps] = useState(() => (variant === "roomy" ? 96 : 72))
   const [zoomOpen, setZoomOpen] = useState(false)
   const [mediaPaused, setMediaPaused] = useState(true)
   const dragRef = useRef(null)

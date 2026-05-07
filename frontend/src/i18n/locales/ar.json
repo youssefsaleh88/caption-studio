@@ -111,12 +111,15 @@
     },
     "sheet": {
       "title": "تحرير الكلمة",
-      "close": "إغلاق"
+      "close": "إغلاق",
+      "prevWord": "الكلمة السابقة",
+      "nextWord": "الكلمة التالية"
     },
     "transcript": {
       "title": "النص",
       "searchPlaceholder": "بحث في النص…",
-      "edit": "تحرير"
+      "edit": "تحرير",
+      "doubleClickHint": "نقرتان لفتح التحرير السريع"
     },
     "action": {
       "downloadSrt": "تحميل SRT",

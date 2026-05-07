@@ -9,12 +9,18 @@ export default function WordEditorForm({
   draft,
   setDraft,
   timeStep = 0.05,
+  largeTouch = false,
   onSave,
   onDelete,
   onPlayFromHere,
   className = "",
 }) {
   const { t } = useTranslation()
+
+  const bumpBtn =
+    "cap-focus-visible rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] font-semibold"
+  const bumpSize = largeTouch ? "min-w-[48px] w-12 min-h-[48px] text-lg" : "w-10 h-11"
+  const inputPad = largeTouch ? "px-2 py-3 text-base min-h-[48px]" : "px-2 py-2 text-sm"
 
   function bump(field, delta) {
     setDraft((d) => {
@@ -38,7 +44,10 @@ export default function WordEditorForm({
           onChange={(e) =>
             setDraft((d) => ({ ...d, text: e.target.value }))
           }
-          className="w-full rounded-[var(--radius-sm)] border border-[var(--accent)] bg-[var(--bg-base)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:shadow-[0_0_12px_var(--accent-glow)] min-h-[48px]"
+          className={[
+            "w-full rounded-[var(--radius-sm)] border border-[var(--accent)] bg-[var(--bg-base)] px-3 text-[var(--text-primary)] outline-none focus:shadow-[0_0_12px_var(--accent-glow)]",
+            largeTouch ? "py-3.5 text-base min-h-[52px]" : "py-2.5 text-sm min-h-[48px]",
+          ].join(" ")}
         />
       </label>
 
@@ -47,10 +56,10 @@ export default function WordEditorForm({
           <span className="text-[11px] text-[var(--text-muted)]">
             {t("studio.captionItem.start")}
           </span>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             <button
               type="button"
-              className="cap-focus-visible w-10 h-11 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)]"
+              className={[bumpBtn, bumpSize].join(" ")}
               onClick={() => bump("start", -timeStep)}
             >
               −
@@ -70,11 +79,14 @@ export default function WordEditorForm({
                   start: Number(e.target.value) || 0,
                 }))
               }
-              className="flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2 py-2 text-sm font-mono text-center"
+              className={[
+                "flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] font-mono text-center",
+                inputPad,
+              ].join(" ")}
             />
             <button
               type="button"
-              className="cap-focus-visible w-10 h-11 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)]"
+              className={[bumpBtn, bumpSize].join(" ")}
               onClick={() => bump("start", timeStep)}
             >
               +
@@ -85,10 +97,10 @@ export default function WordEditorForm({
           <span className="text-[11px] text-[var(--text-muted)]">
             {t("studio.captionItem.end")}
           </span>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             <button
               type="button"
-              className="cap-focus-visible w-10 h-11 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)]"
+              className={[bumpBtn, bumpSize].join(" ")}
               onClick={() => bump("end", -timeStep)}
             >
               −
@@ -108,11 +120,14 @@ export default function WordEditorForm({
                   end: Number(e.target.value) || d.start + 0.02,
                 }))
               }
-              className="flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2 py-2 text-sm font-mono text-center"
+              className={[
+                "flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] font-mono text-center",
+                inputPad,
+              ].join(" ")}
             />
             <button
               type="button"
-              className="cap-focus-visible w-10 h-11 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)]"
+              className={[bumpBtn, bumpSize].join(" ")}
               onClick={() => bump("end", timeStep)}
             >
               +
