@@ -10,6 +10,17 @@ import UploadZone from "../components/UploadZone"
 import BrandFooter from "../components/BrandFooter"
 import StudioNavBar from "../components/studio/StudioNavBar"
 
+/** مرجع ثابت مطلوب: useSyncExternalStore يقارن اللقطة بـ Object.is — كائن جديد كل مرة يسبب حلقة React #185 */
+const TYPING_MOTION_SERVER_SNAP = Object.freeze({
+  enabled: true,
+  charDelayMs: 38,
+})
+
+let typingMotionClientCache = {
+  key: "",
+  snap: TYPING_MOTION_SERVER_SNAP,
+}
+
 function subscribeTypingMotion(cb) {
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
   mq.addEventListener("change", cb)
@@ -22,11 +33,17 @@ function snapshotTypingMotion() {
     cs.getPropertyValue("--cap-motion-enable-typing").trim() !== "0"
   const raw = cs.getPropertyValue("--cap-motion-typing-char-delay").trim()
   const charDelayMs = Math.max(0, parseFloat(raw)) || 0
-  return { enabled, charDelayMs }
+  const key = `${enabled}:${charDelayMs}`
+  if (typingMotionClientCache.key === key) {
+    return typingMotionClientCache.snap
+  }
+  const snap = Object.freeze({ enabled, charDelayMs })
+  typingMotionClientCache = { key, snap }
+  return snap
 }
 
 function serverTypingMotion() {
-  return { enabled: true, charDelayMs: 38 }
+  return TYPING_MOTION_SERVER_SNAP
 }
 
 function TypingTitle({ text }) {
