@@ -14,15 +14,41 @@ def _escape_ffmpeg_filter_path(path: str) -> str:
 def resolve_burn_in_font_file(style: dict) -> str | None:
     """
     Prefer bundled/env font path so libass can load Arabic glyphs in Docker/Linux.
+    Latin UI fonts (Poppins, etc.) map to Liberation Sans in ASS — use its TTF here.
     """
     env_font = os.environ.get("CAPTION_FONT_FILE")
-    candidates = [
-        env_font,
+    fam = str(style.get("fontFamily") or style.get("font") or "").lower()
+    liberation = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
+    arabic_paths = [
         "/usr/share/fonts/NotoSansArabic.ttf",
         "/usr/share/fonts/opentype/noto/NotoSansArabic-Regular.ttf",
         "/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf",
         "/usr/share/fonts/truetype/noto/NotoSansArabic[wdth,wght].ttf",
     ]
+    latinish = (
+        "poppins",
+        "bebas",
+        "space mono",
+        "spacemono",
+        "dm sans",
+        "dmsans",
+    )
+    is_ar_stack = any(
+        x in fam for x in ("cairo", "tajawal", "noto", "arabic")
+    )
+    is_latin_ui = any(x in fam for x in latinish) and not is_ar_stack
+
+    candidates: list[str | None] = [env_font]
+    if is_latin_ui:
+        candidates.append(liberation)
+    if is_ar_stack or not is_latin_ui:
+        candidates.extend(arabic_paths)
+    candidates.extend(
+        [
+            liberation,
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ]
+    )
     for p in candidates:
         if p and os.path.isfile(p):
             return p

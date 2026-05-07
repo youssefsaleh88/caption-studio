@@ -19,6 +19,9 @@
   --success: #43e97b;
   --border-subtle: rgb(255 255 255 / 0.08);
 
+  --editor-rail: #0c0c12;
+  --editor-timeline-track: #14141c;
+
   --radius-card: 16px;
   --radius-sm: 10px;
   --radius-pill: 20px;

@@ -66,6 +66,12 @@
       "panelCollapsedHint": "List hidden for less scrolling — tap above to show words and edit timings.",
       "dragHint": "Drag the caption to position it on the video."
     },
+    "timeline": {
+      "split": "Split at playhead",
+      "zoom": "Track zoom",
+      "resizeStart": "Drag word start",
+      "resizeEnd": "Drag word end"
+    },
     "animations": {
       "none": "None",
       "fade": "Fade",

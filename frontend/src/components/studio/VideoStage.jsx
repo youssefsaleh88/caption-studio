@@ -53,7 +53,16 @@ function resolveFontSizePct(style) {
 }
 
 const VideoStage = forwardRef(function VideoStage(
-  { videoUrl, words, style, onTimeUpdate, onVideoDimensions, onStyleChange },
+  {
+    videoUrl,
+    words,
+    style,
+    onTimeUpdate,
+    onVideoDimensions,
+    onStyleChange,
+    onDurationChange,
+    stageClassName,
+  },
   ref,
 ) {
   const { t } = useTranslation()
@@ -63,6 +72,7 @@ const VideoStage = forwardRef(function VideoStage(
   const [duration, setDuration] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [layoutH, setLayoutH] = useState(400)
+  const [videoRenderH, setVideoRenderH] = useState(400)
   const [fsActive, setFsActive] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [showDragHint, setShowDragHint] = useState(true)
@@ -80,6 +90,12 @@ const VideoStage = forwardRef(function VideoStage(
     }
     lastRoundedHeightRef.current = rounded
     setLayoutH(rounded)
+
+    const v = videoRef.current
+    if (v) {
+      const vh = Math.round(v.getBoundingClientRect().height)
+      if (vh > 40) setVideoRenderH(vh)
+    }
   }, [])
 
   useEffect(() => {
@@ -116,6 +132,10 @@ const VideoStage = forwardRef(function VideoStage(
     play: () => videoRef.current?.play(),
     seek: (time) => {
       if (videoRef.current) videoRef.current.currentTime = time
+    },
+    getDuration: () => {
+      const d = videoRef.current?.duration
+      return Number.isFinite(d) ? d : 0
     },
     get element() {
       return videoRef.current
@@ -183,12 +203,14 @@ const VideoStage = forwardRef(function VideoStage(
     : "no-seg"
 
   const pct = resolveFontSizePct(style)
-  const displayFontPx = Math.max(10, Math.round((pct / 100) * layoutH))
+  const sizeBaseH = videoRenderH > 40 ? videoRenderH : layoutH
+  const displayFontPx = Math.max(10, Math.round((pct / 100) * sizeBaseH))
   const outlinePx = Math.max(
     1,
-    Math.round((pct / 100) * layoutH * 0.06),
+    Math.round((pct / 100) * sizeBaseH * 0.06),
   )
-  const padPx = Math.max(4, Math.round((pct / 100) * layoutH * 0.035))
+  const padPx = Math.max(4, Math.round((pct / 100) * sizeBaseH * 0.035))
+  const userShadow = Math.max(0, Math.min(8, Number(style?.shadow) || 0))
 
   const posX = clampPct(style?.position_x_pct ?? 50)
   const posY = clampPct(style?.position_y_pct ?? 88)
@@ -210,7 +232,15 @@ const VideoStage = forwardRef(function VideoStage(
       backgroundColor: showBg
         ? hexWithAlpha(style?.bg_color || "#000000", style?.bg_opacity ?? 0.6)
         : "transparent",
-      textShadow: `0 0 ${outlinePx}px rgba(0,0,0,0.95), ${outlinePx}px ${outlinePx}px 0 rgba(0,0,0,0.85)`,
+      textShadow: [
+        `0 0 ${outlinePx + userShadow}px rgba(0,0,0,0.92)`,
+        `${outlinePx}px ${outlinePx}px 0 rgba(0,0,0,0.82)`,
+        userShadow > 0
+          ? `0 ${Math.min(6, userShadow)}px ${userShadow * 2}px rgba(0,0,0,0.55)`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(", "),
       WebkitTextStroke: style?.outline_enabled
         ? `${Math.max(1, outlinePx / 4)}px ${style?.outline_color || "#000000"}`
         : "0",
@@ -405,17 +435,26 @@ const VideoStage = forwardRef(function VideoStage(
       className={[
         "relative w-full mx-auto bg-black rounded-[var(--radius-card)] overflow-hidden flex flex-col items-center justify-center max-h-[min(340px,55vh)] aspect-[9/16]",
         fsActive ? "rounded-none max-h-none aspect-auto h-full" : "",
-      ].join(" ")}
+        stageClassName || "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <video
         ref={videoRef}
         src={videoUrl}
         playsInline
         className="w-full h-full object-contain bg-black"
+        onLoadedData={() => {
+          requestAnimationFrame(() => measure())
+        }}
         onLoadedMetadata={(e) => {
           measure()
+          requestAnimationFrame(() => measure())
           const v = e.target
-          setDuration(Number.isFinite(v.duration) ? v.duration : 0)
+          const d = Number.isFinite(v.duration) ? v.duration : 0
+          setDuration(d)
+          onDurationChange?.(d)
           const vw = v.videoWidth
           const vh = v.videoHeight
           if (vw > 0 && vh > 0 && onVideoDimensions) {

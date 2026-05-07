@@ -8,6 +8,7 @@ export default function ActionBar({
   videoUrl,
   style,
   onDownloadSrt,
+  embedded = false,
 }) {
   const { t } = useTranslation()
   const [phase, setPhase] = useState("idle") // idle | loading | success | error
@@ -127,8 +128,12 @@ export default function ActionBar({
         ? "bg-[var(--danger)]/15 ring-2 ring-[var(--danger)]/50 text-[var(--text-primary)]"
         : "bg-gradient-to-r from-[var(--accent)] via-[var(--blue)] to-[var(--accent-bright)] text-white shadow-lg shadow-[var(--accent)]/35"
 
+  const wrapClass = embedded
+    ? "relative z-10 px-0 pt-4 pb-1 space-y-2 border-t border-[var(--border-subtle)] mt-4"
+    : "fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 bg-[var(--bg-base)]/92 backdrop-blur-lg border-t border-[var(--border-subtle)] space-y-2"
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 bg-[var(--bg-base)]/92 backdrop-blur-lg border-t border-[var(--border-subtle)] space-y-2">
+    <div className={wrapClass}>
       {error ? (
         <p
           className="mb-1 text-center text-xs text-[var(--danger)]"

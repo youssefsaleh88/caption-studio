@@ -1,7 +1,7 @@
 FROM python:3.11-slim
-RUN apt-get update && apt-get install -y ffmpeg fonts-noto-cjk wget && \
-    wget -q https://github.com/google/fonts/raw/main/ofl/notosansarabic/NotoSansArabic%5Bwdth%2Cwght%5D.ttf \
-    -O /usr/share/fonts/NotoSansArabic.ttf && \
+RUN apt-get update && apt-get install -y ffmpeg fonts-noto-cjk wget fonts-liberation fonts-dejavu-core && \
+    wget -q "https://github.com/google/fonts/raw/main/ofl/notosansarabic/NotoSansArabic%5Bwdth%2Cwght%5D.ttf" \
+        -O /usr/share/fonts/NotoSansArabic.ttf && \
     fc-cache -f && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 WORKDIR /app

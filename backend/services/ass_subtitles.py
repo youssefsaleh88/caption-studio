@@ -203,13 +203,20 @@ def write_ass_for_burn_in(
 
     font_size_px = _resolve_font_size_px(style, pry)
 
-    font_name = str(
-        style.get("fontFamily") or style.get("font") or "Noto Sans Arabic"
-    )
+    raw_font = str(style.get("fontFamily") or style.get("font") or "Noto Sans Arabic")
+    font_name = raw_font.strip() or "Noto Sans Arabic"
     if "Cairo" in font_name:
         font_name = "Cairo"
     elif "Tajawal" in font_name:
         font_name = "Tajawal"
+    elif "Poppins" in font_name:
+        font_name = "Liberation Sans"
+    elif "Bebas" in font_name:
+        font_name = "Liberation Sans"
+    elif "Space Mono" in font_name or "SpaceMono" in font_name.replace(" ", ""):
+        font_name = "Liberation Sans"
+    elif "DM Sans" in font_name or "DMSans" in font_name.replace(" ", ""):
+        font_name = "Liberation Sans"
     elif "Noto" in font_name or "Arabic" in font_name:
         font_name = "Noto Sans Arabic"
 
