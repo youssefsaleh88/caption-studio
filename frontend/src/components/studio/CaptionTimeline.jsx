@@ -34,6 +34,10 @@ function formatMMSS(sec) {
   return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`
 }
 
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v))
+}
+
 export default function CaptionTimeline({
   words,
   duration,
@@ -292,6 +296,12 @@ export default function CaptionTimeline({
   }
 
   const canSplit = findWordIndexForSplit(sorted, currentTime) >= 0
+  const currentWordId = useMemo(() => {
+    const found = sorted.find(
+      (w) => currentTime >= Number(w.start) && currentTime <= Number(w.end),
+    )
+    return found ? String(found.id) : null
+  }, [sorted, currentTime])
 
   const playLeft = Math.min(
     innerW - 2,
@@ -513,6 +523,40 @@ export default function CaptionTimeline({
                 scrubFromClientX(e.clientX)
               }}
             >
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute start-0 end-0 top-1/2 h-px -translate-y-1/2 bg-white/25" />
+                {sorted.map((w, idx) => {
+                  const ws = Number(w.start)
+                  const we = Number(w.end)
+                  const mid = (ws + we) * 0.5
+                  const left = clamp(mid * effectivePps, 0, innerW - 12)
+                  const selected = String(w.id) === String(selectedWordId)
+                  const playing = String(w.id) === currentWordId
+                  return (
+                    <button
+                      key={`m-dot-${w.id}`}
+                      type="button"
+                      className={[
+                        "pointer-events-auto absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border transition-all",
+                        selected
+                          ? "border-[var(--accent-bright)] bg-[var(--accent)] shadow-[0_0_10px_var(--accent-glow)]"
+                          : playing
+                            ? "border-[var(--accent)]/70 bg-[var(--accent)]/50"
+                            : "border-white/55 bg-[var(--bg-card)]",
+                      ].join(" ")}
+                      style={{ left }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onSelectWord?.(w.id)
+                        onSeek?.(mid)
+                        onRequestEditWord?.(w.id)
+                      }}
+                      aria-label={`${w.word || "word"} ${idx + 1}`}
+                    />
+                  )
+                })}
+              </div>
+
               <div className="absolute inset-x-0 top-0 bottom-0 pointer-events-none overflow-hidden rounded-md">
                 {dur > 0
                   ? rulerTicks.map((sec) => (
@@ -537,7 +581,7 @@ export default function CaptionTimeline({
                       key={w.id}
                       data-word-block
                       className={[
-                        "absolute top-0.5 bottom-0.5 rounded-md border-2 flex items-stretch overflow-hidden select-none pointer-events-auto touch-none",
+                        "absolute top-[58%] bottom-0.5 rounded-md border-2 flex items-stretch overflow-hidden select-none pointer-events-auto touch-none",
                         active
                           ? "border-[var(--accent-bright)] bg-[var(--accent)]/30 z-10 ring-2 ring-amber-400/40 shadow-[0_0_12px_var(--accent-glow)]"
                           : "border-white/20 bg-[var(--bg-card)]/95 z-[5]",
@@ -634,6 +678,57 @@ export default function CaptionTimeline({
             scrubFromClientX(e.clientX)
           }}
         >
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute start-0 end-0 top-[38%] h-px bg-white/20" />
+            {sorted.map((w, idx) => {
+              const ws = Number(w.start)
+              const we = Number(w.end)
+              const mid = (ws + we) * 0.5
+              const left = clamp(mid * effectivePps, 0, innerW - 14)
+              const selected = String(w.id) === String(selectedWordId)
+              const playing = String(w.id) === currentWordId
+              const odd = idx % 2 === 1
+              return (
+                <div key={`d-dot-${w.id}`} className="absolute top-[38%]" style={{ left }}>
+                  <button
+                    type="button"
+                    className={[
+                      "pointer-events-auto absolute start-0 top-0 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border transition-all",
+                      selected
+                        ? "border-[var(--accent-bright)] bg-[var(--accent)] shadow-[0_0_10px_var(--accent-glow)]"
+                        : playing
+                          ? "border-[var(--accent)]/70 bg-[var(--accent)]/50"
+                          : "border-white/60 bg-[var(--bg-card)]",
+                    ].join(" ")}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectWord?.(w.id)
+                      onSeek?.(mid)
+                      onRequestEditWord?.(w.id)
+                    }}
+                    aria-label={`${w.word || "word"} ${idx + 1}`}
+                  />
+                  <div
+                    className={[
+                      "absolute start-0 w-px bg-white/25",
+                      odd ? "top-0 h-3" : "-top-3 h-3",
+                    ].join(" ")}
+                  />
+                  <div
+                    className={[
+                      "absolute start-0 max-w-[84px] -translate-x-1/2 text-center whitespace-nowrap",
+                      odd ? "top-4" : "-top-6",
+                    ].join(" ")}
+                  >
+                    <span className="text-[9px] font-medium text-[var(--text-secondary)]">
+                      {w.word || "·"}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
           {dur > 0
             ? Array.from({ length: Math.ceil(dur) + 1 }, (_, i) => (
                 <div
@@ -657,7 +752,7 @@ export default function CaptionTimeline({
             />
           ) : null}
 
-          <div className="absolute left-0 right-0 top-5 bottom-1 pointer-events-none">
+          <div className="absolute left-0 right-0 top-[52%] bottom-1 pointer-events-none">
             {sorted.map((w) => {
               const ws = Number(w.start)
               const we = Number(w.end)
