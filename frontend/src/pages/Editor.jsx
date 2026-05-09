@@ -12,10 +12,13 @@ import { v4 as uuidv4 } from "uuid"
 import ActionBar from "../components/studio/ActionBar"
 import CaptionTimeline from "../components/studio/CaptionTimeline"
 import LanguageSwitcher from "../components/LanguageSwitcher"
+import MobileShell from "../components/mobile/MobileShell"
+import StepExport from "../components/mobile/StepExport"
+import StepReview from "../components/mobile/StepReview"
+import StepStyle from "../components/mobile/StepStyle"
 import SettingsSection from "../components/studio/SettingsSection"
 import StudioNavBar from "../components/studio/StudioNavBar"
 import TranscriptPanel from "../components/studio/TranscriptPanel"
-import WordListStrip from "../components/studio/WordListStrip"
 import VideoStage from "../components/studio/VideoStage"
 import WordEditBottomSheet from "../components/studio/WordEditBottomSheet"
 import { BRAND } from "../utils/brand"
@@ -66,6 +69,8 @@ function scrollExportAnchorIntoView() {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
 }
 
+const MOBILE_TOTAL_STEPS = 4
+
 export default function Editor() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -96,7 +101,7 @@ export default function Editor() {
   const [currentTime, setCurrentTime] = useState(0)
   const [videoDuration, setVideoDuration] = useState(0)
   const [autoFollow, setAutoFollow] = useState(readInitialAutoFollow)
-  const [activeMobileTab, setActiveMobileTab] = useState("edit")
+  const [mobileStep, setMobileStep] = useState(1)
   const [selectedWordId, setSelectedWordId] = useState(null)
   const [sheetWordId, setSheetWordId] = useState(null)
   const [coarseEditorTouch, setCoarseEditorTouch] = useState(false)
@@ -228,6 +233,21 @@ export default function Editor() {
 
   if (!state?.videoUrl || !Array.isArray(state?.words)) return null
 
+  const mobileStepTitle = (() => {
+    if (mobileStep === 1) return "الخطوة 1: المعاينة"
+    if (mobileStep === 2) return "الخطوة 2: مراجعة الكلام"
+    if (mobileStep === 3) return "الخطوة 3: تنسيق الشكل"
+    return "الخطوة 4: التصدير"
+  })()
+  const mobileStepHint = (() => {
+    if (mobileStep === 1) return "شوف الفيديو بسرعة واتأكد إن المحتوى صحيح."
+    if (mobileStep === 2) return "اضغط على أي كلمة لتعديلها بسهولة."
+    if (mobileStep === 3) return "اختار ستايل جاهز أو افتح التخصيص المتقدم."
+    return "حمّل الفيديو النهائي أو ملف الترجمة."
+  })()
+  const mobileCtaLabel =
+    mobileStep < MOBILE_TOTAL_STEPS ? "التالي" : "إنهاء"
+
   const stageClassUnified =
     "flex-1 min-h-[200px] max-h-[min(52vh,calc(100dvh-15rem))] lg:min-h-[220px] lg:max-h-[min(56vh,calc(100dvh-18rem))] w-full max-w-[min(420px,100%)] mx-auto"
 
@@ -260,16 +280,6 @@ export default function Editor() {
         </span>
         <div className="flex items-center gap-1.5 shrink-0">
           <LanguageSwitcher />
-          <button
-            type="button"
-            onClick={() => {
-              setActiveMobileTab("export")
-              requestAnimationFrame(() => scrollExportAnchorIntoView())
-            }}
-            className="cap-focus-visible rounded-[var(--radius-sm)] bg-gradient-to-r from-[var(--accent)] to-[var(--blue)] px-3 py-2 text-[11px] font-bold text-white shadow-md shadow-[var(--accent)]/25"
-          >
-            {t("studio.action.export")}
-          </button>
         </div>
       </header>
 
@@ -315,48 +325,69 @@ export default function Editor() {
           </div>
 
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="lg:hidden flex-1 min-h-0 flex flex-col gap-2 px-2">
-              {activeMobileTab === "edit" ? (
-                <>
-                  <CaptionTimeline
-                    words={words}
-                    duration={timelineDuration}
-                    currentTime={currentTime}
-                    onSeek={seekTo}
-                    onWordsChange={handleWordsFromTimeline}
-                    newId={() => uuidv4()}
-                    selectedWordId={selectedWordId}
-                    onSelectWord={setSelectedWordId}
-                    onRequestEditWord={handleTimelineRequestEdit}
-                    variant="roomy"
-                    mediaControlRef={previewRef}
-                  />
-                  <WordListStrip
+            <div className="lg:hidden flex-1 min-h-0">
+              <MobileShell
+                step={mobileStep}
+                totalSteps={MOBILE_TOTAL_STEPS}
+                title={mobileStepTitle}
+                hint={mobileStepHint}
+                onBack={() => {
+                  if (mobileStep > 1) {
+                    setMobileStep((s) => s - 1)
+                  } else {
+                    navigate("/")
+                  }
+                }}
+                ctaLabel={mobileCtaLabel}
+                onCta={() => {
+                  if (mobileStep < MOBILE_TOTAL_STEPS) {
+                    setMobileStep((s) => s + 1)
+                  } else {
+                    navigate("/")
+                  }
+                }}
+              >
+                {mobileStep === 1 ? (
+                  <div className="space-y-3">
+                    <p className="rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-card)]/75 px-3 py-2 text-sm text-[var(--text-secondary)]">
+                      استخدم زر التشغيل لمعاينة سريعة قبل التعديل.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => previewRef.current?.togglePlay?.()}
+                      className="cap-focus-visible min-h-[48px] w-full rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 text-sm font-semibold text-[var(--text-primary)]"
+                    >
+                      تشغيل/إيقاف المعاينة
+                    </button>
+                    <div className="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 py-2 text-xs font-mono text-[var(--text-muted)]">
+                      {currentTime.toFixed(2)}s / {timelineDuration.toFixed(2)}s
+                    </div>
+                  </div>
+                ) : null}
+
+                {mobileStep === 2 ? (
+                  <StepReview
                     words={words}
                     selectedWordId={selectedWordId}
                     onPickWord={handleTimelineRequestEdit}
+                    onPlayPause={() => previewRef.current?.togglePlay?.()}
                   />
-                </>
-              ) : null}
+                ) : null}
 
-              {activeMobileTab === "style" ? (
-                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-1 px-1 pb-2">
-                  <SettingsSection style={style} onChange={setStyle} />
-                </div>
-              ) : null}
+                {mobileStep === 3 ? (
+                  <StepStyle style={style} onChange={setStyle} />
+                ) : null}
 
-              {activeMobileTab === "export" ? (
-                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pb-2">
-                  <ActionBar
-                    embedded
-                    exportAnchorId="cap-editor-export-anchor"
+                {mobileStep === 4 ? (
+                  <StepExport
                     words={words}
                     videoUrl={state.videoUrl}
                     style={style}
                     onDownloadSrt={handleDownloadSrt}
+                    exportAnchorId="cap-editor-export-anchor"
                   />
-                </div>
-              ) : null}
+                ) : null}
+              </MobileShell>
             </div>
 
             <div className="hidden lg:block shrink-0">
@@ -376,27 +407,10 @@ export default function Editor() {
           </div>
 
           <nav
-            className="lg:hidden shrink-0 flex items-stretch justify-around gap-1 border-t border-[var(--border-subtle)] bg-[var(--bg-base)]/95 pb-[max(6px,env(safe-area-inset-bottom))] pt-1"
+            className="hidden"
             aria-label={t("editor.mobileTabsNav")}
           >
-            <MobileTabButton
-              active={activeMobileTab === "edit"}
-              onClick={() => setActiveMobileTab("edit")}
-              label={t("editor.tabEdit")}
-              icon="edit"
-            />
-            <MobileTabButton
-              active={activeMobileTab === "style"}
-              onClick={() => setActiveMobileTab("style")}
-              label={t("editor.tabStyle")}
-              icon="style"
-            />
-            <MobileTabButton
-              active={activeMobileTab === "export"}
-              onClick={() => setActiveMobileTab("export")}
-              label={t("editor.tabExport")}
-              icon="export"
-            />
+            <div />
           </nav>
         </div>
 
@@ -445,79 +459,5 @@ export default function Editor() {
         largeTouch={coarseEditorTouch}
       />
     </div>
-  )
-}
-
-function MobileTabButton({ active, onClick, label, icon }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        "cap-focus-visible flex flex-1 flex-col items-center justify-center gap-0.5 py-2 rounded-[var(--radius-sm)] text-[10px] font-semibold transition-colors",
-        active
-          ? "text-[var(--accent-bright)] bg-[var(--accent)]/12"
-          : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]",
-      ].join(" ")}
-    >
-      <TabIcon name={icon} active={active} />
-      <span className="leading-tight text-center px-0.5">{label}</span>
-    </button>
-  )
-}
-
-function TabIcon({ name, active }) {
-  const stroke = active ? "currentColor" : "currentColor"
-  const op = active ? 1 : 0.65
-  if (name === "style") {
-    return (
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={stroke}
-        strokeWidth="2"
-        opacity={op}
-        aria-hidden
-      >
-        <circle cx="12" cy="12" r="3" />
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-      </svg>
-    )
-  }
-  if (name === "export") {
-    return (
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={stroke}
-        strokeWidth="2"
-        opacity={op}
-        aria-hidden
-      >
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="7 10 12 15 17 10" />
-        <line x1="12" y1="15" x2="12" y2="3" />
-      </svg>
-    )
-  }
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={stroke}
-      strokeWidth="2"
-      opacity={op}
-      aria-hidden
-    >
-      <rect x="3" y="14" width="4" height="6" rx="1" />
-      <rect x="10" y="10" width="4" height="10" rx="1" />
-      <rect x="17" y="6" width="4" height="14" rx="1" />
-    </svg>
   )
 }

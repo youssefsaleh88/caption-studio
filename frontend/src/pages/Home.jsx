@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate } from "react-router-dom"
 import UploadZone from "../components/UploadZone"
 import BrandFooter from "../components/BrandFooter"
+import StepUpload from "../components/mobile/StepUpload"
 import StudioNavBar from "../components/studio/StudioNavBar"
 
 /** مرجع ثابت مطلوب: useSyncExternalStore يقارن اللقطة بـ Object.is — كائن جديد كل مرة يسبب حلقة React #185 */
@@ -134,9 +135,42 @@ export default function Home() {
         }}
       />
 
-      <StudioNavBar showBack={false} onBack={() => navigate("/")} />
+      <StudioNavBar showBack={false} onBack={() => navigate("/")} mobileCompact />
 
-      <main className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-6 pt-6 sm:pt-10 pb-10 flex-1 w-full max-w-lg mx-auto">
+      <main className="relative z-10 lg:hidden flex flex-col px-3 pt-4 pb-6 flex-1 w-full max-w-lg mx-auto">
+        {showColdBanner ? (
+          <div
+            className="w-full mb-3 rounded-[var(--radius-card)] border border-amber-500/35 bg-amber-500/10 px-3 py-3 text-sm text-amber-100/95 flex gap-3 items-start"
+            role="status"
+          >
+            <p className="flex-1 leading-snug text-start">
+              {t("home.editorSessionMissing")}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setColdDismissed(true)
+                clearLocationFlag()
+              }}
+              className="cap-focus-visible shrink-0 min-h-11 min-w-11 px-2 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-white/5 text-[var(--text-primary)] hover:bg-white/10 text-lg leading-none"
+              aria-label={t("home.dismissHint")}
+            >
+              ×
+            </button>
+          </div>
+        ) : null}
+        <h1 className="text-2xl font-extrabold text-[var(--text-primary)] text-center">
+          ارفع الفيديو وابدأ في 4 خطوات سهلة
+        </h1>
+        <p className="mt-2 text-sm text-[var(--text-secondary)] text-center">
+          مناسب لأي مستخدم جديد بدون خبرة تقنية.
+        </p>
+        <div className="mt-4">
+          <StepUpload />
+        </div>
+      </main>
+
+      <main className="relative z-10 hidden lg:flex flex-col items-center justify-center px-4 sm:px-6 pt-6 sm:pt-10 pb-10 flex-1 w-full max-w-lg mx-auto">
         {showColdBanner ? (
           <div
             className="w-full mb-6 rounded-[var(--radius-card)] border border-amber-500/35 bg-amber-500/10 px-3 py-3 sm:px-4 text-sm text-amber-100/95 flex gap-3 items-start"

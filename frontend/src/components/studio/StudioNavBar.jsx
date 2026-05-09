@@ -2,7 +2,13 @@ import { useTranslation } from "react-i18next"
 import CaptainLogo from "../CaptainLogo"
 import LanguageSwitcher from "../LanguageSwitcher"
 
-export default function StudioNavBar({ onBack, showBack = true }) {
+export default function StudioNavBar({
+  onBack,
+  showBack = true,
+  mobileCompact = false,
+  mobileStep = null,
+  mobileTotalSteps = 4,
+}) {
   const { t } = useTranslation()
 
   return (
@@ -34,13 +40,24 @@ export default function StudioNavBar({ onBack, showBack = true }) {
 
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
           <CaptainLogo size="sm" wordmark className="max-w-[min(220px,52vw)] sm:max-w-none" />
-          <span className="shrink-0 rounded-[var(--radius-pill)] bg-[var(--accent-dim)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--accent-bright)] border border-[var(--accent)]/25">
+          <span
+            className={[
+              "shrink-0 rounded-[var(--radius-pill)] bg-[var(--accent-dim)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--accent-bright)] border border-[var(--accent)]/25",
+              mobileCompact ? "hidden sm:inline-flex" : "",
+            ].join(" ")}
+          >
             {t("studio.badge")}
           </span>
         </div>
       </div>
 
-      <div className="shrink-0">
+      {typeof mobileStep === "number" ? (
+        <div className="shrink-0 text-[11px] font-mono text-[var(--text-muted)]">
+          {mobileStep}/{mobileTotalSteps}
+        </div>
+      ) : null}
+
+      <div className={mobileCompact ? "shrink-0 hidden sm:block" : "shrink-0"}>
         <LanguageSwitcher />
       </div>
     </header>

@@ -10,6 +10,7 @@ export default function ActionBar({
   onDownloadSrt,
   embedded = false,
   exportAnchorId,
+  onExportSuccess,
 }) {
   const { t } = useTranslation()
   const [phase, setPhase] = useState("idle") // idle | loading | success | error
@@ -114,6 +115,7 @@ export default function ActionBar({
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       setPhase("success")
+      onExportSuccess?.()
     } catch (e) {
       setPhase("error")
       setError(e.message || t("export.failed"))
