@@ -29,3 +29,13 @@ export function downloadSRT(words, filename = "captions.srt") {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
+
+export async function copySRT(words) {
+  const content = generateSRT(words)
+  try {
+    await navigator.clipboard.writeText(content)
+    return true
+  } catch (err) {
+    return false
+  }
+}

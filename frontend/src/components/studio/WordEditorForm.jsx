@@ -10,6 +10,7 @@ export default function WordEditorForm({
   setDraft,
   timeStep = 0.05,
   largeTouch = false,
+  hideTiming = false,
   onSave,
   onDelete,
   onPlayFromHere,
@@ -51,90 +52,92 @@ export default function WordEditorForm({
         />
       </label>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <span className="text-[11px] text-[var(--text-muted)]">
-            {t("studio.captionItem.start")}
-          </span>
-          <div className="flex gap-1.5">
-            <button
-              type="button"
-              className={[bumpBtn, bumpSize].join(" ")}
-              onClick={() => bump("start", -timeStep)}
-            >
-              −
-            </button>
-            <input
-              type="number"
-              step={timeStep}
-              min={0}
-              value={
-                Number.isFinite(Number(draft.start))
-                  ? Number(draft.start).toFixed(2)
-                  : ""
-              }
-              onChange={(e) =>
-                setDraft((d) => ({
-                  ...d,
-                  start: Number(e.target.value) || 0,
-                }))
-              }
-              className={[
-                "flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] font-mono text-center",
-                inputPad,
-              ].join(" ")}
-            />
-            <button
-              type="button"
-              className={[bumpBtn, bumpSize].join(" ")}
-              onClick={() => bump("start", timeStep)}
-            >
-              +
-            </button>
+      {!hideTiming && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <span className="text-[11px] text-[var(--text-muted)]">
+              {t("studio.captionItem.start")}
+            </span>
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                className={[bumpBtn, bumpSize].join(" ")}
+                onClick={() => bump("start", -timeStep)}
+              >
+                −
+              </button>
+              <input
+                type="number"
+                step={timeStep}
+                min={0}
+                value={
+                  Number.isFinite(Number(draft.start))
+                    ? Number(draft.start).toFixed(2)
+                    : ""
+                }
+                onChange={(e) =>
+                  setDraft((d) => ({
+                    ...d,
+                    start: Number(e.target.value) || 0,
+                  }))
+                }
+                className={[
+                  "flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] font-mono text-center",
+                  inputPad,
+                ].join(" ")}
+              />
+              <button
+                type="button"
+                className={[bumpBtn, bumpSize].join(" ")}
+                onClick={() => bump("start", timeStep)}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <span className="text-[11px] text-[var(--text-muted)]">
+              {t("studio.captionItem.end")}
+            </span>
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                className={[bumpBtn, bumpSize].join(" ")}
+                onClick={() => bump("end", -timeStep)}
+              >
+                −
+              </button>
+              <input
+                type="number"
+                step={timeStep}
+                min={0}
+                value={
+                  Number.isFinite(Number(draft.end))
+                    ? Number(draft.end).toFixed(2)
+                    : ""
+                }
+                onChange={(e) =>
+                  setDraft((d) => ({
+                    ...d,
+                    end: Number(e.target.value) || d.start + 0.02,
+                  }))
+                }
+                className={[
+                  "flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] font-mono text-center",
+                  inputPad,
+                ].join(" ")}
+              />
+              <button
+                type="button"
+                className={[bumpBtn, bumpSize].join(" ")}
+                onClick={() => bump("end", timeStep)}
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
-        <div className="space-y-1">
-          <span className="text-[11px] text-[var(--text-muted)]">
-            {t("studio.captionItem.end")}
-          </span>
-          <div className="flex gap-1.5">
-            <button
-              type="button"
-              className={[bumpBtn, bumpSize].join(" ")}
-              onClick={() => bump("end", -timeStep)}
-            >
-              −
-            </button>
-            <input
-              type="number"
-              step={timeStep}
-              min={0}
-              value={
-                Number.isFinite(Number(draft.end))
-                  ? Number(draft.end).toFixed(2)
-                  : ""
-              }
-              onChange={(e) =>
-                setDraft((d) => ({
-                  ...d,
-                  end: Number(e.target.value) || d.start + 0.02,
-                }))
-              }
-              className={[
-                "flex-1 min-w-0 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-base)] font-mono text-center",
-                inputPad,
-              ].join(" ")}
-            />
-            <button
-              type="button"
-              className={[bumpBtn, bumpSize].join(" ")}
-              onClick={() => bump("end", timeStep)}
-            >
-              +
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <button

@@ -10,6 +10,8 @@ export default function UploadZone() {
   const inputRef = useRef(null)
   const [dragOver, setDragOver] = useState(false)
   const [languageHint, setLanguageHint] = useState("auto")
+  const [localError, setLocalError] = useState("")
+  const [lastFile, setLastFile] = useState(null)
 
   const { upload, progress, uploading, error: uploadError } = useVideoUpload()
   const {
@@ -18,15 +20,21 @@ export default function UploadZone() {
     error: transcribeError,
   } = useTranscription()
 
-  const error = uploadError || transcribeError
+  const error = uploadError || transcribeError || localError
 
   async function handleFile(file) {
     if (!file) return
+    setLastFile(file)
+    setLocalError("")
+    if (file.size > 200 * 1024 * 1024) {
+      setLocalError("حجم الفيديو أكبر من المسموح (200 ميجابايت).")
+      return
+    }
     const videoUrl = await upload(file)
     if (!videoUrl) return
     const words = await transcribe(videoUrl, languageHint)
     if (!words) return
-    navigate("/editor", { state: { videoUrl, words } })
+    navigate("/review", { state: { videoUrl, words } })
   }
 
   function onDrop(e) {
@@ -45,6 +53,8 @@ export default function UploadZone() {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-2 sm:px-4 space-y-4">
+      {/* Language hint hidden by default for core flow */}
+      {/* 
       <div className="flex flex-col gap-2">
         <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
           {t("upload.langLabel")}
@@ -60,6 +70,7 @@ export default function UploadZone() {
           <option value="en">{t("upload.langEn")}</option>
         </select>
       </div>
+      */}
 
       <div
         onClick={() => !busy && inputRef.current?.click()}
@@ -135,8 +146,16 @@ export default function UploadZone() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-          {error}
+        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300 flex justify-between items-center">
+          <span>{error}</span>
+          {lastFile && (
+            <button
+              onClick={() => handleFile(lastFile)}
+              className="px-3 py-1 bg-red-500/20 rounded hover:bg-red-500/30 text-xs font-semibold cap-focus-visible"
+            >
+              {t("studio.action.retry")}
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -8,12 +8,12 @@ from routes import transcribe, export_video, upload  # noqa: E402
 
 app = FastAPI(title="Caption Studio API", version="1.0.0")
 
+import os
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:4173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:4173",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_origin_regex=r"https://.*\.netlify\.app",
     allow_credentials=True,
     allow_methods=["*"],

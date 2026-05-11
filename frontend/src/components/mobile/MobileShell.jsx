@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next"
+
 export default function MobileShell({
   step = 1,
   totalSteps = 4,
@@ -9,6 +11,7 @@ export default function MobileShell({
   ctaDisabled = false,
   children,
 }) {
+  const { t } = useTranslation()
   return (
     <section className="lg:hidden flex-1 min-h-0 flex flex-col border-t border-[var(--border-subtle)] bg-[var(--bg-base)]/75">
       <header className="shrink-0 px-3 pt-3 pb-2 border-b border-[var(--border-subtle)]/60">
@@ -18,7 +21,7 @@ export default function MobileShell({
             onClick={onBack}
             className="cap-focus-visible min-h-[44px] rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 text-sm font-semibold text-[var(--text-primary)]"
           >
-            رجوع
+            {t("nav.back")}
           </button>
           <p className="text-xs font-mono text-[var(--text-muted)]">
             {step}/{totalSteps}

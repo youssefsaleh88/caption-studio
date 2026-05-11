@@ -16,6 +16,7 @@ export default function ActionBar({
   const [phase, setPhase] = useState("idle") // idle | loading | success | error
   const [error, setError] = useState(null)
   const [shimmer, setShimmer] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (phase !== "success") return
@@ -147,14 +148,31 @@ export default function ActionBar({
         </p>
       ) : null}
 
-      <button
-        type="button"
-        onClick={() => onDownloadSrt?.()}
-        disabled={busy}
-        className="cap-focus-visible w-full min-h-[48px] rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-3 text-sm font-semibold text-[var(--accent-bright)] hover:bg-[var(--bg-surface)] hover:border-[var(--accent)]/35 transition-colors"
-      >
-        {t("studio.action.downloadSrt")}
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => onDownloadSrt?.()}
+          disabled={busy}
+          className="cap-focus-visible flex-1 min-h-[48px] rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-3 text-sm font-semibold text-[var(--accent-bright)] hover:bg-[var(--bg-surface)] hover:border-[var(--accent)]/35 transition-colors"
+        >
+          {t("studio.action.downloadSrt")}
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
+            const { copySRT } = await import("../../utils/srtExport")
+            const ok = await copySRT(words)
+            if (ok) {
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            }
+          }}
+          disabled={busy}
+          className="cap-focus-visible flex-1 min-h-[48px] rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface)] hover:border-[var(--accent)]/35 transition-colors"
+        >
+          {copied ? t("studio.action.copiedSrt") : t("studio.action.copySrt")}
+        </button>
+      </div>
 
       <button
         type="button"

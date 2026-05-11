@@ -12,16 +12,13 @@ import { v4 as uuidv4 } from "uuid"
 import ActionBar from "../components/studio/ActionBar"
 import CaptionTimeline from "../components/studio/CaptionTimeline"
 import LanguageSwitcher from "../components/LanguageSwitcher"
-import MobileShell from "../components/mobile/MobileShell"
-import StepExport from "../components/mobile/StepExport"
-import StepReview from "../components/mobile/StepReview"
-import StepStyle from "../components/mobile/StepStyle"
 import SettingsSection from "../components/studio/SettingsSection"
 import StudioNavBar from "../components/studio/StudioNavBar"
 import TranscriptPanel from "../components/studio/TranscriptPanel"
 import VideoStage from "../components/studio/VideoStage"
 import WordEditBottomSheet from "../components/studio/WordEditBottomSheet"
 import { BRAND } from "../utils/brand"
+import { useEditorSession } from "../hooks/useEditorSession"
 import { downloadSRT } from "../utils/srtExport"
 import { sortWordsByStart } from "../utils/timelineUtils"
 
@@ -69,39 +66,36 @@ function scrollExportAnchorIntoView() {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
 }
 
-const MOBILE_TOTAL_STEPS = 4
-
-export default function Editor() {
+export default function AdvancedEditorPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { state } = useLocation()
+  const { session, updateWords } = useEditorSession()
   const previewRef = useRef(null)
 
   useEffect(() => {
-    if (!state?.videoUrl || !Array.isArray(state?.words)) {
+    if (!session?.videoUrl || !Array.isArray(session?.words)) {
       navigate("/", {
         replace: true,
         state: { editorSessionMissing: true },
       })
     }
-  }, [state, navigate])
+  }, [session, navigate])
 
   const initialWords = useMemo(() => {
-    if (!Array.isArray(state?.words)) return []
-    return state.words.map((w) => ({
+    if (!Array.isArray(session?.words)) return []
+    return session.words.map((w) => ({
       id: String(w.id ?? uuidv4()),
       word: String(w.word ?? ""),
       start: Number(w.start ?? 0),
       end: Number(w.end ?? 0),
     }))
-  }, [state?.words])
+  }, [session?.words])
 
   const [words, setWords] = useState(initialWords)
   const [style, setStyle] = useState(DEFAULT_STYLE)
   const [currentTime, setCurrentTime] = useState(0)
   const [videoDuration, setVideoDuration] = useState(0)
   const [autoFollow, setAutoFollow] = useState(readInitialAutoFollow)
-  const [mobileStep, setMobileStep] = useState(1)
   const [selectedWordId, setSelectedWordId] = useState(null)
   const [sheetWordId, setSheetWordId] = useState(null)
   const [coarseEditorTouch, setCoarseEditorTouch] = useState(false)
@@ -128,6 +122,10 @@ export default function Editor() {
       setSheetWordId(null)
     }
   }, [words, sheetWordId])
+
+  useEffect(() => {
+    updateWords(words)
+  }, [words, updateWords])
 
   const onPatchWord = useCallback((id, patch) => {
     setWords((prev) =>
@@ -222,7 +220,7 @@ export default function Editor() {
   }, [sheetWordId])
 
   const videoStageProps = {
-    videoUrl: state.videoUrl,
+    videoUrl: session?.videoUrl,
     words,
     style: { ...style, timing_offset: 0 },
     onTimeUpdate: setCurrentTime,
@@ -231,64 +229,19 @@ export default function Editor() {
     onDurationChange: setVideoDuration,
   }
 
-  if (!state?.videoUrl || !Array.isArray(state?.words)) return null
-
-  const mobileStepTitle = (() => {
-    if (mobileStep === 1) return "الخطوة 1: المعاينة"
-    if (mobileStep === 2) return "الخطوة 2: مراجعة الكلام"
-    if (mobileStep === 3) return "الخطوة 3: تنسيق الشكل"
-    return "الخطوة 4: التصدير"
-  })()
-  const mobileStepHint = (() => {
-    if (mobileStep === 1) return "شوف الفيديو بسرعة واتأكد إن المحتوى صحيح."
-    if (mobileStep === 2) return "اضغط على أي كلمة لتعديلها بسهولة."
-    if (mobileStep === 3) return "اختار ستايل جاهز أو افتح التخصيص المتقدم."
-    return "حمّل الفيديو النهائي أو ملف الترجمة."
-  })()
-  const mobileCtaLabel =
-    mobileStep < MOBILE_TOTAL_STEPS ? "التالي" : "إنهاء"
+  if (!session?.videoUrl || !Array.isArray(session?.words)) return null
 
   const stageClassUnified =
     "flex-1 min-h-[200px] max-h-[min(52vh,calc(100dvh-15rem))] lg:min-h-[220px] lg:max-h-[min(56vh,calc(100dvh-18rem))] w-full max-w-[min(420px,100%)] mx-auto"
 
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden bg-[var(--editor-rail)] text-[var(--text-primary)]">
-      <header className="lg:hidden shrink-0 flex items-center justify-between gap-2 px-3 py-2.5 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/90 backdrop-blur-md safe-area-pt">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="cap-focus-visible shrink-0 flex items-center gap-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-2 rounded-[var(--radius-sm)]"
-          aria-label={t("nav.back")}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
-          </svg>
-        </button>
-        <span className="min-w-0 truncate text-center text-xs font-semibold text-[var(--text-primary)]">
-          {t("brand.appName")}
-        </span>
-        <div className="flex items-center gap-1.5 shrink-0">
-          <LanguageSwitcher />
-        </div>
-      </header>
-
-      <div className="hidden lg:block">
+      <div>
         <StudioNavBar onBack={() => navigate("/")} />
       </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0 min-w-0">
-        <aside className="hidden lg:flex lg:flex-col min-h-0 w-[min(320px,32vw)] shrink-0 border-e border-[var(--border-subtle)]/60 bg-[var(--bg-base)]/50">
+      <div className="flex-1 flex flex-row min-h-0 min-w-0">
+        <aside className="flex flex-col min-h-0 w-[min(320px,32vw)] shrink-0 border-e border-[var(--border-subtle)]/60 bg-[var(--bg-base)]/50">
           <TranscriptPanel
             words={words}
             currentTime={currentTime}
@@ -325,72 +278,7 @@ export default function Editor() {
           </div>
 
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="lg:hidden flex-1 min-h-0">
-              <MobileShell
-                step={mobileStep}
-                totalSteps={MOBILE_TOTAL_STEPS}
-                title={mobileStepTitle}
-                hint={mobileStepHint}
-                onBack={() => {
-                  if (mobileStep > 1) {
-                    setMobileStep((s) => s - 1)
-                  } else {
-                    navigate("/")
-                  }
-                }}
-                ctaLabel={mobileCtaLabel}
-                onCta={() => {
-                  if (mobileStep < MOBILE_TOTAL_STEPS) {
-                    setMobileStep((s) => s + 1)
-                  } else {
-                    navigate("/")
-                  }
-                }}
-              >
-                {mobileStep === 1 ? (
-                  <div className="space-y-3">
-                    <p className="rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-card)]/75 px-3 py-2 text-sm text-[var(--text-secondary)]">
-                      استخدم زر التشغيل لمعاينة سريعة قبل التعديل.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => previewRef.current?.togglePlay?.()}
-                      className="cap-focus-visible min-h-[48px] w-full rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 text-sm font-semibold text-[var(--text-primary)]"
-                    >
-                      تشغيل/إيقاف المعاينة
-                    </button>
-                    <div className="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 py-2 text-xs font-mono text-[var(--text-muted)]">
-                      {currentTime.toFixed(2)}s / {timelineDuration.toFixed(2)}s
-                    </div>
-                  </div>
-                ) : null}
-
-                {mobileStep === 2 ? (
-                  <StepReview
-                    words={words}
-                    selectedWordId={selectedWordId}
-                    onPickWord={handleTimelineRequestEdit}
-                    onPlayPause={() => previewRef.current?.togglePlay?.()}
-                  />
-                ) : null}
-
-                {mobileStep === 3 ? (
-                  <StepStyle style={style} onChange={setStyle} />
-                ) : null}
-
-                {mobileStep === 4 ? (
-                  <StepExport
-                    words={words}
-                    videoUrl={state.videoUrl}
-                    style={style}
-                    onDownloadSrt={handleDownloadSrt}
-                    exportAnchorId="cap-editor-export-anchor"
-                  />
-                ) : null}
-              </MobileShell>
-            </div>
-
-            <div className="hidden lg:block shrink-0">
+            <div className="block shrink-0">
               <CaptionTimeline
                 words={words}
                 duration={timelineDuration}
@@ -438,7 +326,7 @@ export default function Editor() {
             embedded
             exportAnchorId="cap-editor-export-aside"
             words={words}
-            videoUrl={state.videoUrl}
+            videoUrl={session.videoUrl}
             style={style}
             onDownloadSrt={handleDownloadSrt}
           />

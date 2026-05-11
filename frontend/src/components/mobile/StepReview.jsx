@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import HelpHint from "./HelpHint"
 
 function groupWords(words) {
@@ -20,17 +21,18 @@ export default function StepReview({
   onPickWord,
   onPlayPause,
 }) {
+  const { t } = useTranslation()
   const groups = groupWords(words)
 
   return (
     <div className="space-y-3">
-      <HelpHint text="اضغط على أي كلمة لتعديلها. ما تقلقش من التوقيتات، النظام بيضبطها تلقائي." />
+      <HelpHint text={t("mobile.reviewHelp")} />
       <button
         type="button"
         onClick={onPlayPause}
         className="cap-focus-visible min-h-[48px] w-full rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 text-sm font-semibold text-[var(--text-primary)]"
       >
-        تشغيل/إيقاف المعاينة
+        {t("mobile.playPause")}
       </button>
 
       <div className="space-y-2">

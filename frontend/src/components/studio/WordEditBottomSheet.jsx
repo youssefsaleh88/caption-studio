@@ -20,6 +20,7 @@ export default function WordEditBottomSheet({
   onNavigateToWordId,
   timeStep = 0.05,
   largeTouch = false,
+  hideTimingControls = false,
 }) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState({
@@ -168,6 +169,7 @@ export default function WordEditBottomSheet({
           setDraft={setDraft}
           timeStep={timeStep}
           largeTouch={largeTouch}
+          hideTiming={hideTimingControls}
           onSave={commitSave}
           onDelete={handleDelete}
           onPlayFromHere={() =>

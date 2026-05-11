@@ -118,9 +118,8 @@ export default function Home() {
         pathname: location.pathname,
         search: location.search,
         hash: location.hash,
-        state: {},
       },
-      { replace: true },
+      { replace: true, state: {} },
     )
   }, [navigate, location.pathname, location.search, location.hash])
 
@@ -160,10 +159,10 @@ export default function Home() {
           </div>
         ) : null}
         <h1 className="text-2xl font-extrabold text-[var(--text-primary)] text-center">
-          ارفع الفيديو وابدأ في 4 خطوات سهلة
+          {t("home.mobileTitle")}
         </h1>
         <p className="mt-2 text-sm text-[var(--text-secondary)] text-center">
-          مناسب لأي مستخدم جديد بدون خبرة تقنية.
+          {t("home.mobileSubtitle")}
         </p>
         <div className="mt-4">
           <StepUpload />
