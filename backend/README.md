@@ -1,7 +1,7 @@
 ---
 title: Caption Studio API
 emoji: 🎬
-colorFrom: orange
+colorFrom: yellow
 colorTo: purple
 sdk: docker
 app_port: 7860
