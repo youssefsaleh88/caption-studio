@@ -4,60 +4,60 @@
 
 /* ─────────────────────────── Design Tokens ─────────────────────────── */
 :root {
-  /* Clipt — forest / mint (OKLCH) */
-  --color-primary: oklch(0.41 0.13 135);
-  --color-primary-alt: oklch(0.52 0.14 130);
+  /* Clipt — Light Mode (OKLCH) */
+  --color-primary: oklch(0.44 0.12 135);
+  --color-primary-alt: oklch(0.58 0.15 130);
   --color-primary-gradient: linear-gradient(
     135deg,
-    oklch(0.41 0.13 135) 0%,
-    oklch(0.52 0.14 130) 100%
+    oklch(0.44 0.12 135) 0%,
+    oklch(0.58 0.15 130) 100%
   );
 
   /* Secondary — highlight / deep accent pair */
-  --color-secondary: oklch(0.72 0.12 128);
-  --color-secondary-alt: oklch(0.45 0.12 135);
+  --color-secondary: oklch(0.75 0.14 125);
+  --color-secondary-alt: oklch(0.44 0.12 135);
   --color-secondary-gradient: linear-gradient(
     135deg,
-    oklch(0.52 0.14 130) 0%,
-    oklch(0.72 0.12 128) 100%
+    oklch(0.58 0.15 130) 0%,
+    oklch(0.75 0.14 125) 100%
   );
 
   /* Surfaces */
-  --color-bg: oklch(0.13 0.022 142);
-  --color-surface: oklch(0.17 0.028 142);
-  --color-surface-warm: oklch(0.2 0.032 142);
-  --color-border: oklch(0.94 0.02 132 / 0.14);
-  --color-border-strong: oklch(0.72 0.12 128 / 0.45);
+  --color-bg: oklch(0.97 0.02 145);
+  --color-surface: oklch(0.95 0.04 135);
+  --color-surface-warm: oklch(0.98 0.01 140);
+  --color-border: oklch(0.9 0.06 135);
+  --color-border-strong: oklch(0.75 0.14 125);
 
   /* Text */
-  --color-text-primary: oklch(0.94 0.02 132);
-  --color-text-secondary: oklch(0.78 0.06 132);
-  --color-text-muted: oklch(0.58 0.04 140);
-  --color-text-inverse: oklch(0.94 0.02 132);
+  --color-text-primary: oklch(0.35 0.08 135);
+  --color-text-secondary: oklch(0.45 0.06 135);
+  --color-text-muted: oklch(0.55 0.04 135);
+  --color-text-inverse: oklch(0.95 0.04 135);
 
   /* Status */
-  --color-success: oklch(0.72 0.12 145);
-  --color-success-bg: oklch(0.22 0.04 145);
-  --color-processing: oklch(0.72 0.09 175);
-  --color-processing-bg: oklch(0.22 0.03 175);
-  --color-danger: oklch(0.62 0.2 25);
-  --color-danger-bg: oklch(0.22 0.05 25);
+  --color-success: oklch(0.44 0.12 135);
+  --color-success-bg: oklch(0.95 0.04 135);
+  --color-processing: oklch(0.58 0.15 130);
+  --color-processing-bg: oklch(0.95 0.04 135);
+  --color-danger: oklch(0.55 0.15 25);
+  --color-danger-bg: oklch(0.95 0.04 25);
 
-  /* Shadows */
-  --shadow-card: 0 4px 18px oklch(0.08 0.04 142 / 0.42);
-  --shadow-card-hover: 0 10px 28px oklch(0.1 0.05 142 / 0.5);
-  --shadow-button: 0 8px 22px oklch(0.41 0.13 135 / 0.35);
-  --shadow-button-hover: 0 12px 28px oklch(0.52 0.14 130 / 0.42);
+  /* Shadows (softer for light mode) */
+  --shadow-card: 0 4px 18px oklch(0.35 0.08 135 / 0.05);
+  --shadow-card-hover: 0 10px 28px oklch(0.35 0.08 135 / 0.08);
+  --shadow-button: 0 6px 16px oklch(0.44 0.12 135 / 0.2);
+  --shadow-button-hover: 0 8px 24px oklch(0.44 0.12 135 / 0.3);
 
   /* Radii */
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --radius-full: 999px;
 
   /* Spacing rhythm */
-  --space-screen-x: 20px;
+  --space-screen-x: 16px;
 }
 
 * {

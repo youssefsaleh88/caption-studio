@@ -1,63 +1,62 @@
 ---
 name: Clipt
-description: Dark-first caption workflow with Clipt forest-mint palette, Arabic-first type, and green signal accents.
+description: Light-first, fresh, and friendly caption workflow with Clipt spring-green palette, Arabic-first type, and crisp contrast.
 colors:
-  void-root: "oklch(0.13 0.022 142)"
-  surface-base: "oklch(0.17 0.028 142)"
-  surface-raised: "oklch(0.2 0.032 142)"
-  text-mint: "oklch(0.94 0.02 132)"
-  text-soft: "oklch(0.78 0.06 132)"
-  text-muted: "oklch(0.58 0.04 140)"
-  brand-green: "oklch(0.41 0.13 135)"
-  brand-accent: "oklch(0.52 0.14 130)"
-  brand-highlight: "oklch(0.72 0.12 128)"
-  border-mint: "oklch(0.94 0.02 132 / 0.14)"
-  border-strong: "oklch(0.72 0.12 128 / 0.45)"
-  signal-danger: "oklch(0.62 0.2 25)"
-  signal-success: "oklch(0.72 0.12 145)"
-  scrim-teal: "oklch(0.72 0.09 175)"
+  surface-base: "oklch(0.97 0.02 145)" # #F0FDF4 - Main Light Background
+  surface-raised: "oklch(0.95 0.04 135)" # #EAF3DE - Cards, Badges, Icons
+  text-ink: "oklch(0.25 0.05 135)" # #1A2E0A - Near Black
+  text-primary: "oklch(0.35 0.08 135)" # #27500A - Dark Text
+  text-secondary: "oklch(0.45 0.06 135)" # Muted Text
+  text-tertiary: "oklch(0.55 0.04 135)" # Very Muted / Meta
+  brand-green: "oklch(0.44 0.12 135)" # #3B6D11 - Primary Actions, Solid Fill
+  brand-accent: "oklch(0.58 0.15 130)" # #639922 - Highlight, Secondary borders
+  brand-highlight: "oklch(0.75 0.14 125)" # #97C459 - Subtle borders, inputs
+  border-subtle: "oklch(0.9 0.06 135)" # Card borders
+  border-strong: "oklch(0.75 0.14 125)" # Stronger borders
 typography:
   display:
     fontFamily: "Tajawal, \"Noto Sans Arabic\", system-ui, sans-serif"
-    fontSize: "clamp(1.75rem, 4.6vw, 2.25rem)"
-    fontWeight: 800
-    lineHeight: 1.15
-    letterSpacing: "-0.02em"
+    fontSize: "38px"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "-0.04em"
   headline:
     fontFamily: "Tajawal, \"Noto Sans Arabic\", system-ui, sans-serif"
-    fontSize: "1.375rem"
-    fontWeight: 800
-    lineHeight: 1.25
-    letterSpacing: "-0.01em"
+    fontSize: "22px"
+    fontWeight: 500
+    lineHeight: 1.2
+    letterSpacing: "normal"
   title:
     fontFamily: "Tajawal, \"Noto Sans Arabic\", system-ui, sans-serif"
-    fontSize: "1rem"
-    fontWeight: 700
-    lineHeight: 1.35
+    fontSize: "16px"
+    fontWeight: 500
+    lineHeight: 1.2
     letterSpacing: "normal"
   body:
     fontFamily: "Tajawal, \"Noto Sans Arabic\", system-ui, sans-serif"
-    fontSize: "0.9375rem"
-    fontWeight: 500
-    lineHeight: 1.45
+    fontSize: "14px"
+    fontWeight: 400
+    lineHeight: 1.6
     letterSpacing: "normal"
   label:
     fontFamily: "Tajawal, system-ui, sans-serif"
-    fontSize: "0.6875rem"
-    fontWeight: 700
+    fontSize: "11px"
+    fontWeight: 500
     lineHeight: 1.25
     letterSpacing: "0.08em"
+    textTransform: "uppercase"
   mono:
     fontFamily: "ui-monospace, \"Cascadia Code\", monospace"
-    fontSize: "0.6875rem"
-    fontWeight: 500
+    fontSize: "11px"
+    fontWeight: 400
     lineHeight: 1.2
     letterSpacing: "normal"
 rounded:
   sm: "10px"
   md: "12px"
-  card: "16px"
-  pill: "20px"
+  lg: "18px"
+  card: "18px"
+  pill: "99px"
 spacing:
   xs: "4px"
   sm: "8px"
@@ -68,116 +67,111 @@ spacing:
 components:
   button-primary:
     backgroundColor: "{colors.brand-green}"
-    textColor: "{colors.text-mint}"
+    textColor: "{colors.surface-raised}"
     rounded: "{rounded.md}"
-    padding: "12px 20px"
-  button-primary-hover:
-    backgroundColor: "{colors.brand-accent}"
-    textColor: "{colors.text-mint}"
-    rounded: "{rounded.md}"
-    padding: "12px 20px"
+    padding: "11px 20px"
   button-secondary:
     backgroundColor: "transparent"
-    textColor: "{colors.text-mint}"
+    textColor: "{colors.text-primary}"
     borderColor: "{colors.brand-accent}"
     rounded: "{rounded.md}"
     padding: "11px 20px"
-  chip-timecode:
-    backgroundColor: "oklch(0.52 0.14 130 / 0.22)"
-    textColor: "{colors.brand-highlight}"
+  card-caption:
+    backgroundColor: "{colors.surface-base}"
+    borderColor: "{colors.brand-highlight}"
+    textColor: "{colors.text-primary}"
     rounded: "{rounded.sm}"
-    padding: "4px 8px"
+    padding: "10px 12px"
 ---
 
-# Design System: Clipt
+# Design System: Clipt (Light Mode)
 
 ## Overview
 
-**Creative North Star: "Night Edit, Fresh Signal"**
+**Creative North Star: "Fresh, Friendly, and Fast"**
 
-A creator finishes a Reel at night at their desk, phone on a stand, one lamp on. The UI stays deep forest so the video and caption lines stay the focus. Mint and spring greens mark progress, selection, and primary actions. Nothing reads as neon club lighting or decorative glass.
+A creator needs to upload, transcribe, and review their video captions quickly during the day. The UI is exceptionally bright and crisp, using a spring-green palette that feels energetic but professional. It avoids the heavy, clinical feel of SaaS dashboards by utilizing high-contrast, nature-inspired greens on soft, breathable surfaces.
 
 **Implementation source of truth:** semantic CSS variables in `frontend/src/styles/globals.css` (`:root`). Tailwind maps to those variables in `frontend/tailwind.config.js` for utility classes such as `bg-surface` and `text-ink`.
 
 **Key characteristics**
-- Dark-first surfaces tinted toward brand green hue, not pure black or pure white.
-- **Color strategy:** Restrained neutrals with a **Committed** green lane for CTAs, progress, and focus.
-- Arabic-first typography with **Tajawal** as the primary UI family.
-- Motion is short and easing-led; respect `prefers-reduced-motion` (see globals).
+- **Light-first surfaces**: Tinted toward brand green hue (e.g., `#F0FDF4`), never pure white.
+- **Color strategy:** "Restrained". Fresh, clean backgrounds with purposeful green accents for progress, actions, and selection.
+- **Typography:** Arabic-first typography with **Tajawal** as the primary UI family. High legibility with distinct weight contrast.
+- **Motion:** Short and easing-led; respects `prefers-reduced-motion`. Micro-interactions feel snappy and responsive.
 
 ## Colors
 
 ### Primary
-- **Brand green** (`oklch(0.41 0.13 135)`): primary buttons, solid progress fill, strong selection.
-- **Brand accent** (`oklch(0.52 0.14 130)`): hover brighten, secondary emphasis, logotype accent letter.
+- **Brand green** (`#3B6D11`): Primary buttons, active progress fill, primary icons. The main action color.
+- **Accent** (`#639922`): Secondary button borders, timecode text, active state highlights, and logo accents.
 
-### Secondary
-- **Brand highlight** (`oklch(0.72 0.12 128)`): chips, borders on active drops, focus ring partner, secondary gradient end.
+### Secondary / Structural
+- **Highlight** (`#97C459`): Input borders, active card borders, focus rings.
+- **Surface** (`#EAF3DE`): Badges, icon background circles, progress tracks, logo marks.
+- **Surface Light** (`#F0FDF4`): Main application background, content cards.
 
-### Tertiary
-- **Scrim teal** (`oklch(0.72 0.09 175)`): non-blocking informational pills (for example file limits), never a second rainbow accent.
-
-### Neutrals
-- **Void root**, **Surface base**, **Surface raised**: layered panels for upload, cards, and editor chrome.
-- **Text mint / soft / muted**: hierarchy without extra hues.
-- **Border mint / strong**: hairlines and drag-over affordances.
-
-### Named rules
-**One gradient lane.** Use `linear-gradient` on primary CTAs and hero marks only, built from brand green to brand accent. Do not stack unrelated multi-hue gradients across settings lists.
-
-**No neon flood.** Avoid high-chroma fills on large backgrounds. Glow, if any, stays soft and tied to focus or active playback only.
+### Neutrals (Text & Ink)
+- **Text dark** (`#27500A`): Primary body text, headings, secondary button text.
+- **Near black** (`#1A2E0A`): Highest contrast text, critical emphasis.
+- **Text muted**: Secondary descriptions and metadata.
 
 ## Typography
 
 **Primary:** Tajawal (with Noto Sans Arabic, system-ui).
 
-**Character:** confident, legible at small sizes, friendly without rounded “toy” excess. Headlines stay heavy; body stays medium weight for RTL clarity.
+**Character:** Friendly, confident, and readable. Uses `500` weight heavily for headings, labels, and buttons, contrasting with `400` for body text.
 
 ### Hierarchy
-- **Display:** hero titles on home and major step titles.
-- **Headline:** page titles and section impact.
-- **Title:** card titles and list headers.
-- **Body:** descriptions and helper lines; keep line length near **72ch** in reading panels.
-- **Label:** uppercase micro labels with letter spacing for steps and categories.
-- **Mono:** timecodes and numeric ranges; use tabular lining where available.
+- **Display (38px):** Logotype and hero moments.
+- **Headline 1 (22px):** Page titles (e.g., "ارفع فيديوهك الآن").
+- **Headline 2 (16px):** Section headers (e.g., "راجع الكابشن").
+- **Body (14px):** Descriptions and general text.
+- **Label/Caption (11px/12px):** Uppercase, letter-spaced labels, meta info.
 
-## Elevation
+## Elevation & Layout
 
-Depth is tonal first: void root to surface raised. Shadows are soft and green-tinted, used for cards and primary buttons, not deep material stacks.
+Depth is defined by subtle borders (`0.5px solid`) and tonal backgrounds (`Surface Light` vs `Surface`), rather than heavy drop shadows.
+- Cards use an `18px` border radius with a `0.5px` border.
+- Inputs and small cards use `10px` or `12px` border radius.
 
 ## Components
 
 ### Buttons
-- **Primary:** gradient from brand green to brand accent, mint text, generous height on mobile primary paths.
-- **Secondary:** transparent with accent border (Clipt sheet pattern).
-- **Ghost:** muted text, hover wash only.
+- **Primary:** Solid `#3B6D11` background, `#EAF3DE` text, `12px` border radius.
+- **Secondary:** Transparent background, `#27500A` text, `#639922` border, `12px` border radius.
 
-### Chips and pills
-- Timecode and format chips use translucent accent fills and mint or accent text, not rainbow status colors unless semantic (success, danger, info).
+### Badges & Pills
+- **Standard Badge:** `#EAF3DE` background, `#27500A` text, `99px` radius.
+- **Dark/AI Badge:** `#27500A` background, `#C0DD97` text, `99px` radius.
 
-### Upload zone
-- Dashed border that shifts toward accent on drag-over; circular mark uses the same primary gradient as the logo tile.
+### Progress Bar
+- Track: `#EAF3DE` background.
+- Fill: `#3B6D11` background.
 
-### Focus
-- Visible `2px` outline using highlight or accent, with offset, on `.cap-focus-ring:focus-visible`.
+### Caption Card
+- Background: `#F0FDF4`
+- Border: `0.5px solid #97C459`
+- Timecode: `#639922`
+- Text: `#27500A`
+
+### Icons
+- Displayed inside a `#EAF3DE` rounded square (`12px` radius) with `#3B6D11` icon color.
 
 ## Motion (from Clipt identity reference)
 
-- Micro interactions: **150ms** ease-out.
-- Screen transitions: **300ms** ease-in-out.
-- Progress value changes: **500ms** linear where a bar animates.
-- Card entrance: **200ms** fade or slide without animating layout-critical properties.
-
-All decorative motion respects `prefers-reduced-motion: reduce` in `globals.css`.
+- **Micro interactions:** 150ms ease-out.
+- **Screen transitions:** 300ms ease-in-out.
+- **Progress updates:** 500ms linear.
+- **Card entrance:** 200ms slide-up.
 
 ## Do's and Don'ts
 
 ### Do
-- Keep large areas on void or surface tokens; let green carry meaning for action and progress.
-- Pair high-contrast mint text on dark green buttons for AA-style pairings.
-- Keep copy short, stepwise, and reassuring in Arabic.
+- Ensure all backgrounds have a slight tint of green; avoid pure `#FFFFFF`.
+- Use the dark text colors (`#27500A`, `#1A2E0A`) to maintain strong contrast against the light surfaces.
+- Rely on border colors for definition between elements rather than heavy shadows.
 
 ### Don't
-- Introduce violet or unrelated purple as a brand accent (legacy palette).
-- Use glass blur as a decorative default.
-- Use gradient text or colored side-stripe borders as decoration (shared impeccable bans).
+- Don't use dark mode patterns (e.g., `#1A2E1A`) as main backgrounds; they are reserved for specific badges or the dark logo variant.
+- Don't mix multiple unrelated hues. Stick strictly to the green monochromatic scale provided.

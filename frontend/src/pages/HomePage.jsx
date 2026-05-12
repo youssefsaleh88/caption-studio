@@ -40,7 +40,7 @@ export default function HomePage() {
         <div
           aria-hidden="true"
           className="text-[58px] mb-3 cap-animate-float"
-          style={{ filter: "drop-shadow(0 8px 16px rgba(255,107,107,0.35))" }}
+          style={{ filter: "drop-shadow(0 8px 16px rgba(99,153,34,0.35))" }}
         >
           ✨
         </div>

@@ -1,0 +1,363 @@
+
+<style>
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  .bi{font-family:var(--font-sans);padding:1.5rem 0;display:flex;flex-direction:column;gap:2rem}
+  .bi-section-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+  .card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem 1.5rem}
+
+  /* Logo hero */
+  .logo-hero{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .logo-mark{width:64px;height:64px;border-radius:18px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .logo-wordmark{font-size:38px;font-weight:500;letter-spacing:-.04em;color:#27500A}
+  .logo-wordmark span{color:#639922}
+  .logo-tagline{font-size:13px;color:var(--color-text-secondary);margin-top:4px}
+
+  /* Logo variations */
+  .logo-vars{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .logo-var{border-radius:var(--border-radius-lg);padding:1.25rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:0.5px solid var(--color-border-tertiary);min-height:90px}
+  .logo-var-label{font-size:11px;color:var(--color-text-tertiary);letter-spacing:.04em}
+  .lv-light{background:#F0FDF4}
+  .lv-dark{background:#1A2E1A}
+  .lv-mono{background:var(--color-background-secondary)}
+
+  /* Palette */
+  .palette-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+  .swatch-card{border-radius:var(--border-radius-md);overflow:hidden;border:0.5px solid var(--color-border-tertiary)}
+  .swatch-color{height:56px}
+  .swatch-info{padding:8px 10px;background:var(--color-background-primary)}
+  .swatch-name{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+  .swatch-hex{font-size:11px;color:var(--color-text-tertiary);font-family:var(--font-mono)}
+
+  /* Typography */
+  .type-row{display:flex;flex-direction:column;gap:14px}
+  .type-item{display:flex;align-items:baseline;gap:16px;padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary)}
+  .type-item:last-child{border-bottom:none;padding-bottom:0}
+  .type-meta{font-size:11px;color:var(--color-text-tertiary);min-width:120px;flex-shrink:0;font-family:var(--font-mono)}
+  .type-sample-xl{font-size:32px;font-weight:500;color:#27500A;letter-spacing:-.03em;line-height:1}
+  .type-sample-h1{font-size:22px;font-weight:500;color:var(--color-text-primary);line-height:1.2}
+  .type-sample-h2{font-size:16px;font-weight:500;color:var(--color-text-primary)}
+  .type-sample-body{font-size:14px;color:var(--color-text-secondary);line-height:1.6}
+  .type-sample-small{font-size:12px;color:var(--color-text-tertiary)}
+
+  /* UI components preview */
+  .comp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .comp-box{border-radius:var(--border-radius-lg);padding:1.25rem;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);display:flex;flex-direction:column;gap:10px}
+  .comp-box-label{font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.06em}
+  .btn-primary-clipt{background:#3B6D11;color:#EAF3DE;border:none;border-radius:12px;padding:11px 20px;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;justify-content:center}
+  .btn-secondary-clipt{background:transparent;color:#27500A;border:0.5px solid #639922;border-radius:12px;padding:11px 20px;font-size:14px;font-weight:500;cursor:pointer;width:100%;justify-content:center;display:flex;align-items:center;gap:8px}
+  .badge-clipt{display:inline-flex;align-items:center;gap:5px;background:#EAF3DE;color:#27500A;border-radius:99px;padding:4px 12px;font-size:12px;font-weight:500}
+  .badge-clipt-dark{background:#27500A;color:#C0DD97;border-radius:99px;padding:4px 12px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:5px}
+  .input-clipt{border:0.5px solid #97C459;border-radius:10px;padding:10px 14px;font-size:14px;color:var(--color-text-primary);background:var(--color-background-primary);width:100%;box-sizing:border-box;outline:none}
+  .progress-clipt{height:7px;background:#EAF3DE;border-radius:99px;overflow:hidden}
+  .progress-fill-clipt{height:100%;width:65%;background:#3B6D11;border-radius:99px}
+
+  /* Icon system */
+  .icon-grid{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  .icon-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .icon-circle{width:44px;height:44px;border-radius:12px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;color:#3B6D11;font-size:20px}
+  .icon-lbl{font-size:10px;color:var(--color-text-tertiary);text-align:center}
+
+  /* Motion principle */
+  .motion-row{display:flex;gap:12px;flex-wrap:wrap}
+  .motion-card{flex:1;min-width:140px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);padding:12px 14px;background:var(--color-background-secondary)}
+  .motion-name{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px}
+  .motion-val{font-size:12px;color:var(--color-text-tertiary);font-family:var(--font-mono)}
+
+  /* App icon preview */
+  .app-icon-row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+  .app-icon{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .app-icon-lbl{font-size:11px;color:var(--color-text-tertiary)}
+  .ai-64{width:64px;height:64px;border-radius:14px;background:#EAF3DE;display:flex;align-items:center;justify-content:center}
+  .ai-48{width:48px;height:48px;border-radius:11px;background:#EAF3DE;display:flex;align-items:center;justify-content:center}
+  .ai-32{width:32px;height:32px;border-radius:7px;background:#EAF3DE;display:flex;align-items:center;justify-content:center}
+</style>
+
+<h2 class="sr-only">Clipt brand identity sheet — logo, colors, typography, and UI components</h2>
+<div class="bi">
+
+  <div>
+    <div class="bi-section-label">Logo</div>
+    <div class="card">
+      <div class="logo-hero">
+        <div class="logo-mark">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+            <rect x="4" y="8" width="28" height="17" rx="4" fill="#3B6D11" opacity=".15"/>
+            <rect x="4" y="8" width="28" height="17" rx="4" stroke="#3B6D11" stroke-width="1.8" fill="none"/>
+            <rect x="9" y="13" width="18" height="2.5" rx="1.25" fill="#3B6D11"/>
+            <rect x="9" y="18" width="11" height="2.5" rx="1.25" fill="#3B6D11" opacity=".5"/>
+            <circle cx="28" cy="9" r="5" fill="#639922"/>
+            <path d="M26 9h4M28 7v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-wordmark">Clip<span>t</span></div>
+          <div class="logo-tagline">حوّل فيديوهاتك في ثواني</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="bi-section-label">متغيرات اللوجو</div>
+    <div class="logo-vars">
+      <div class="logo-var lv-light">
+        <svg width="32" height="32" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+          <rect x="4" y="8" width="28" height="17" rx="4" fill="#3B6D11" opacity=".15"/>
+          <rect x="4" y="8" width="28" height="17" rx="4" stroke="#3B6D11" stroke-width="1.8" fill="none"/>
+          <rect x="9" y="13" width="18" height="2.5" rx="1.25" fill="#3B6D11"/>
+          <rect x="9" y="18" width="11" height="2.5" rx="1.25" fill="#3B6D11" opacity=".5"/>
+          <circle cx="28" cy="9" r="5" fill="#639922"/>
+          <path d="M26 9h4M28 7v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size:18px;font-weight:500;color:#27500A;letter-spacing:-.03em">Clipt</span>
+        <span class="logo-var-label">Light</span>
+      </div>
+      <div class="logo-var lv-dark">
+        <svg width="32" height="32" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+          <rect x="4" y="8" width="28" height="17" rx="4" fill="#97C459" opacity=".2"/>
+          <rect x="4" y="8" width="28" height="17" rx="4" stroke="#97C459" stroke-width="1.8" fill="none"/>
+          <rect x="9" y="13" width="18" height="2.5" rx="1.25" fill="#97C459"/>
+          <rect x="9" y="18" width="11" height="2.5" rx="1.25" fill="#97C459" opacity=".5"/>
+          <circle cx="28" cy="9" r="5" fill="#639922"/>
+          <path d="M26 9h4M28 7v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size:18px;font-weight:500;color:#C0DD97;letter-spacing:-.03em">Clipt</span>
+        <span style="font-size:11px;color:#5DCAA5;letter-spacing:.04em">Dark</span>
+      </div>
+      <div class="logo-var lv-mono">
+        <svg width="32" height="32" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+          <rect x="4" y="8" width="28" height="17" rx="4" fill="none" stroke="var(--color-text-primary)" stroke-width="1.8"/>
+          <rect x="9" y="13" width="18" height="2.5" rx="1.25" fill="var(--color-text-primary)"/>
+          <rect x="9" y="18" width="11" height="2.5" rx="1.25" fill="var(--color-text-secondary)"/>
+          <circle cx="28" cy="9" r="5" fill="var(--color-text-primary)"/>
+          <path d="M26 9h4M28 7v4" stroke="var(--color-background-primary)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size:18px;font-weight:500;color:var(--color-text-primary);letter-spacing:-.03em">Clipt</span>
+        <span class="logo-var-label">Mono</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="bi-section-label">App icon</div>
+    <div class="card">
+      <div class="app-icon-row">
+        <div class="app-icon">
+          <div class="ai-64">
+            <svg width="38" height="38" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+              <rect x="4" y="8" width="28" height="17" rx="4" fill="#3B6D11" opacity=".15"/>
+              <rect x="4" y="8" width="28" height="17" rx="4" stroke="#3B6D11" stroke-width="1.8" fill="none"/>
+              <rect x="9" y="13" width="18" height="2.5" rx="1.25" fill="#3B6D11"/>
+              <rect x="9" y="18" width="11" height="2.5" rx="1.25" fill="#3B6D11" opacity=".5"/>
+              <circle cx="28" cy="9" r="5" fill="#639922"/>
+              <path d="M26 9h4M28 7v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="app-icon-lbl">64px</span>
+        </div>
+        <div class="app-icon">
+          <div class="ai-48">
+            <svg width="28" height="28" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+              <rect x="4" y="8" width="28" height="17" rx="4" fill="#3B6D11" opacity=".15"/>
+              <rect x="4" y="8" width="28" height="17" rx="4" stroke="#3B6D11" stroke-width="1.8" fill="none"/>
+              <rect x="9" y="13" width="18" height="2.5" rx="1.25" fill="#3B6D11"/>
+              <rect x="9" y="18" width="11" height="2.5" rx="1.25" fill="#3B6D11" opacity=".5"/>
+              <circle cx="28" cy="9" r="5" fill="#639922"/>
+              <path d="M26 9h4M28 7v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="app-icon-lbl">48px</span>
+        </div>
+        <div class="app-icon">
+          <div class="ai-32">
+            <svg width="20" height="20" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+              <rect x="4" y="8" width="28" height="17" rx="4" fill="#3B6D11" opacity=".15"/>
+              <rect x="4" y="8" width="28" height="17" rx="4" stroke="#3B6D11" stroke-width="1.8" fill="none"/>
+              <rect x="9" y="13" width="18" height="2.5" rx="1.25" fill="#3B6D11"/>
+              <rect x="9" y="18" width="11" height="2.5" rx="1.25" fill="#3B6D11" opacity=".5"/>
+              <circle cx="28" cy="9" r="5" fill="#639922"/>
+              <path d="M26 9h4M28 7v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="app-icon-lbl">32px</span>
+        </div>
+        <div class="app-icon" style="margin-left:8px">
+          <div style="width:64px;height:64px;border-radius:14px;background:#3B6D11;display:flex;align-items:center;justify-content:center">
+            <svg width="38" height="38" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+              <rect x="4" y="8" width="28" height="17" rx="4" fill="#C0DD97" opacity=".2"/>
+              <rect x="4" y="8" width="28" height="17" rx="4" stroke="#C0DD97" stroke-width="1.8" fill="none"/>
+              <rect x="9" y="13" width="18" height="2.5" rx="1.25" fill="#C0DD97"/>
+              <rect x="9" y="18" width="11" height="2.5" rx="1.25" fill="#C0DD97" opacity=".5"/>
+              <circle cx="28" cy="9" r="5" fill="#639922"/>
+              <path d="M26 9h4M28 7v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="app-icon-lbl">Dark bg</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="bi-section-label">الألوان</div>
+    <div class="palette-row">
+      <div class="swatch-card">
+        <div class="swatch-color" style="background:#3B6D11"></div>
+        <div class="swatch-info"><div class="swatch-name">Brand green</div><div class="swatch-hex">#3B6D11</div></div>
+      </div>
+      <div class="swatch-card">
+        <div class="swatch-color" style="background:#639922"></div>
+        <div class="swatch-info"><div class="swatch-name">Accent</div><div class="swatch-hex">#639922</div></div>
+      </div>
+      <div class="swatch-card">
+        <div class="swatch-color" style="background:#97C459"></div>
+        <div class="swatch-info"><div class="swatch-name">Highlight</div><div class="swatch-hex">#97C459</div></div>
+      </div>
+      <div class="swatch-card">
+        <div class="swatch-color" style="background:#EAF3DE"></div>
+        <div class="swatch-info"><div class="swatch-name">Surface</div><div class="swatch-hex">#EAF3DE</div></div>
+      </div>
+      <div class="swatch-card">
+        <div class="swatch-color" style="background:#27500A"></div>
+        <div class="swatch-info"><div class="swatch-name">Text dark</div><div class="swatch-hex">#27500A</div></div>
+      </div>
+      <div class="swatch-card">
+        <div class="swatch-color" style="background:#1A2E0A;border-top:0.5px solid var(--color-border-tertiary)"></div>
+        <div class="swatch-info"><div class="swatch-name">Near black</div><div class="swatch-hex">#1A2E0A</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="bi-section-label">Typography</div>
+    <div class="card">
+      <div class="type-row">
+        <div class="type-item">
+          <span class="type-meta">Logotype / 38px 500</span>
+          <span class="type-sample-xl">Clipt</span>
+        </div>
+        <div class="type-item">
+          <span class="type-meta">Heading 1 / 22px 500</span>
+          <span class="type-sample-h1">ارفع فيديوهك الآن</span>
+        </div>
+        <div class="type-item">
+          <span class="type-meta">Heading 2 / 16px 500</span>
+          <span class="type-sample-h2">راجع الكابشن</span>
+        </div>
+        <div class="type-item">
+          <span class="type-meta">Body / 14px 400</span>
+          <span class="type-sample-body">هنحوّل فيديوهك لفيديو جاهز للنشر في ثواني — رفع، تفريغ، مراجعة، تصدير.</span>
+        </div>
+        <div class="type-item">
+          <span class="type-meta">Caption / 12px 400</span>
+          <span class="type-sample-small">يدعم MP4 · MOV · AVI · MKV — حجم أقصى 500MB</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="bi-section-label">مكونات الـ UI</div>
+    <div class="comp-grid">
+      <div class="comp-box">
+        <div class="comp-box-label">Primary button</div>
+        <button class="btn-primary-clipt"><i class="ti ti-upload" aria-hidden="true"></i> ارفع فيديو</button>
+      </div>
+      <div class="comp-box">
+        <div class="comp-box-label">Secondary button</div>
+        <button class="btn-secondary-clipt"><i class="ti ti-download" aria-hidden="true"></i> تصدير SRT</button>
+      </div>
+      <div class="comp-box">
+        <div class="comp-box-label">Badges</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge-clipt"><i class="ti ti-check" style="font-size:13px" aria-hidden="true"></i> جاهز</span>
+          <span class="badge-clipt-dark"><i class="ti ti-sparkles" style="font-size:13px" aria-hidden="true"></i> AI</span>
+        </div>
+      </div>
+      <div class="comp-box">
+        <div class="comp-box-label">Input</div>
+        <input class="input-clipt" type="text" placeholder="اسم الفيديو..."/>
+      </div>
+      <div class="comp-box">
+        <div class="comp-box-label">Progress bar</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--color-text-secondary)">
+            <span>جاري التفريغ...</span><span style="color:#3B6D11;font-weight:500">65%</span>
+          </div>
+          <div class="progress-clipt"><div class="progress-fill-clipt"></div></div>
+        </div>
+      </div>
+      <div class="comp-box">
+        <div class="comp-box-label">Caption card</div>
+        <div style="border:0.5px solid #97C459;border-radius:10px;padding:10px 12px;background:#F0FDF4;display:flex;gap:10px;align-items:flex-start">
+          <span style="font-size:11px;font-weight:500;color:#639922;white-space:nowrap;margin-top:2px">0:04</span>
+          <span style="font-size:13px;color:#27500A;flex:1">أهلاً وسهلاً بيكم</span>
+          <i class="ti ti-edit" style="font-size:16px;color:#639922" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="bi-section-label">نظام الأيقونات</div>
+    <div class="card">
+      <div class="icon-grid">
+        <div class="icon-item">
+          <div class="icon-circle"><i class="ti ti-upload" aria-hidden="true"></i></div>
+          <span class="icon-lbl">رفع</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-circle"><i class="ti ti-sparkles" aria-hidden="true"></i></div>
+          <span class="icon-lbl">AI</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-circle"><i class="ti ti-edit" aria-hidden="true"></i></div>
+          <span class="icon-lbl">تعديل</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-circle"><i class="ti ti-download" aria-hidden="true"></i></div>
+          <span class="icon-lbl">تصدير</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-circle"><i class="ti ti-player-play" aria-hidden="true"></i></div>
+          <span class="icon-lbl">تشغيل</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-circle"><i class="ti ti-trash" aria-hidden="true"></i></div>
+          <span class="icon-lbl">حذف</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-circle"><i class="ti ti-check" aria-hidden="true"></i></div>
+          <span class="icon-lbl">تم</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-circle"><i class="ti ti-file-text" aria-hidden="true"></i></div>
+          <span class="icon-lbl">ملف</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="bi-section-label">مبادئ الحركة</div>
+    <div class="motion-row">
+      <div class="motion-card">
+        <div class="motion-name">Micro interactions</div>
+        <div class="motion-val">150ms ease-out</div>
+      </div>
+      <div class="motion-card">
+        <div class="motion-name">Screen transitions</div>
+        <div class="motion-val">300ms ease-in-out</div>
+      </div>
+      <div class="motion-card">
+        <div class="motion-name">Progress updates</div>
+        <div class="motion-val">500ms linear</div>
+      </div>
+      <div class="motion-card">
+        <div class="motion-name">Card entrance</div>
+        <div class="motion-val">200ms slide-up</div>
+      </div>
+    </div>
+  </div>
+
+</div>

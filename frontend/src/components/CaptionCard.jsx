@@ -87,8 +87,8 @@ export default function CaptionCard({
         "cap-card transition-all duration-200",
         "px-3.5 py-3",
         isActive
-          ? "ring-2 ring-primary/60 shadow-cardHover bg-surface-warm"
-          : "hover:shadow-cardHover",
+          ? "border-secondary ring-1 ring-secondary bg-surface-warm shadow-cardHover"
+          : "hover:border-line-strong hover:bg-surface-warm/50",
       ].join(" ")}
     >
       <div className="flex items-center justify-between mb-2 gap-2">
