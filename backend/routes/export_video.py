@@ -11,11 +11,18 @@ from services.ffmpeg_service import burn_captions
 router = APIRouter()
 
 
+class WordSpan(BaseModel):
+    word: str
+    start: float
+    end: float
+
+
 class Caption(BaseModel):
     id: str
     word: str
     start: float
     end: float
+    words: list[WordSpan] | None = None
 
 
 class StyleOptions(BaseModel):

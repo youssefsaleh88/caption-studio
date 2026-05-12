@@ -174,14 +174,23 @@ def _karaoke_ass_body(words: list[dict]) -> str:
     return " ".join(parts)
 
 
-def _resolve_font_size_px(style: dict, play_res_y: int) -> int:
+def _resolve_font_size_px(
+    style: dict, play_res_x: int, play_res_y: int
+) -> int:
+    """
+    Compute font size in px. Base on the smaller of width/height so the same
+    `font_size_pct` produces visually consistent text across landscape AND
+    portrait videos (otherwise portrait clips render text that's far too large
+    relative to width).
+    """
+    base = max(1, min(int(play_res_x), int(play_res_y)))
     pct = style.get("font_size_pct")
     if pct is not None:
-        return max(8, round(float(pct) / 100.0 * play_res_y))
+        return max(12, round(float(pct) / 100.0 * base))
     fs = style.get("fontsize")
     if fs is not None:
-        return max(8, int(fs))
-    return max(8, round(0.055 * play_res_y))
+        return max(12, int(fs))
+    return max(12, round(0.055 * base))
 
 
 def write_ass_for_burn_in(
@@ -201,7 +210,7 @@ def write_ass_for_burn_in(
     prx = max(1, int(play_res_x))
     pry = max(1, int(play_res_y))
 
-    font_size_px = _resolve_font_size_px(style, pry)
+    font_size_px = _resolve_font_size_px(style, prx, pry)
 
     raw_font = str(style.get("fontFamily") or style.get("font") or "Noto Sans Arabic")
     font_name = raw_font.strip() or "Noto Sans Arabic"
@@ -248,8 +257,8 @@ def write_ass_for_burn_in(
 
     alignment = _position_to_alignment(str(style.get("position") or "bottom-center"))
 
-    margin_v = round(pry * 0.05)
-    margin_lr = round(prx * 0.05)
+    margin_v = round(pry * 0.06)
+    margin_lr = round(prx * 0.04)
 
     header = f"""[Script Info]
 Title: AI Caption Studio
@@ -257,7 +266,7 @@ ScriptType: v4.00+
 PlayResX: {prx}
 PlayResY: {pry}
 ScaledBorderAndShadow: yes
-WrapStyle: 2
+WrapStyle: 0
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding

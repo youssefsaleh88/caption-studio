@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react"
 import { formatTime } from "../utils/time"
+import TimeStepper from "./TimeStepper"
 
 export default function CaptionCard({
   caption,
   isActive,
+  autoScroll = true,
+  scrollRoot = null,
   onEdit,
+  onTimeChange,
   onDelete,
   onSeek,
 }) {
@@ -27,10 +31,31 @@ export default function CaptionCard({
   }, [editing])
 
   useEffect(() => {
-    if (isActive && cardRef.current) {
-      cardRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    if (!isActive || !autoScroll || editing) return
+    const card = cardRef.current
+    const root = scrollRoot
+    if (!card || !root) return
+
+    const rootRect = root.getBoundingClientRect()
+    const cardRect = card.getBoundingClientRect()
+
+    const pad = 32
+    if (
+      cardRect.top >= rootRect.top + pad &&
+      cardRect.bottom <= rootRect.bottom - pad
+    ) {
+      return
     }
-  }, [isActive])
+
+    const offsetFromRootTop = cardRect.top - rootRect.top + root.scrollTop
+    const target =
+      offsetFromRootTop - root.clientHeight / 2 + card.clientHeight / 2
+
+    root.scrollTo({
+      top: Math.max(0, target),
+      behavior: "smooth",
+    })
+  }, [isActive, autoScroll, editing, scrollRoot])
 
   function commit() {
     const next = text.trim()
@@ -47,27 +72,34 @@ export default function CaptionCard({
     setEditing(false)
   }
 
+  const duration = Math.max(0, Number(caption.end) - Number(caption.start))
+
   return (
     <article
       ref={cardRef}
       className={[
         "cap-card transition-all duration-200",
-        "px-4 py-3.5",
+        "px-3.5 py-3",
         isActive
           ? "ring-2 ring-primary/60 shadow-cardHover bg-surface-warm"
           : "hover:shadow-cardHover",
       ].join(" ")}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2 gap-2">
         <button
           type="button"
           onClick={() => onSeek?.(caption.start)}
-          className="cap-pill bg-info-bg text-info font-bold cap-focus-ring tabular-nums"
+          className="cap-pill bg-info-bg text-info font-bold cap-focus-ring tabular-nums shrink-0"
           aria-label={`اقفز للوقت ${formatTime(caption.start)}`}
         >
           {formatTime(caption.start)}
         </button>
-        <div className="flex items-center gap-1">
+
+        <span className="text-[11px] font-bold text-ink-muted tabular-nums">
+          {duration.toFixed(1)} ث
+        </span>
+
+        <div className="flex items-center gap-0.5 ms-auto">
           {!editing && (
             <button
               type="button"
@@ -77,6 +109,19 @@ export default function CaptionCard({
             >
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+              </svg>
+            </button>
+          )}
+          {editing && (
+            <button
+              type="button"
+              onClick={cancel}
+              aria-label="إلغاء"
+              className="cap-btn-ghost cap-focus-ring !min-h-[34px] !w-9 !p-0"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
               </svg>
             </button>
           )}
@@ -96,27 +141,45 @@ export default function CaptionCard({
       </div>
 
       {editing ? (
-        <textarea
-          ref={textareaRef}
-          value={text}
-          dir="auto"
-          rows={1}
-          onChange={(e) => {
-            setText(e.target.value)
-            autoSize(e.target)
-          }}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              commit()
-            } else if (e.key === "Escape") {
-              e.preventDefault()
-              cancel()
-            }
-          }}
-          className="cap-focus-ring w-full resize-none bg-transparent text-ink text-[15.5px] font-semibold leading-snug outline-none rounded-md py-1 px-1"
-        />
+        <div className="space-y-2.5">
+          <textarea
+            ref={textareaRef}
+            value={text}
+            dir="auto"
+            rows={1}
+            onChange={(e) => {
+              setText(e.target.value)
+              autoSize(e.target)
+            }}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                commit()
+              } else if (e.key === "Escape") {
+                e.preventDefault()
+                cancel()
+              }
+            }}
+            className="cap-focus-ring w-full resize-none bg-surface border border-line rounded-md text-ink text-[15.5px] font-semibold leading-snug outline-none py-2 px-2.5 focus:border-primary"
+          />
+
+          <div className="space-y-2 pt-1 border-t border-line/60">
+            <TimeStepper
+              label="بداية"
+              value={Number(caption.start)}
+              onChange={(v) => onTimeChange?.(caption.id, { start: v })}
+              min={0}
+              max={Number(caption.end) - 0.2}
+            />
+            <TimeStepper
+              label="نهاية"
+              value={Number(caption.end)}
+              onChange={(v) => onTimeChange?.(caption.id, { end: v })}
+              min={Number(caption.start) + 0.2}
+            />
+          </div>
+        </div>
       ) : (
         <button
           type="button"

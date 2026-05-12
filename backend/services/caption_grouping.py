@@ -162,6 +162,32 @@ def expand_captions_for_style(
     min_hold = float(style.get("min_display_time") or 0.7)
 
     mode = str(style.get("caption_mode") or "sentences").lower()
+
+    # Pre-grouped sentences from the client: keep each caption intact and
+    # preserve per-word timing so karaoke / word animations work correctly.
+    if mode == "presplit":
+        lines: list[dict] = []
+        for c in adjusted:
+            words_inner = c.get("words") or []
+            normalized_words = [
+                {
+                    "word": str(w.get("word", "")),
+                    "start": float(w.get("start", c["start"])),
+                    "end": float(w.get("end", c["end"])),
+                }
+                for w in words_inner
+                if isinstance(w, dict)
+            ]
+            lines.append(
+                {
+                    "word": str(c.get("word") or c.get("text") or ""),
+                    "start": float(c["start"]),
+                    "end": float(c["end"]),
+                    "words": normalized_words,
+                }
+            )
+        return apply_min_display_time(lines, min_hold)
+
     if mode == "sliding":
         ws = int(style.get("sliding_window") or 3)
         lines = build_chunked_lines(adjusted, window_size=ws)

@@ -7,12 +7,16 @@ import {
 } from "react"
 
 const VideoPreview = forwardRef(function VideoPreview(
-  { src, captions = [], onTimeUpdate, onLoadedMeta },
+  { src, captions = [], onTimeUpdate, onLoadedMeta, onPlayingChange },
   ref,
 ) {
   const videoRef = useRef(null)
   const [time, setTime] = useState(0)
   const [playing, setPlaying] = useState(false)
+
+  useEffect(() => {
+    onPlayingChange?.(playing)
+  }, [playing, onPlayingChange])
 
   useImperativeHandle(ref, () => ({
     seek(seconds) {
