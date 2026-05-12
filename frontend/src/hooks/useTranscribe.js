@@ -25,6 +25,9 @@ export function useTranscribe() {
         throw new Error(data?.detail || "transcription failed")
       }
       const data = await res.json()
+      if (data?.error) {
+        throw new Error(data.error)
+      }
       return Array.isArray(data?.words) ? data.words : []
     } catch (err) {
       setError(friendlyError(err.message || err))

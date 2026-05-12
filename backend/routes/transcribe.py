@@ -69,38 +69,42 @@ def _normalize_word_timeline_to_media(
     return normalized
 
 
+import json
+import asyncio
+from fastapi.responses import StreamingResponse
+
+async def _process_transcription(req: TranscribeRequest, tmpdir: str) -> dict:
+    video_path = os.path.join(tmpdir, "input.mp4")
+    try:
+        async with httpx.AsyncClient(timeout=120) as client:
+            r = await client.get(req.video_url)
+            if r.status_code != 200:
+                return {"error": "Could not download video from storage URL"}
+            with open(video_path, "wb") as f:
+                f.write(r.content)
+    except httpx.HTTPError as e:
+        return {"error": f"Network error while downloading video: {e}"}
+
+    audio_path = await run_in_threadpool(extract_audio, video_path, tmpdir)
+    words = await transcribe_audio(
+        audio_path,
+        language_hint=req.language_hint or "auto",
+    )
+    return {"words": words}
+
 @router.post("/transcribe")
 async def transcribe(req: TranscribeRequest):
-    try:
+    async def generate():
         with tempfile.TemporaryDirectory() as tmpdir:
-            video_path = os.path.join(tmpdir, "input.mp4")
-
+            task = asyncio.create_task(_process_transcription(req, tmpdir))
+            while not task.done():
+                yield b" "  # Keep-alive space to bypass HF 60s timeout
+                await asyncio.sleep(2)
+            
             try:
-                async with httpx.AsyncClient(timeout=120) as client:
-                    r = await client.get(req.video_url)
-                    if r.status_code != 200:
-                        raise HTTPException(
-                            status_code=400,
-                            detail="Could not download video from storage URL",
-                        )
-                    with open(video_path, "wb") as f:
-                        f.write(r.content)
-            except httpx.HTTPError as e:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Network error while downloading video: {e}",
-                )
+                result = task.result()
+                yield json.dumps(result).encode("utf-8")
+            except Exception as e:
+                yield json.dumps({"error": f"Transcription pipeline failed: {e}"}).encode("utf-8")
 
-            audio_path = await run_in_threadpool(extract_audio, video_path, tmpdir)
-            words = await transcribe_audio(
-                audio_path,
-                language_hint=req.language_hint or "auto",
-            )
-
-        return {"words": words}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Transcription pipeline failed: {e}"
-        )
+    return StreamingResponse(generate(), media_type="application/json")
