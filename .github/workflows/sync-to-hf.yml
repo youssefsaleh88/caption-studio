@@ -1,0 +1,27 @@
+name: Sync Backend to Hugging Face hub
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**' # Only run this workflow if something in the backend folder changes
+  workflow_dispatch: # Allows you to run it manually
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      
+      - name: Push backend folder to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Extract only the backend folder into a temporary branch called 'backend-only'
+          git subtree split --prefix backend -b backend-only
+          
+          # Force push this temporary branch to the 'main' branch on Hugging Face
+          git push --force https://youssef-m-saleh88:$HF_TOKEN@huggingface.co/spaces/youssef-m-saleh88/caption-studio-api backend-only:main
