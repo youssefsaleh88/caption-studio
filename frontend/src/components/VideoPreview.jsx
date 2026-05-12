@@ -7,7 +7,7 @@ import {
 } from "react"
 
 const VideoPreview = forwardRef(function VideoPreview(
-  { src, captions = [], onTimeUpdate, onLoadedMeta, onPlayingChange },
+  { src, captions = [], onTimeUpdate, onLoadedMeta, onPlayingChange, onAspectRatio },
   ref,
 ) {
   const videoRef = useRef(null)
@@ -52,12 +52,24 @@ const VideoPreview = forwardRef(function VideoPreview(
       setTime(t)
       onTimeUpdate?.(t)
     }
-    const handleMeta = () => onLoadedMeta?.(v.duration || 0)
+    const handleMeta = () => {
+      const dur = v.duration || 0
+      onLoadedMeta?.(dur)
+      // Detect true aspect ratio from the video source
+      if (v.videoWidth && v.videoHeight) {
+        onAspectRatio?.(v.videoWidth / v.videoHeight)
+      }
+    }
 
     v.addEventListener("play", handlePlay)
     v.addEventListener("pause", handlePause)
     v.addEventListener("timeupdate", handleTime)
     v.addEventListener("loadedmetadata", handleMeta)
+
+    // In case metadata already loaded (cached src)
+    if (v.readyState >= 1 && v.videoWidth) {
+      onAspectRatio?.(v.videoWidth / v.videoHeight)
+    }
 
     return () => {
       v.removeEventListener("play", handlePlay)
@@ -65,7 +77,7 @@ const VideoPreview = forwardRef(function VideoPreview(
       v.removeEventListener("timeupdate", handleTime)
       v.removeEventListener("loadedmetadata", handleMeta)
     }
-  }, [onTimeUpdate, onLoadedMeta])
+  }, [onTimeUpdate, onLoadedMeta, onAspectRatio])
 
   const activeCaption = captions.find(
     (c) => time >= Number(c.start) && time <= Number(c.end),
@@ -79,13 +91,14 @@ const VideoPreview = forwardRef(function VideoPreview(
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl bg-black aspect-video shadow-card">
+    <div className="relative w-full overflow-hidden rounded-xl bg-black shadow-card">
       <video
         ref={videoRef}
         src={src}
         playsInline
         preload="metadata"
         className="w-full h-full object-contain bg-black"
+        style={{ display: "block" }}
         onClick={toggle}
       />
 

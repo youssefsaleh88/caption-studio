@@ -11,6 +11,7 @@ export default function ReviewPage() {
   const [previewSrc, setPreviewSrc] = useState(() => session.get("localPreviewUrl") || null)
   const [time, setTime] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [aspectRatio, setAspectRatio] = useState(16 / 9) // default, updated from video
   const videoRef = useRef(null)
   const scrollBoxRef = useRef(null)
 
@@ -144,18 +145,30 @@ export default function ReviewPage() {
         }
       />
 
+      {/* Video — takes max available space with true source aspect ratio */}
       {previewSrc && (
         <section
           className="shrink-0 mb-3 cap-animate-fade-up"
           aria-label="معاينة الفيديو"
         >
-          <VideoPreview
-            ref={videoRef}
-            src={previewSrc}
-            captions={captions}
-            onTimeUpdate={setTime}
-            onPlayingChange={setIsPlaying}
-          />
+          <div
+            style={{
+              width: "100%",
+              aspectRatio: `${aspectRatio}`,
+              maxHeight: "48vh",
+              overflow: "hidden",
+              borderRadius: "0.75rem",
+            }}
+          >
+            <VideoPreview
+              ref={videoRef}
+              src={previewSrc}
+              captions={captions}
+              onTimeUpdate={setTime}
+              onPlayingChange={setIsPlaying}
+              onAspectRatio={setAspectRatio}
+            />
+          </div>
         </section>
       )}
 

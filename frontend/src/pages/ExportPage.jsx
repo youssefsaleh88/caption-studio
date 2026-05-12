@@ -1,21 +1,27 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import ScreenHeader from "../components/ScreenHeader"
 import ExportOption from "../components/ExportOption"
 import StylePresetCard from "../components/StylePresetCard"
+import StyleOptionsPanel from "../components/StyleOptionsPanel"
 import ErrorBanner from "../components/ErrorBanner"
 import { useExport } from "../hooks/useExport"
 import { session } from "../utils/session"
-import { STYLE_PRESETS } from "../utils/stylePresets"
+import { STYLE_PRESETS, getPresetById } from "../utils/stylePresets"
 
 const PRESET_STORAGE_KEY = "lastPreset"
+const CUSTOM_STYLE_KEY = "lastCustomStyle"
 
 export default function ExportPage() {
   const navigate = useNavigate()
-  const { exportSRT, exportMP4, busy, error, setError } = useExport()
+  const { exportSRT, exportMP4, busy, error, setError, progress } = useExport()
   const [format, setFormat] = useState("mp4")
   const [presetId, setPresetId] = useState(
     () => session.get(PRESET_STORAGE_KEY) || "classic",
+  )
+  const [openPanelId, setOpenPanelId] = useState(null) // which preset's options panel is open
+  const [customStyle, setCustomStyle] = useState(
+    () => session.get(CUSTOM_STYLE_KEY) || {},
   )
   const [done, setDone] = useState(false)
 
@@ -32,6 +38,27 @@ export default function ExportPage() {
   function handlePresetChange(id) {
     setPresetId(id)
     session.set(PRESET_STORAGE_KEY, id)
+
+    // Reset custom style when switching presets — start fresh from preset defaults
+    const preset = getPresetById(id)
+    const defaults = {
+      color: preset.style.color || "#FFFFFF",
+      bg_enabled: preset.style.bg_enabled ?? true,
+      bg_color: preset.style.bg_color || "#000000",
+      font_size_pct: preset.style.font_size_pct || 5.5,
+      position: preset.style.position || "bottom-center",
+    }
+    setCustomStyle(defaults)
+    session.set(CUSTOM_STYLE_KEY, defaults)
+
+    // Toggle: if the same preset is clicked again → close panel; otherwise open
+    setOpenPanelId((prev) => (prev === id ? null : id))
+  }
+
+  function handleStyleOptions(patch) {
+    const next = { ...customStyle, ...patch }
+    setCustomStyle(next)
+    session.set(CUSTOM_STYLE_KEY, next)
   }
 
   async function handleExport() {
@@ -40,13 +67,23 @@ export default function ExportPage() {
     const ok =
       format === "srt"
         ? await exportSRT(captions)
-        : await exportMP4(videoUrl, captions, presetId)
+        : await exportMP4(videoUrl, captions, presetId, customStyle)
     if (ok) setDone(true)
   }
 
   function startNew() {
     session.clear()
     navigate("/", { replace: true })
+  }
+
+  // Derive current preset defaults for the panel's initial values
+  const currentPreset = getPresetById(presetId)
+  const panelInitial = {
+    color: customStyle.color ?? currentPreset.style.color ?? "#FFFFFF",
+    bg_enabled: customStyle.bg_enabled ?? currentPreset.style.bg_enabled ?? true,
+    bg_color: customStyle.bg_color ?? currentPreset.style.bg_color ?? "#000000",
+    font_size_pct: customStyle.font_size_pct ?? currentPreset.style.font_size_pct ?? 5.5,
+    position: customStyle.position ?? currentPreset.style.position ?? "bottom-center",
   }
 
   return (
@@ -106,6 +143,7 @@ export default function ExportPage() {
         </div>
       </section>
 
+      {/* Caption Style — each card toggles its own options panel */}
       {format === "mp4" && (
         <section className="mb-6 cap-animate-fade-up" aria-label="ستايل الكابشن">
           <div className="flex items-center justify-between mb-2 px-0.5">
@@ -113,19 +151,29 @@ export default function ExportPage() {
               ستايل الكابشن
             </h3>
             <span className="text-[11px] font-bold text-ink-soft">
-              {STYLE_PRESETS.length} اختيارات
+              اضغط للتخصيص ✏️
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2.5">
             {STYLE_PRESETS.map((preset) => (
-              <StylePresetCard
-                key={preset.id}
-                preset={preset}
-                selected={presetId === preset.id}
-                onSelect={handlePresetChange}
-              />
+              <div key={preset.id} className="flex flex-col">
+                <StylePresetCard
+                  preset={preset}
+                  selected={presetId === preset.id}
+                  onSelect={handlePresetChange}
+                />
+                {/* Options panel — expands under its own card */}
+                {openPanelId === preset.id && presetId === preset.id && (
+                  <StyleOptionsPanel
+                    presetId={preset.id}
+                    initial={panelInitial}
+                    onChange={handleStyleOptions}
+                  />
+                )}
+              </div>
             ))}
           </div>
+          {/* Options panel spanning full width when open — alternative layout for mobile */}
         </section>
       )}
 
@@ -157,16 +205,33 @@ export default function ExportPage() {
       )}
 
       <section className="space-y-3 pb-2">
+        {/* Export button with progress */}
         <button
           type="button"
           onClick={handleExport}
           disabled={busy}
-          className="cap-btn-primary cap-focus-ring"
+          className="cap-btn-primary cap-focus-ring relative overflow-hidden"
+          style={{ position: "relative" }}
         >
+          {/* Progress fill behind text */}
+          {busy && progress > 0 && (
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 rounded-[inherit] transition-all duration-300"
+              style={{
+                width: `${progress}%`,
+                background: "rgba(255,255,255,0.18)",
+                pointerEvents: "none",
+              }}
+            />
+          )}
+
           {busy ? (
             <>
               <span className="inline-block w-5 h-5 rounded-full border-[3px] border-white border-t-transparent animate-[spin-slow_0.8s_linear_infinite]" />
-              <span>جاري التجهيز…</span>
+              <span>
+                {progress > 0 ? `جاري التصدير… ${progress}%` : "جاري التجهيز…"}
+              </span>
             </>
           ) : (
             <>
@@ -180,6 +245,31 @@ export default function ExportPage() {
           )}
         </button>
 
+        {/* Progress bar below the button */}
+        {busy && (
+          <div className="w-full h-2 rounded-full bg-line overflow-hidden cap-animate-fade-up">
+            <div
+              className="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${progress}%`,
+                background: "var(--color-primary-gradient)",
+              }}
+            />
+          </div>
+        )}
+
+        {busy && (
+          <p className="text-center text-[12px] font-bold text-ink-muted">
+            {progress < 10
+              ? "⏳ بنجهز الفيديو…"
+              : progress < 50
+                ? "🔄 بنحرق الكابشن…"
+                : progress < 85
+                  ? "🎬 بنعمل الفيلتر…"
+                  : "✨ تقريباً خلصنا!"}
+          </p>
+        )}
+
         {done && (
           <button
             type="button"
@@ -191,7 +281,7 @@ export default function ExportPage() {
         )}
       </section>
 
-      {format === "mp4" && (
+      {format === "mp4" && !busy && (
         <p className="mt-4 mb-2 text-center text-[11.5px] font-bold text-ink-muted">
           ⏱️ التجهيز ممكن ياخد دقيقة أو اتنين حسب طول الفيديو
         </p>
