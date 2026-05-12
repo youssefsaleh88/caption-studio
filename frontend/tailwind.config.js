@@ -40,7 +40,15 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Nunito", "system-ui", "-apple-system", "sans-serif"],
+        sans: [
+          "Tajawal",
+          "Noto Sans Arabic",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "sans-serif",
+        ],
       },
       borderRadius: {
         sm: "var(--radius-sm)",

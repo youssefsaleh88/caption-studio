@@ -4,6 +4,7 @@ import TimeStepper from "./TimeStepper"
 
 export default function CaptionCard({
   caption,
+  timeBounds,
   isActive,
   autoScroll = true,
   scrollRoot = null,
@@ -71,6 +72,11 @@ export default function CaptionCard({
     setText(caption.text)
     setEditing(false)
   }
+
+  const startMin = timeBounds?.startMin ?? 0
+  const startMax = timeBounds?.startMax ?? Number(caption.end) - 0.2
+  const endMin = timeBounds?.endMin ?? Number(caption.start) + 0.2
+  const endMax = timeBounds?.endMax ?? Number.POSITIVE_INFINITY
 
   const duration = Math.max(0, Number(caption.end) - Number(caption.start))
 
@@ -170,23 +176,27 @@ export default function CaptionCard({
             className="cap-focus-ring w-full resize-none bg-surface border border-line rounded-md text-ink text-[15.5px] font-semibold leading-snug outline-none py-2 px-2.5 focus:border-primary"
           />
 
-          <div className="space-y-2 pt-1 border-t border-line/60">
+          <div className="space-y-2.5 pt-1 border-t border-line/60">
             <TimeStepper
               label="بداية"
               value={Number(caption.start)}
               onChange={(v) => onTimeChange?.(caption.id, { start: v })}
-              min={0}
-              max={Number(caption.end) - 0.2}
+              min={startMin}
+              max={startMax}
             />
             <TimeStepper
               label="نهاية"
               value={Number(caption.end)}
               onChange={(v) => onTimeChange?.(caption.id, { end: v })}
-              min={Number(caption.start) + 0.2}
+              min={endMin}
+              max={endMax}
             />
-            <p className="text-[10.5px] font-bold text-ink-muted leading-snug pt-0.5">
-              اكتب الرقم بالثواني أو حرك بـ <span className="font-mono">+5</span> أو
-              <span className="font-mono"> -3</span> للقفز السريع.
+            <p className="text-[10.5px] font-bold text-ink-muted leading-snug">
+              اكتب الوقت بالثواني، أو استخدم{" "}
+              <span className="font-mono text-ink-soft">±0.1</span> للضبط الدقيق و
+              <span className="font-mono text-ink-soft"> ±1</span> للقفز السريع. ممكن كمان{" "}
+              <span className="font-mono text-ink-soft">+0.25</span> أو{" "}
+              <span className="font-mono text-ink-soft">-0.05</span> في الخانة نفسها.
             </p>
           </div>
         </div>

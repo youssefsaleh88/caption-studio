@@ -47,8 +47,78 @@ export const session = {
   },
 }
 
+const TIMELINE_GAP_SEC = 0.02
+const MIN_SEGMENT_SEC = 0.2
+
+/** Linearly rescale per-word timings when segment start/end change. */
+export function rescaleSegmentWords(seg, newStart, newEnd) {
+  const oldStart = Number(seg.start)
+  const oldEnd = Number(seg.end)
+  const oldDur = oldEnd - oldStart
+  const newDur = newEnd - newStart
+  if (!Array.isArray(seg.words) || oldDur <= 0.0001) return seg.words
+  return seg.words.map((w) => ({
+    ...w,
+    start: newStart + ((Number(w.start) - oldStart) / oldDur) * newDur,
+    end: newStart + ((Number(w.end) - oldStart) / oldDur) * newDur,
+  }))
+}
+
+/**
+ * Remove overlaps, keep a tiny gap between segments, preserve order by time.
+ * Shifts or trims segment ends so manual review starts from a sane timeline.
+ */
+export function refineCaptionTimeline(captions) {
+  if (!Array.isArray(captions) || captions.length === 0) return []
+
+  const sorted = [...captions].sort((a, b) => Number(a.start) - Number(b.start))
+  const out = sorted.map((c) => ({
+    ...c,
+    start: Number(c.start),
+    end: Number(c.end),
+    words: Array.isArray(c.words) ? c.words.map((w) => ({ ...w })) : c.words,
+  }))
+
+  for (let i = 0; i < out.length; i += 1) {
+    let { start, end } = out[i]
+    if (end <= start) {
+      end = start + MIN_SEGMENT_SEC
+      out[i].words = rescaleSegmentWords({ ...out[i], start, end }, start, end)
+    }
+
+    if (i > 0) {
+      const minStart = out[i - 1].end + TIMELINE_GAP_SEC
+      if (start < minStart) {
+        const d = minStart - start
+        start += d
+        end += d
+        if (Array.isArray(out[i].words)) {
+          out[i].words = out[i].words.map((w) => ({
+            ...w,
+            start: Number(w.start) + d,
+            end: Number(w.end) + d,
+          }))
+        }
+      }
+    }
+    out[i].start = start
+    out[i].end = end
+  }
+
+  for (let i = 0; i < out.length - 1; i += 1) {
+    const maxEnd = out[i + 1].start - TIMELINE_GAP_SEC
+    if (out[i].end > maxEnd) {
+      const nextEnd = Math.max(out[i].start + MIN_SEGMENT_SEC, maxEnd)
+      out[i].end = nextEnd
+      out[i].words = rescaleSegmentWords(out[i], out[i].start, nextEnd)
+    }
+  }
+
+  return out
+}
+
 // Group word-level transcription into sentence cards.
-// Break a sentence when: long pause (>0.5s), 10+ words, or sentence-ending punctuation.
+// Break a sentence when: pause, many words, or sentence-ending punctuation.
 export function groupWordsToSentences(words) {
   if (!Array.isArray(words) || words.length === 0) return []
 
@@ -79,9 +149,10 @@ export function groupWordsToSentences(words) {
     bucket.push(w)
 
     const next = sorted[i + 1]
-    const longPause = next && Number(next.start) - Number(w.end) > 0.5
-    const longEnough = bucket.length >= 10
-    const punctuationBreak = endsSentence(w.word) && bucket.length >= 3
+    const pauseSec = next ? Number(next.start) - Number(w.end) : 0
+    const longPause = next && pauseSec > 0.55 && bucket.length >= 2
+    const longEnough = bucket.length >= 12
+    const punctuationBreak = endsSentence(w.word) && bucket.length >= 2
     const isLast = i === sorted.length - 1
 
     if (longPause || longEnough || punctuationBreak || isLast) {
@@ -89,7 +160,7 @@ export function groupWordsToSentences(words) {
     }
   }
 
-  return sentences
+  return refineCaptionTimeline(sentences)
 }
 
 function cryptoId() {

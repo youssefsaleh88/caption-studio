@@ -5,13 +5,13 @@
 product
 
 ## Users
-General users who need a practical caption workflow without a steep learning curve. They usually come with a video that is already close to publish-ready, and want to generate, review, and polish captions in one focused session with minimal setup friction.
+People who are not professional editors but need reliable captions fast: everyday users finishing a clip for social, and Instagram-style creators who publish often and care about pacing, readability, and timing per line. They usually arrive with a video that is almost ready to post and want upload, cleanup, and export without hunting for controls.
 
 ## Product Purpose
-Caption Studio helps users turn raw videos into captioned export-ready outputs quickly while preserving control over readability and visual style. Success means users can complete upload, transcription, quick edits, and export with confidence in a single flow, balancing speed, quality, and styling flexibility.
+Clipt helps users turn videos into accurate, well-timed, publish-ready captions in one calm session. Success means faster upload and processing feedback they can trust, text they can refine with confidence, sentence-level timing that feels right on the beat, and export without surprises. The interface should feel unmistakably Clipt: confident, friendly, and precise, not generic tool chrome.
 
 ## Brand Personality
-Technical, confident, and calm. The interface should feel precise and trustworthy without visual noise, while still being approachable for non-technical users. Tone should prioritize clarity, composure, and competent guidance over hype.
+Warm, guiding, and exact. Copy is step-by-step and encouraging in Arabic, never chatty for its own sake. Visual tone stays calm and production-minded so timing and text stay the hero. The product should feel like a capable studio assistant, not a toy and not a cold enterprise panel.
 
 ## Anti-references
 - Over-neon color treatment or aggressively saturated glow-heavy visuals.
@@ -21,11 +21,11 @@ Technical, confident, and calm. The interface should feel precise and trustworth
 - Toy-like styling that reduces professional trust.
 
 ## Design Principles
-1. Keep the path to output obvious, every screen should reduce distance to an exportable result.
-2. Make precision feel simple, advanced controls should exist without making core actions intimidating.
-3. Communicate state clearly, users should always understand what is processing, editable, or final.
-4. Stay calm under complexity, visual hierarchy should reduce stress during dense editing moments.
-5. Respect diverse users by default, accessibility and motion preferences are product behavior, not optional polish.
+1. Keep the path to export obvious: every screen shortens the distance to a finished file.
+2. Make precision feel simple: timing and text edits should feel approachable, not laboratory dense.
+3. Communicate state clearly: uploading, transcribing, editing, and exporting each have unmistakable feedback.
+4. Protect the current workflow muscle memory: keep the core step order and ease of use unless a change clearly improves outcomes.
+5. Respect diverse users by default: accessibility and motion preferences are product behavior, not optional polish.
 
 ## Accessibility & Inclusion
-Target WCAG AA as the baseline across key flows, including clear focus states, readable contrast, keyboard accessibility where applicable, and meaningful feedback for processing and errors. Reduced-motion preferences must be respected across animated interactions, with non-animated fallbacks that preserve clarity.
+Target WCAG AA as the baseline across key flows, with slightly stronger focus visibility on primary actions (upload, confirm, export) so keyboard and touch users always see where they are. Provide clear contrast for green-on-green pairings, meaningful labels for loading and errors, keyboard access for primary controls where applicable, and respect `prefers-reduced-motion` with instant, readable fallbacks instead of decorative motion.

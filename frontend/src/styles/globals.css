@@ -4,42 +4,50 @@
 
 /* ─────────────────────────── Design Tokens ─────────────────────────── */
 :root {
-  /* Primary — Warm Orange/Coral */
-  --color-primary: #FF6B6B;
-  --color-primary-alt: #FF9F43;
-  --color-primary-gradient: linear-gradient(135deg, #FF6B6B 0%, #FF9F43 100%);
+  /* Clipt — forest / mint (OKLCH) */
+  --color-primary: oklch(0.41 0.13 135);
+  --color-primary-alt: oklch(0.52 0.14 130);
+  --color-primary-gradient: linear-gradient(
+    135deg,
+    oklch(0.41 0.13 135) 0%,
+    oklch(0.52 0.14 130) 100%
+  );
 
-  /* Secondary — Soft Purple */
-  --color-secondary: #667EEA;
-  --color-secondary-alt: #764BA2;
-  --color-secondary-gradient: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+  /* Secondary — highlight / deep accent pair */
+  --color-secondary: oklch(0.72 0.12 128);
+  --color-secondary-alt: oklch(0.45 0.12 135);
+  --color-secondary-gradient: linear-gradient(
+    135deg,
+    oklch(0.52 0.14 130) 0%,
+    oklch(0.72 0.12 128) 100%
+  );
 
   /* Surfaces */
-  --color-bg: #FAFAFA;
-  --color-surface: #FFFFFF;
-  --color-surface-warm: #FFFBF5;
-  --color-border: #F0EDFF;
-  --color-border-strong: #E5E0F5;
+  --color-bg: oklch(0.13 0.022 142);
+  --color-surface: oklch(0.17 0.028 142);
+  --color-surface-warm: oklch(0.2 0.032 142);
+  --color-border: oklch(0.94 0.02 132 / 0.14);
+  --color-border-strong: oklch(0.72 0.12 128 / 0.45);
 
   /* Text */
-  --color-text-primary: #1A1A2E;
-  --color-text-secondary: #6B7280;
-  --color-text-muted: #9CA3AF;
-  --color-text-inverse: #FFFFFF;
+  --color-text-primary: oklch(0.94 0.02 132);
+  --color-text-secondary: oklch(0.78 0.06 132);
+  --color-text-muted: oklch(0.58 0.04 140);
+  --color-text-inverse: oklch(0.94 0.02 132);
 
   /* Status */
-  --color-success: #10B981;
-  --color-success-bg: #D1FAE5;
-  --color-processing: #8B5CF6;
-  --color-processing-bg: #EDE9FE;
-  --color-danger: #EF4444;
-  --color-danger-bg: #FEE2E2;
+  --color-success: oklch(0.72 0.12 145);
+  --color-success-bg: oklch(0.22 0.04 145);
+  --color-processing: oklch(0.72 0.09 175);
+  --color-processing-bg: oklch(0.22 0.03 175);
+  --color-danger: oklch(0.62 0.2 25);
+  --color-danger-bg: oklch(0.22 0.05 25);
 
   /* Shadows */
-  --shadow-card: 0 4px 16px rgba(102, 126, 234, 0.08);
-  --shadow-card-hover: 0 8px 24px rgba(102, 126, 234, 0.14);
-  --shadow-button: 0 6px 18px rgba(255, 107, 107, 0.32);
-  --shadow-button-hover: 0 10px 24px rgba(255, 107, 107, 0.42);
+  --shadow-card: 0 4px 18px oklch(0.08 0.04 142 / 0.42);
+  --shadow-card-hover: 0 10px 28px oklch(0.1 0.05 142 / 0.5);
+  --shadow-button: 0 8px 22px oklch(0.41 0.13 135 / 0.35);
+  --shadow-button-hover: 0 12px 28px oklch(0.52 0.14 130 / 0.42);
 
   /* Radii */
   --radius-sm: 12px;
@@ -72,7 +80,8 @@ html {
 body {
   background: var(--color-bg);
   color: var(--color-text-primary);
-  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-family: "Tajawal", "Noto Sans Arabic", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
   font-weight: 500;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -101,11 +110,11 @@ textarea {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.25);
+  background: oklch(0.72 0.12 128 / 0.28);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.5);
+  background: oklch(0.72 0.12 128 / 0.5);
 }
 
 /* ─────────────────────────── Animations ─────────────────────────── */
@@ -234,7 +243,7 @@ textarea {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .cap-btn-secondary:hover {
-  background: var(--color-surface-warm);
+  background: oklch(0.22 0.03 142);
   border-color: var(--color-border-strong);
 }
 
@@ -255,7 +264,7 @@ textarea {
 }
 .cap-btn-ghost:hover {
   color: var(--color-text-primary);
-  background: rgba(0, 0, 0, 0.04);
+  background: oklch(0.94 0.02 132 / 0.06);
 }
 
 .cap-card {

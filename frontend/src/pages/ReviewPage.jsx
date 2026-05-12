@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import ScreenHeader from "../components/ScreenHeader"
 import VideoPreview from "../components/VideoPreview"
 import CaptionCard from "../components/CaptionCard"
-import { session } from "../utils/session"
+import { session, rescaleSegmentWords } from "../utils/session"
 
 export default function ReviewPage() {
   const navigate = useNavigate()
@@ -37,35 +37,53 @@ export default function ReviewPage() {
     persist(captions.map((c) => (c.id === id ? { ...c, text: newText } : c)))
   }
 
+  const timeBoundsById = useMemo(() => {
+    const GAP = 0.02
+    const MIN_DUR = 0.2
+    const sorted = [...captions].sort((a, b) => Number(a.start) - Number(b.start))
+    const m = new Map()
+    sorted.forEach((c, i) => {
+      const prev = sorted[i - 1]
+      const next = sorted[i + 1]
+      m.set(c.id, {
+        startMin: prev ? Number(prev.end) + GAP : 0,
+        startMax: Math.max(Number(c.start), Number(c.end) - MIN_DUR),
+        endMin: Math.min(Number(c.end), Number(c.start) + MIN_DUR),
+        endMax: next ? Number(next.start) - GAP : Number.POSITIVE_INFINITY,
+      })
+    })
+    return m
+  }, [captions])
+
   function handleTimeChange(id, patch) {
+    const sorted = [...captions].sort((a, b) => Number(a.start) - Number(b.start))
+    const idx = sorted.findIndex((c) => c.id === id)
+    const prev = sorted[idx - 1]
+    const next = sorted[idx + 1]
+    const GAP = 0.02
+    const MIN_DUR = 0.2
+
     persist(
       captions.map((c) => {
         if (c.id !== id) return c
 
         const oldStart = Number(c.start)
         const oldEnd = Number(c.end)
-        const newStart = patch.start != null ? Number(patch.start) : oldStart
-        const newEnd = patch.end != null ? Number(patch.end) : oldEnd
+        let newStart = patch.start != null ? Number(patch.start) : oldStart
+        let newEnd = patch.end != null ? Number(patch.end) : oldEnd
+
+        for (let pass = 0; pass < 3; pass += 1) {
+          if (prev) newStart = Math.max(newStart, Number(prev.end) + GAP)
+          if (next) newEnd = Math.min(newEnd, Number(next.start) - GAP)
+          newStart = Math.max(0, newStart)
+          newEnd = Math.max(newEnd, newStart + MIN_DUR)
+          newStart = Math.min(newStart, newEnd - MIN_DUR)
+        }
 
         if (newEnd <= newStart) return c
 
-        const oldDur = oldEnd - oldStart
-        const newDur = newEnd - newStart
-
-        // Re-scale per-word timings so karaoke / word animations stay aligned.
         const newWords = Array.isArray(c.words)
-          ? c.words.map((w) => {
-              if (oldDur <= 0.001) {
-                return { ...w, start: newStart, end: newEnd }
-              }
-              const startRatio = (Number(w.start) - oldStart) / oldDur
-              const endRatio = (Number(w.end) - oldStart) / oldDur
-              return {
-                ...w,
-                start: newStart + startRatio * newDur,
-                end: newStart + endRatio * newDur,
-              }
-            })
+          ? rescaleSegmentWords({ ...c, start: oldStart, end: oldEnd, words: c.words }, newStart, newEnd)
           : c.words
 
         return { ...c, start: newStart, end: newEnd, words: newWords }
@@ -107,7 +125,7 @@ export default function ReviewPage() {
         title="راجع الكابشن"
         subtitle={
           captions.length
-            ? `${captions.length} جملة • اضغط لأي جملة لتعديلها`
+            ? `${captions.length} جملة • اضغط الجملة عشان تعدّل النص والتوقيت`
             : "لا توجد جمل بعد"
         }
         onBack={startOver}
@@ -176,6 +194,7 @@ export default function ReviewPage() {
             <CaptionCard
               key={c.id}
               caption={c}
+              timeBounds={timeBoundsById.get(c.id)}
               isActive={c.id === activeId}
               autoScroll={isPlaying}
               scrollRoot={scrollBoxRef.current}

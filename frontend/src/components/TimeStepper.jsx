@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react"
 
 function formatNum(value) {
   const v = Math.max(0, Number(value) || 0)
-  return v.toFixed(2).replace(/\.?0+$/, "")
+  const rounded = Math.round(v * 1000) / 1000
+  const s = rounded.toFixed(3).replace(/\.?0+$/, "")
+  return s || "0"
 }
 
 export default function TimeStepper({
@@ -11,6 +13,8 @@ export default function TimeStepper({
   onChange,
   min = 0,
   max = Number.POSITIVE_INFINITY,
+  stepLarge = 1,
+  stepSmall = 0.1,
 }) {
   const [text, setText] = useState(() => formatNum(value))
   const focusedRef = useRef(false)
@@ -26,8 +30,8 @@ export default function TimeStepper({
   function commitRaw(next) {
     if (!Number.isFinite(next)) return
     const clamped = clamp(next)
-    const rounded = Math.round(clamped * 100) / 100
-    if (Math.abs(rounded - Number(value)) > 0.001) onChange(rounded)
+    const rounded = Math.round(clamped * 1000) / 1000
+    if (Math.abs(rounded - Number(value)) > 0.0005) onChange(rounded)
     return rounded
   }
 
@@ -62,66 +66,74 @@ export default function TimeStepper({
     if (!focusedRef.current) setText(formatNum(applied ?? value))
   }
 
-  const canDecrease = Number(value) > min + 0.001
-  const canIncrease = Number(value) < max - 0.001
+  const canDecrease = Number(value) > min + 0.0005
+  const canIncrease = Number(value) < max - 0.0005
 
   return (
-    <div className="flex items-center gap-1.5 flex-1 min-w-0">
-      <span className="text-[11px] font-extrabold text-ink-soft shrink-0 w-9">
-        {label}
-      </span>
-      <div className="flex items-center bg-surface-warm border border-line rounded-md overflow-hidden shrink-0 h-8">
-        <StepBtn
-          aria-label="ناقص ثانية"
-          onClick={() => adjust(-1)}
-          disabled={!canDecrease}
-        >
-          <span className="font-mono tabular-nums text-[11.5px] font-extrabold">
-            −1
-          </span>
-        </StepBtn>
-        <div className="relative flex items-center border-x border-line">
-          <input
-            type="text"
-            inputMode="decimal"
-            dir="ltr"
-            value={text}
-            aria-label={`${label} بالثواني`}
-            onFocus={(e) => {
-              focusedRef.current = true
-              e.currentTarget.select()
-            }}
-            onChange={(e) => setText(e.target.value)}
-            onBlur={() => {
-              focusedRef.current = false
-              applyTyped()
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault()
+    <div className="flex flex-col gap-1.5 min-w-0">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-[11px] font-extrabold text-ink-soft shrink-0 w-10">
+          {label}
+        </span>
+        <div className="flex flex-1 flex-wrap items-center justify-end gap-1">
+          <StepBtn
+            aria-label={`ناقص ${stepLarge} ثانية`}
+            onClick={() => adjust(-stepLarge)}
+            disabled={!canDecrease || Number(value) - min < stepLarge - 0.0005}
+          >
+            <span className="font-mono tabular-nums text-[11px] font-extrabold">−{stepLarge}</span>
+          </StepBtn>
+          <StepBtn
+            aria-label={`ناقص ${stepSmall} ثانية`}
+            onClick={() => adjust(-stepSmall)}
+            disabled={!canDecrease}
+          >
+            <span className="font-mono tabular-nums text-[11px] font-extrabold">−{stepSmall}</span>
+          </StepBtn>
+          <div className="flex items-center bg-surface-warm border border-line rounded-md overflow-hidden shrink-0 h-9">
+            <input
+              type="text"
+              inputMode="decimal"
+              dir="ltr"
+              value={text}
+              aria-label={`${label} بالثواني`}
+              onFocus={(e) => {
+                focusedRef.current = true
+                e.currentTarget.select()
+              }}
+              onChange={(e) => setText(e.target.value)}
+              onBlur={() => {
+                focusedRef.current = false
                 applyTyped()
-                e.currentTarget.blur()
-              } else if (e.key === "Escape") {
-                e.preventDefault()
-                setText(formatNum(value))
-                e.currentTarget.blur()
-              }
-            }}
-            className="cap-focus-ring font-mono tabular-nums text-[12.5px] font-bold text-ink bg-transparent text-center outline-none w-[58px] h-8 px-1"
-          />
-          <span className="font-mono text-[10.5px] font-bold text-ink-soft pr-1.5 select-none pointer-events-none">
-            ث
-          </span>
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  applyTyped()
+                  e.currentTarget.blur()
+                } else if (e.key === "Escape") {
+                  e.preventDefault()
+                  setText(formatNum(value))
+                  e.currentTarget.blur()
+                }
+              }}
+              className="cap-focus-ring font-mono tabular-nums text-[13px] font-bold text-ink bg-transparent text-center outline-none w-[64px] h-9 px-1"
+            />
+            <span className="font-mono text-[10.5px] font-bold text-ink-soft pe-1.5 select-none pointer-events-none">
+              ث
+            </span>
+          </div>
+          <StepBtn aria-label={`زائد ${stepSmall} ثانية`} onClick={() => adjust(stepSmall)} disabled={!canIncrease}>
+            <span className="font-mono tabular-nums text-[11px] font-extrabold">+{stepSmall}</span>
+          </StepBtn>
+          <StepBtn
+            aria-label={`زائد ${stepLarge} ثانية`}
+            onClick={() => adjust(stepLarge)}
+            disabled={!canIncrease || max - Number(value) < stepLarge - 0.0005}
+          >
+            <span className="font-mono tabular-nums text-[11px] font-extrabold">+{stepLarge}</span>
+          </StepBtn>
         </div>
-        <StepBtn
-          aria-label="زائد ثانية"
-          onClick={() => adjust(1)}
-          disabled={!canIncrease}
-        >
-          <span className="font-mono tabular-nums text-[11.5px] font-extrabold">
-            +1
-          </span>
-        </StepBtn>
       </div>
     </div>
   )
@@ -140,7 +152,7 @@ function StepBtn({ children, onClick, disabled, ...rest }) {
         if (!disabled) onClick()
       }}
       disabled={disabled}
-      className="cap-focus-ring inline-flex items-center justify-center min-w-[34px] h-8 px-1.5 text-ink hover:bg-line/60 active:bg-line disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+      className="cap-focus-ring inline-flex items-center justify-center min-h-9 min-w-[38px] px-1.5 rounded-md border border-line bg-surface text-ink hover:bg-line/50 active:bg-line/70 disabled:opacity-30 disabled:hover:bg-surface transition-colors"
       {...rest}
     >
       {children}
