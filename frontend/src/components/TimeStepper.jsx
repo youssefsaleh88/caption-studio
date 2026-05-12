@@ -63,6 +63,11 @@ function StepBtn({ children, onClick, disabled, ...rest }) {
   return (
     <button
       type="button"
+      tabIndex={-1}
+      onMouseDown={(e) => {
+        // Don't pull focus away from the active textarea — keeps the card open.
+        e.preventDefault()
+      }}
       onClick={(e) => {
         e.stopPropagation()
         if (!disabled) onClick()

@@ -151,7 +151,13 @@ export default function CaptionCard({
               setText(e.target.value)
               autoSize(e.target)
             }}
-            onBlur={commit}
+            onBlur={(e) => {
+              // Stay in edit mode if focus moved to another control inside
+              // the same card (steppers, delete, cancel, time-pill).
+              const next = e.relatedTarget
+              if (next && cardRef.current?.contains(next)) return
+              commit()
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault()
