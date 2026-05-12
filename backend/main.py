@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -8,13 +10,26 @@ from routes import transcribe, export_video, upload  # noqa: E402
 
 app = FastAPI(title="Caption Studio API", version="1.0.0")
 
-import os
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:4173").split(",")
+
+def _split_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+ALLOWED_ORIGINS = _split_csv(
+    os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:5173,http://localhost:4173",
+    )
+)
+ALLOWED_ORIGIN_REGEX = os.getenv(
+    "ALLOWED_ORIGIN_REGEX",
+    r"https://.*\.vercel\.app",
+).strip()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.netlify\.app",
+    allow_origin_regex=ALLOWED_ORIGIN_REGEX or None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

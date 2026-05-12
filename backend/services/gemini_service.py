@@ -1,3 +1,5 @@
+"""Transcribe audio with Gemini 2.5 Pro into word-level timestamps."""
+
 import google.generativeai as genai
 import logging
 import os
@@ -10,7 +12,11 @@ from fastapi import HTTPException
 logger = logging.getLogger(__name__)
 
 
+MODEL = "gemini-2.5-pro"
+
+
 def _collect_gemini_keys() -> list[str]:
+    """Collect all configured API keys (primary + fallbacks for rate-limit resilience)."""
     keys: list[str] = []
 
     primary = os.getenv("GEMINI_API_KEY", "").strip()
@@ -32,63 +38,6 @@ def _collect_gemini_keys() -> list[str]:
     return list(dict.fromkeys(keys))
 
 
-def _collect_gemini_models() -> list[str]:
-    default_models = [
-        "gemini-3-flash-preview",
-        "gemini-2.5-pro",
-        "gemini-2.5-flash",
-        "gemini-1.5-flash",
-        "gemini-2.5-flash-lite",
-    ]
-    configured = os.getenv("GEMINI_MODELS", "").strip()
-    if not configured:
-        return default_models
-    models = [m.strip() for m in configured.split(",") if m.strip()]
-    return models or default_models
-
-
-def _language_hint_line(language_hint: str) -> str:
-    h = (language_hint or "auto").strip().lower()
-    if h in ("ar", "arabic", "عربي"):
-        return (
-            "Language hint: The spoken language is Arabic "
-            "(MSA or dialect). Transcribe in Arabic script."
-        )
-    if h in ("en", "english", "إنجليزي"):
-        return "Language hint: The spoken language is English."
-    return (
-        "Language hint: Auto-detect the spoken language from the audio "
-        "and transcribe using the correct script."
-    )
-
-
-def _rebalance_word_timings(
-    words: list[dict],
-    *,
-    min_gap: float = 0.05,
-    max_extend: float = 2.0,
-) -> list[dict]:
-    """Extend each word end toward the next word start (minus gap), capped."""
-    if not words:
-        return []
-
-    sorted_words = sorted(words, key=lambda w: float(w["start"]))
-    out: list[dict] = []
-    for i, w in enumerate(sorted_words):
-        cur = dict(w)
-        s = float(cur["start"])
-        e = float(cur["end"])
-        if i < len(sorted_words) - 1:
-            nxt_start = float(sorted_words[i + 1]["start"])
-            room = max(0.02, nxt_start - s - min_gap)
-            target = max(e, min(nxt_start - min_gap, s + min(room, max_extend)))
-            cur["end"] = max(s + 0.02, min(target, nxt_start - min_gap))
-        else:
-            cur["end"] = max(e, s + min_gap)
-        out.append(cur)
-    return out
-
-
 def _coerce_float(val: object, default: float | None = None) -> float | None:
     if val is None:
         return default
@@ -99,10 +48,7 @@ def _coerce_float(val: object, default: float | None = None) -> float | None:
 
 
 def _extract_word_entry(raw: object, prev_end: float) -> dict | None:
-    """
-    Normalize one Gemini array element to {word, start, end}.
-    Returns None if the row cannot be recovered.
-    """
+    """Normalize one Gemini element to {word, start, end}. Returns None if unrecoverable."""
     if not isinstance(raw, dict):
         return None
 
@@ -118,17 +64,11 @@ def _extract_word_entry(raw: object, prev_end: float) -> dict | None:
     if start is None:
         start = _coerce_float(raw.get("s"))
     if start is None:
-        start = _coerce_float(raw.get("begin"))
+        start = max(0.0, float(prev_end))
 
     end = _coerce_float(raw.get("end"))
     if end is None:
         end = _coerce_float(raw.get("e"))
-    if end is None:
-        end = _coerce_float(raw.get("stop"))
-
-    if start is None:
-        start = max(0.0, float(prev_end))
-
     if end is None:
         end = float(start) + 0.2
 
@@ -146,20 +86,44 @@ def _audio_mime(path: str) -> str:
     ext = Path(path).suffix.lower()
     if ext == ".wav":
         return "audio/wav"
-    if ext in (".mp3",):
+    if ext == ".mp3":
         return "audio/mp3"
     return "audio/wav"
+
+
+def _parse_words_payload(raw_text: str) -> list[dict]:
+    """Pull the JSON payload out of Gemini's response (handles ```json fences and stray prose)."""
+    text = (raw_text or "").strip()
+    text = re.sub(r"```json|```", "", text).strip()
+
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        match = re.search(r"\{[\s\S]*\}|\[[\s\S]*\]", text)
+        if not match:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Gemini returned invalid JSON: {text[:200]}",
+            )
+        parsed = json.loads(match.group(0))
+
+    if isinstance(parsed, dict) and "words" in parsed:
+        parsed = parsed["words"]
+
+    if not isinstance(parsed, list):
+        raise HTTPException(
+            status_code=500,
+            detail="Gemini response is not a list of words.",
+        )
+
+    return parsed
 
 
 async def transcribe_audio(
     audio_path: str,
     language_hint: str = "auto",
 ) -> list[dict]:
-    """
-    Send audio to Gemini and return word-level timestamps.
-
-    Returns list of: {id, word, start, end}
-    """
+    """Send audio to Gemini 2.5 Pro and return [{id, word, start, end}, ...]."""
     try:
         with open(audio_path, "rb") as f:
             audio_data = base64.b64encode(f.read()).decode("utf-8")
@@ -170,29 +134,25 @@ async def transcribe_audio(
 
     mime = _audio_mime(audio_path)
 
-    lang_line = _language_hint_line(language_hint)
+    prompt = """أنت نظام متخصص في تفريغ الصوت بدقة عالية.
 
-    prompt = f"""You are a professional speech-to-text engine. Transcribe this audio VERBATIM.
+المطلوب:
+- فرّغ هذا الصوت كلمة بكلمة بالضبط كما نُطقت.
+- لا تُترجم ولا تُعيد الصياغة ولا تُصلح القواعد.
+- ادعم اللغة العربية الفصحى، العامية المصرية، والإنجليزية.
+- احتفظ بكلمات التردد ("يعني"، "طب"، "اه") كما هي.
+- أعطِ لكل كلمة وقت البداية (start) ووقت النهاية (end) بالثواني (أرقام عشرية).
+- كن دقيقًا قدر الإمكان في التوقيت، خصوصًا عند بداية كل كلمة.
+- إذا نُطقت كلمتان متتاليتان بدون فاصل: end[i] يساوي تقريبًا start[i+1].
+- end > start بفارق 0.02 ثانية على الأقل.
 
-Rules:
-- Preserve the spoken language exactly (do NOT translate).
-- Preserve dialect words and filler sounds ("um", "ah", "يعني", "طب") AS-IS.
-- Do NOT paraphrase; do NOT "clean up" grammar unless fixing obvious ASR mistakes.
-- Output ONE JSON ARRAY ONLY — no markdown, no code fences, no commentary.
-
-Each element MUST be: {{"word": "<token>", "start": <seconds>, "end": <seconds>}}
-
-Timing rules:
-- Timestamps are in seconds as floats (two decimals minimum).
-- start = exact moment the word/token begins.
-- end = exact moment the word/token ends.
-- If two words are spoken back-to-back with no pause: end[i] should equal start[i+1]
-  (or differ by at most 0.02s due to rounding).
-- Every word must have end > start by at least 0.02s unless impossible.
-
-{lang_line}
-
-Return ONLY the JSON array."""
+أرجع JSON فقط بهذا الشكل، بدون أي نص إضافي وبدون ```:
+{
+  "words": [
+    {"word": "مرحباً", "start": 0.00, "end": 0.45},
+    {"word": "بالجميع", "start": 0.46, "end": 1.10}
+  ]
+}"""
 
     keys = _collect_gemini_keys()
     if not keys:
@@ -204,47 +164,34 @@ Return ONLY the JSON array."""
             ),
         )
 
-    models = _collect_gemini_models()
-
     response = None
-    last_error = None
+    last_error: Exception | None = None
     for key in keys:
-        for model_name in models:
-            try:
-                genai.configure(api_key=key)
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content([
-                    {"mime_type": mime, "data": audio_data},
-                    prompt,
-                ])
-                break
-            except Exception as e:
-                last_error = e
-                continue
-        if response is not None:
+        try:
+            genai.configure(api_key=key)
+            model = genai.GenerativeModel(MODEL)
+            response = model.generate_content([
+                {"mime_type": mime, "data": audio_data},
+                prompt,
+            ])
             break
+        except Exception as e:
+            last_error = e
+            logger.warning("Gemini call failed for one key (model=%s): %s", MODEL, e)
+            continue
 
     if response is None:
         raise HTTPException(
             status_code=502,
             detail=(
-                "Gemini API request failed for all configured keys/models: "
-                f"{last_error}"
+                "Gemini API request failed for all configured keys "
+                f"(model={MODEL}): {last_error}"
             ),
         )
 
-    text = (response.text or "").strip()
-    text = re.sub(r"```json|```", "", text).strip()
+    words_raw = _parse_words_payload(response.text or "")
 
-    try:
-        words = json.loads(text)
-    except json.JSONDecodeError:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Gemini returned invalid JSON: {text[:200]}",
-        )
-
-    if not isinstance(words, list) or not words:
+    if not words_raw:
         raise HTTPException(
             status_code=500, detail="Gemini returned an empty transcription."
         )
@@ -252,14 +199,12 @@ Return ONLY the JSON array."""
     result: list[dict] = []
     prev_end = 0.0
     skipped = 0
-    for i, w in enumerate(words):
+    for i, w in enumerate(words_raw):
         entry = _extract_word_entry(w, prev_end)
         if entry is None:
             skipped += 1
             logger.warning(
-                "Skipping malformed Gemini word entry at index %s: %r",
-                i,
-                w,
+                "Skipping malformed Gemini word entry at index %s: %r", i, w
             )
             continue
         prev_end = entry["end"]
@@ -270,7 +215,7 @@ Return ONLY the JSON array."""
             status_code=500,
             detail=(
                 "Gemini returned no parseable word entries. "
-                f"Skipped {skipped} malformed rows. Preview: {text[:200]}"
+                f"Skipped {skipped} malformed rows."
             ),
         )
 
@@ -278,10 +223,9 @@ Return ONLY the JSON array."""
         logger.warning(
             "Gemini transcription: skipped %s malformed entries out of %s",
             skipped,
-            len(words),
+            len(words_raw),
         )
 
-    # Keep raw Gemini timings (no automatic rebalance).
     for i, w in enumerate(result):
         w["id"] = str(i)
 

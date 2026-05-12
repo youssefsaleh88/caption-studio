@@ -4,79 +4,59 @@ export default {
   theme: {
     extend: {
       colors: {
-        dark: {
-          DEFAULT: "var(--cap-bg-root)",
-          surface: "var(--cap-bg-surface)",
-          elevated: "var(--cap-bg-elevated)",
+        primary: {
+          DEFAULT: "var(--color-primary)",
+          alt: "var(--color-primary-alt)",
         },
-        accent: {
-          DEFAULT: "var(--cap-accent)",
-          hover: "var(--cap-accent-hover)",
-          muted: "var(--cap-accent-muted)",
+        secondary: {
+          DEFAULT: "var(--color-secondary)",
+          alt: "var(--color-secondary-alt)",
         },
-        captain: {
-          base: "var(--bg-base)",
-          card: "var(--bg-card)",
-          surface: "var(--bg-surface)",
-          accent: "var(--accent)",
-          bright: "var(--accent-bright)",
-          blue: "var(--blue)",
-          muted: "var(--text-muted)",
-          danger: "var(--danger)",
-          success: "var(--success)",
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          warm: "var(--color-surface-warm)",
+        },
+        bg: "var(--color-bg)",
+        ink: {
+          DEFAULT: "var(--color-text-primary)",
+          soft: "var(--color-text-secondary)",
+          muted: "var(--color-text-muted)",
+        },
+        ok: {
+          DEFAULT: "var(--color-success)",
+          bg: "var(--color-success-bg)",
+        },
+        info: {
+          DEFAULT: "var(--color-processing)",
+          bg: "var(--color-processing-bg)",
+        },
+        warn: {
+          DEFAULT: "var(--color-danger)",
+          bg: "var(--color-danger-bg)",
+        },
+        line: {
+          DEFAULT: "var(--color-border)",
+          strong: "var(--color-border-strong)",
         },
       },
       fontFamily: {
-        sans: ["Tajawal", "Syne", "Noto Sans Arabic", "system-ui", "sans-serif"],
-        display: ["Syne", "Tajawal", "system-ui", "sans-serif"],
-        mono: ["Space Mono", "monospace"],
+        sans: ["Nunito", "system-ui", "-apple-system", "sans-serif"],
       },
-      keyframes: {
-        "fade-up": {
-          from: { opacity: "0", transform: "translateY(12px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
-        },
-        "gradient-shift": {
-          "0%, 100%": { backgroundPosition: "0% 50%" },
-          "50%": { backgroundPosition: "100% 50%" },
-        },
-        "caret-pulse-soft": {
-          "0%, 100%": { opacity: "0.35" },
-          "50%": { opacity: "1" },
-        },
-        "cap-slide-up": {
-          from: { opacity: "0", transform: "translateY(14px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
-        },
-        "cap-shimmer": {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
-        "cap-glow-pulse": {
-          "0%, 100%": {
-            textShadow:
-              "0 0 8px rgb(108 99 255 / 0.45), 0 0 2px rgb(108 99 255 / 0.8)",
-          },
-          "50%": {
-            textShadow:
-              "0 0 16px rgb(139 128 255 / 0.9), 0 0 4px rgb(108 99 255 / 0.9)",
-          },
-        },
-        "cap-thumb-grow": {
-          from: { transform: "scale(1)" },
-          to: { transform: "scale(1.2)" },
-        },
+      borderRadius: {
+        sm: "var(--radius-sm)",
+        md: "var(--radius-md)",
+        lg: "var(--radius-lg)",
+        xl: "var(--radius-xl)",
       },
-      animation: {
-        "fade-up": "fade-up 0.55s ease forwards",
-        "gradient-shift":
-          "gradient-shift var(--cap-duration-gradient, 14s) ease infinite",
-        "caret-pulse-soft":
-          "caret-pulse-soft 1.1s ease-in-out infinite",
-        "cap-slide-up": "cap-slide-up 0.4s ease forwards",
-        "cap-shimmer": "cap-shimmer 1.8s linear infinite",
-        "cap-glow-pulse": "cap-glow-pulse 1.2s ease-in-out infinite",
-        "cap-thumb-grow": "cap-thumb-grow 0.15s ease forwards",
+      boxShadow: {
+        card: "var(--shadow-card)",
+        cardHover: "var(--shadow-card-hover)",
+        button: "var(--shadow-button)",
+        buttonHover: "var(--shadow-button-hover)",
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--color-primary-gradient)",
+        "gradient-secondary": "var(--color-secondary-gradient)",
       },
     },
   },
