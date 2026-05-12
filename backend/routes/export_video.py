@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import httpx
@@ -91,8 +92,8 @@ async def export(req: ExportRequest, background_tasks: BackgroundTasks):
             else req.style.dict()
         )
 
-        output_path = burn_captions(
-            video_path, captions_dicts, style_dict, tmpdir
+        output_path = await run_in_threadpool(
+            burn_captions, video_path, captions_dicts, style_dict, tmpdir
         )
 
         background_tasks.add_task(_cleanup_dir, tmpdir)

@@ -170,7 +170,7 @@ async def transcribe_audio(
         try:
             genai.configure(api_key=key)
             model = genai.GenerativeModel(MODEL)
-            response = model.generate_content([
+            response = await model.generate_content_async([
                 {"mime_type": mime, "data": audio_data},
                 prompt,
             ])

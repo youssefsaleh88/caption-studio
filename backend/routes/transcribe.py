@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 import httpx
 import tempfile
@@ -90,7 +91,7 @@ async def transcribe(req: TranscribeRequest):
                     detail=f"Network error while downloading video: {e}",
                 )
 
-            audio_path = extract_audio(video_path, tmpdir)
+            audio_path = await run_in_threadpool(extract_audio, video_path, tmpdir)
             words = await transcribe_audio(
                 audio_path,
                 language_hint=req.language_hint or "auto",
