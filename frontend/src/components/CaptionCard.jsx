@@ -184,6 +184,10 @@ export default function CaptionCard({
               onChange={(v) => onTimeChange?.(caption.id, { end: v })}
               min={Number(caption.start) + 0.2}
             />
+            <p className="text-[10.5px] font-bold text-ink-muted leading-snug pt-0.5">
+              اكتب الرقم بالثواني أو حرك بـ <span className="font-mono">+5</span> أو
+              <span className="font-mono"> -3</span> للقفز السريع.
+            </p>
           </div>
         </div>
       ) : (

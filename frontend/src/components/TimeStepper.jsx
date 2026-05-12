@@ -1,4 +1,9 @@
-import { formatTimePrecise } from "../utils/time"
+import { useEffect, useRef, useState } from "react"
+
+function formatNum(value) {
+  const v = Math.max(0, Number(value) || 0)
+  return v.toFixed(2).replace(/\.?0+$/, "")
+}
 
 export default function TimeStepper({
   label,
@@ -7,52 +12,115 @@ export default function TimeStepper({
   min = 0,
   max = Number.POSITIVE_INFINITY,
 }) {
-  function adjust(delta) {
-    const raw = Number(value || 0) + delta
-    const clamped = Math.max(min, Math.min(max, raw))
-    const rounded = Math.round(clamped * 100) / 100
-    if (Math.abs(rounded - value) > 0.001) onChange(rounded)
+  const [text, setText] = useState(() => formatNum(value))
+  const focusedRef = useRef(false)
+
+  useEffect(() => {
+    if (!focusedRef.current) setText(formatNum(value))
+  }, [value])
+
+  function clamp(raw) {
+    return Math.max(min, Math.min(max, raw))
   }
 
-  const canDecrease = value > min + 0.001
-  const canIncrease = value < max - 0.001
+  function commitRaw(next) {
+    if (!Number.isFinite(next)) return
+    const clamped = clamp(next)
+    const rounded = Math.round(clamped * 100) / 100
+    if (Math.abs(rounded - Number(value)) > 0.001) onChange(rounded)
+    return rounded
+  }
+
+  function applyTyped() {
+    const raw = String(text).trim().replace(",", ".")
+    if (!raw) {
+      setText(formatNum(value))
+      return
+    }
+    let next
+    if (/^[+\-]/.test(raw)) {
+      const delta = parseFloat(raw)
+      if (!Number.isFinite(delta)) {
+        setText(formatNum(value))
+        return
+      }
+      next = Number(value || 0) + delta
+    } else {
+      const abs = parseFloat(raw)
+      if (!Number.isFinite(abs)) {
+        setText(formatNum(value))
+        return
+      }
+      next = abs
+    }
+    const applied = commitRaw(next)
+    setText(formatNum(applied ?? value))
+  }
+
+  function adjust(delta) {
+    const applied = commitRaw(Number(value || 0) + delta)
+    if (!focusedRef.current) setText(formatNum(applied ?? value))
+  }
+
+  const canDecrease = Number(value) > min + 0.001
+  const canIncrease = Number(value) < max - 0.001
 
   return (
     <div className="flex items-center gap-1.5 flex-1 min-w-0">
       <span className="text-[11px] font-extrabold text-ink-soft shrink-0 w-9">
         {label}
       </span>
-      <div className="flex items-center bg-surface-warm border border-line rounded-md overflow-hidden shrink-0">
+      <div className="flex items-center bg-surface-warm border border-line rounded-md overflow-hidden shrink-0 h-8">
         <StepBtn
-          aria-label="-0.5 ثانية"
-          onClick={() => adjust(-0.5)}
+          aria-label="ناقص ثانية"
+          onClick={() => adjust(-1)}
           disabled={!canDecrease}
         >
-          <DoubleChevron dir="prev" />
+          <span className="font-mono tabular-nums text-[11.5px] font-extrabold">
+            −1
+          </span>
         </StepBtn>
+        <div className="relative flex items-center border-x border-line">
+          <input
+            type="text"
+            inputMode="decimal"
+            dir="ltr"
+            value={text}
+            aria-label={`${label} بالثواني`}
+            onFocus={(e) => {
+              focusedRef.current = true
+              e.currentTarget.select()
+            }}
+            onChange={(e) => setText(e.target.value)}
+            onBlur={() => {
+              focusedRef.current = false
+              applyTyped()
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                applyTyped()
+                e.currentTarget.blur()
+              } else if (e.key === "Escape") {
+                e.preventDefault()
+                setText(formatNum(value))
+                e.currentTarget.blur()
+              }
+            }}
+            className="cap-focus-ring font-mono tabular-nums text-[12.5px] font-bold text-ink bg-transparent text-center outline-none w-[58px] h-8 px-1"
+          />
+          <span className="font-mono text-[10.5px] font-bold text-ink-soft pr-1.5 select-none pointer-events-none">
+            ث
+          </span>
+        </div>
         <StepBtn
-          aria-label="-0.1 ثانية"
-          onClick={() => adjust(-0.1)}
-          disabled={!canDecrease}
-        >
-          <SingleChevron dir="prev" />
-        </StepBtn>
-        <span className="font-mono tabular-nums text-[12.5px] font-bold text-ink px-2 min-w-[58px] text-center">
-          {formatTimePrecise(value)}
-        </span>
-        <StepBtn
-          aria-label="+0.1 ثانية"
-          onClick={() => adjust(0.1)}
+          aria-label="زائد ثانية"
+          onClick={() => adjust(1)}
           disabled={!canIncrease}
         >
-          <SingleChevron dir="next" />
-        </StepBtn>
-        <StepBtn
-          aria-label="+0.5 ثانية"
-          onClick={() => adjust(0.5)}
-          disabled={!canIncrease}
-        >
-          <DoubleChevron dir="next" />
+          <span className="font-mono tabular-nums text-[11.5px] font-extrabold">
+            +1
+          </span>
         </StepBtn>
       </div>
     </div>
@@ -65,7 +133,6 @@ function StepBtn({ children, onClick, disabled, ...rest }) {
       type="button"
       tabIndex={-1}
       onMouseDown={(e) => {
-        // Don't pull focus away from the active textarea — keeps the card open.
         e.preventDefault()
       }}
       onClick={(e) => {
@@ -73,56 +140,10 @@ function StepBtn({ children, onClick, disabled, ...rest }) {
         if (!disabled) onClick()
       }}
       disabled={disabled}
-      className="cap-focus-ring inline-flex items-center justify-center w-7 h-8 text-ink hover:bg-line/60 active:bg-line disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+      className="cap-focus-ring inline-flex items-center justify-center min-w-[34px] h-8 px-1.5 text-ink hover:bg-line/60 active:bg-line disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
       {...rest}
     >
       {children}
     </button>
-  )
-}
-
-function SingleChevron({ dir }) {
-  // For RTL UI, prev points right (›) and next points left (‹) visually.
-  const d = dir === "prev" ? "m9 6 6 6-6 6" : "m15 6-6 6 6 6"
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d={d} />
-    </svg>
-  )
-}
-
-function DoubleChevron({ dir }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {dir === "prev" ? (
-        <>
-          <path d="m6 6 6 6-6 6" />
-          <path d="m13 6 6 6-6 6" />
-        </>
-      ) : (
-        <>
-          <path d="m18 6-6 6 6 6" />
-          <path d="m11 6-6 6 6 6" />
-        </>
-      )}
-    </svg>
   )
 }
