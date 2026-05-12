@@ -12,7 +12,11 @@ from fastapi import HTTPException
 logger = logging.getLogger(__name__)
 
 
-MODEL = "gemini-2.5-pro"
+def _collect_gemini_models() -> list[str]:
+    csv_models = os.getenv("GEMINI_MODELS", "").strip()
+    if csv_models:
+        return [m.strip() for m in csv_models.split(",") if m.strip()]
+    return ["gemini-2.5-pro", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.5-flash"]
 
 
 def _collect_gemini_keys() -> list[str]:
@@ -164,28 +168,33 @@ async def transcribe_audio(
             ),
         )
 
+    models = _collect_gemini_models()
+
     response = None
     last_error: Exception | None = None
     for key in keys:
-        try:
-            genai.configure(api_key=key)
-            model = genai.GenerativeModel(MODEL)
-            response = await model.generate_content_async([
-                {"mime_type": mime, "data": audio_data},
-                prompt,
-            ])
+        for model_name in models:
+            try:
+                genai.configure(api_key=key)
+                model = genai.GenerativeModel(model_name)
+                response = await model.generate_content_async([
+                    {"mime_type": mime, "data": audio_data},
+                    prompt,
+                ])
+                break
+            except Exception as e:
+                last_error = e
+                logger.warning("Gemini call failed for key/model (model=%s): %s", model_name, e)
+                continue
+        if response is not None:
             break
-        except Exception as e:
-            last_error = e
-            logger.warning("Gemini call failed for one key (model=%s): %s", MODEL, e)
-            continue
 
     if response is None:
         raise HTTPException(
             status_code=502,
             detail=(
-                "Gemini API request failed for all configured keys "
-                f"(model={MODEL}): {last_error}"
+                "Gemini API request failed for all configured keys and models: "
+                f"{last_error}"
             ),
         )
 
