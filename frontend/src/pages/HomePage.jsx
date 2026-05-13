@@ -71,8 +71,11 @@ export default function HomePage() {
         )}
       </section>
 
-      <footer className="mt-6 pb-1 text-center">
-        <p className="text-[11px] font-bold text-ink-muted">
+      <footer className="mt-8 pb-3 text-center flex flex-col items-center gap-1.5 opacity-80">
+        <p className="text-[12px] font-bold text-ink">
+          صنع بواسطة يوسف محمود 🚀
+        </p>
+        <p className="text-[10px] font-semibold text-ink-muted">
           مدعوم بـ Gemini 2.5 Pro • فيديوهاتك خاصة بيك
         </p>
       </footer>

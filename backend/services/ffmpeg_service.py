@@ -149,10 +149,12 @@ def burn_captions(
             .output(
                 output_path,
                 vf=vf,
-                acodec="copy",
+                acodec="aac",  # Re-encode audio to fix VFR sync drift
+                audio_bitrate="128k",
                 vcodec="libx264",
                 crf=23,
                 preset="veryfast",
+                fps_mode="cfr", # Force Constant Frame Rate
             )
             .overwrite_output()
             .run(capture_stdout=True, capture_stderr=True)

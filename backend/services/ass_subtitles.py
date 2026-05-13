@@ -160,18 +160,39 @@ def _snapshots_typewriter(
     return out
 
 
-def _karaoke_ass_body(words: list[dict]) -> str:
-    parts: list[str] = []
-    for w in words:
-        raw = str(w.get("word", "")).strip()
-        if not raw:
-            continue
-        st = float(w.get("start", 0))
-        en = float(w.get("end", 0))
-        dur_cs = max(1, int(round(max(0.0, en - st) * 100)))
-        escaped = _escape_ass_text(raw)
-        parts.append(rf"{{\k{dur_cs}}}{escaped}")
-    return " ".join(parts)
+def _snapshots_karaoke(
+    words: list[dict],
+    seg_start: float,
+    seg_end: float,
+    min_gap: float,
+    active_col_tag: str,
+    reset_col_tag: str,
+) -> list[tuple[float, float, str]]:
+    out: list[tuple[float, float, str]] = []
+    n = len(words)
+    for i, w in enumerate(words):
+        t_in = max(float(seg_start), float(w.get("start", seg_start)))
+        if i + 1 < n:
+            t_next = float(words[i + 1].get("start", seg_end))
+            t_out = max(t_in + min_gap, min(t_next, seg_end))
+        else:
+            t_out = max(t_in + min_gap, float(seg_end))
+        t_out = min(float(seg_end), max(t_out, t_in + min_gap))
+        
+        parts: list[str] = []
+        for j, w2 in enumerate(words):
+            raw = str(w2.get("word", "")).strip()
+            if not raw:
+                continue
+            escaped = _escape_ass_text(raw)
+            if j == i:
+                parts.append(f"{active_col_tag}{escaped}{reset_col_tag}")
+            else:
+                parts.append(escaped)
+                
+        text = " ".join(parts)
+        out.append((t_in, t_out, text))
+    return out
 
 
 def _resolve_font_size_px(
@@ -232,11 +253,14 @@ def write_ass_for_burn_in(
     anim_mode = str(style.get("caption_animation") or "none").lower()
 
     if anim_mode == "karaoke":
-        primary = _hex_to_ass_bgr(str(style.get("karaoke_color") or "#8B80FF"), 0.0)
-        secondary = _hex_to_ass_bgr(str(style.get("color") or "#FFFFFF"), 0.0)
+        # we will use the base color as primary, and inject active color tags.
+        primary = _hex_to_ass_bgr(str(style.get("color") or "#FFFFFF"), 0.0)
+        secondary = "&H000000FF"
+        active_col = _hex_to_ass_bgr(str(style.get("karaoke_color") or "#8B80FF"), 0.0)
     else:
         primary = _hex_to_ass_bgr(str(style.get("color") or "#FFFFFF"), 0.0)
         secondary = "&H000000FF"
+        active_col = primary
 
     outline_col = _hex_to_ass_bgr("#000000", 0.0)
 
@@ -288,17 +312,22 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             words_inner = []
 
         if anim_mode == "karaoke" and len(words_inner) > 0:
-            body = _karaoke_ass_body(words_inner)
-            if not body.strip():
-                body = _escape_ass_text(str(cap["word"]))
-            text = pos_pre + body
-            start = _format_ass_time(seg_start)
-            end = _format_ass_time(seg_end)
-            if end <= start:
-                end = _format_ass_time(seg_start + min_gap)
-            events.append(
-                f"Dialogue: 0,{start},{end},Default,,0,0,0,,{text}"
-            )
+            active_col_tag = f"{{\\c{active_col}}}"
+            reset_col_tag = f"{{\\c{primary}}}"
+            
+            for t_in, t_out, text_body in _snapshots_karaoke(
+                words_inner, seg_start, seg_end, min_gap, active_col_tag, reset_col_tag
+            ):
+                if not str(text_body).strip():
+                    continue
+                st = _format_ass_time(t_in)
+                en = _format_ass_time(t_out)
+                if en <= st:
+                    en = _format_ass_time(t_in + min_gap)
+                body = pos_pre + text_body
+                events.append(
+                    f"Dialogue: 0,{st},{en},Default,,0,0,0,,{body}"
+                )
             continue
 
         if anim_mode == "word" and len(words_inner) > 0:

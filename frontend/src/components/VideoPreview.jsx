@@ -91,7 +91,7 @@ const VideoPreview = forwardRef(function VideoPreview(
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl bg-black shadow-card">
+    <div className="relative w-full h-full overflow-hidden rounded-xl bg-black shadow-card">
       <video
         ref={videoRef}
         src={src}

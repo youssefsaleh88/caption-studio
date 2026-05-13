@@ -145,19 +145,17 @@ export default function ReviewPage() {
         }
       />
 
-      {/* Video — takes max available space with true source aspect ratio */}
+      {/* Video — perfectly contained in a max-height box */}
       {previewSrc && (
         <section
-          className="shrink-0 mb-3 cap-animate-fade-up"
+          className="shrink-0 mb-3 cap-animate-fade-up flex justify-center"
           aria-label="معاينة الفيديو"
         >
           <div
+            className="w-full relative"
             style={{
-              width: "100%",
-              aspectRatio: `${aspectRatio}`,
-              maxHeight: "48vh",
-              overflow: "hidden",
-              borderRadius: "0.75rem",
+              height: "42vh",
+              maxHeight: "380px",
             }}
           >
             <VideoPreview
